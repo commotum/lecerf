@@ -1,73 +1,148 @@
 # Paper Map
 
-Source set:
+## Source Policy
 
-- `lecerf-1963-fr/lecerf-1963-fr.pdf` and page images: primary historical text.
-- `lecerf-1963-fr/lecerf-1963-fr.md`: searchable French transcription.
-- `lecerf-1963-en/lecerf-1963-en.pdf` and Markdown: English translation and
-  transcription, to be checked against the French.
+- `lecerf-1963-fr/lecerf-1963-fr.pdf` and its page images are the primary
+  historical source. The French Markdown is the searchable transcription.
+- The English PDF is a translation, not independent evidence. Its Markdown
+  faithfully transcribes that translation, including two material errors.
+- A source assertion is not a Lean theorem. Every simulation or reduction
+  claim below remains unformalized until its named stage supplies definitions,
+  computability, and both directions of the required specification.
 
-Status labels used below: `unreviewed`, `proposed`, `corrected`, `formalized`,
-`blocked`, and `out-of-scope-follow-up`.
+Status labels in this file are:
+
+- `cited-background`: cited rather than proved in the note;
+- `source-confirmed`: the source meaning is stable, but no Lean result exists;
+- `corrected-target`: the formal target deliberately repairs or disambiguates
+  the printed claim;
+- `spec-gap`: the source omits information needed for a proof;
+- `conjecture`: explicitly conjectural in the note; and
+- `out-of-scope-follow-up`: announced for another note.
 
 ## Claim Inventory
 
-| ID | Location | Paper content | Proposed formal target | Status |
+| ID | Location | Source claim | Stage-1 disposition | Status |
 |---|---|---|---|---|
-| `L1a-POST` | §1a | PCP/diagonalization is undecidable for arbitrary homomorphisms and with one monomorphism | Background dependency only unless needed as an alternate source reduction | unreviewed |
-| `L1b-ISO` | §1b | `θ = ψ ∘ φ⁻¹` is a bijective multiplicative map between images of injective free-monoid morphisms | Code isomorphism between generated submonoids induced by two injective `FreeMonoid` homomorphisms | proposed |
-| `L1b-CODE` | §1b | Images of generators form codes because decoding has at most one index sequence | Unique decipherability iff induced free-monoid homomorphism is injective | corrected |
-| `L1c-REL` | §1c | Relation words define a code isomorphism when both indexed families are codes and correspondence is bijective | Construction from two injective generator maps sharing an index type | proposed |
-| `L1d-PREFIX` | §1d | Fresh-marker union with a right/left prefix code remains a code | Two explicit uniquely-decodable-code extension lemmas | proposed |
-| `L1e-EPI` | §1e | “Epimorphism of codes” has a code on the source and target relation words only constrained to lie in a code | Separate paper-specific structure; exact duplicate/surjectivity conditions unresolved | unreviewed |
-| `L2-RULEINV` | §2 | Associate a sign-reversed inverse-image quintuple to each rule | Syntactic rule inversion under a fixed action-order convention | unreviewed |
-| `L2-REV` | §2 | A machine is reversible when inverse-image quintuples constitute a machine; inverse runs traverse image configurations backward | Deterministic forward and inverse step functions satisfying partial inverse laws | unreviewed |
-| `L2-COUPLE` | §2 | Union of machine, inverse image, and halt-switch rules runs forward then backward | Phase-tagged forward/reverse coupling theorem | proposed |
-| `L3-RELATIONS` | §3 | Three relation elements per `+1`, `0`, or `-1` rule plus symbol identities define an epimorphism of codes | Exhaustive rule-family encoding with proved source-code property | unreviewed |
-| `L3-CONFIG` | §3 | `α/ω/β` markers encode current read and previously written positions so `uᵢ₊₁ = τ(uᵢ)` | Encode/decode and one-step iff theorem for well-formed configurations | unreviewed |
-| `L3-MIN` | §3 | Removing relation forms that never appear gives `τ_min`; if it is an isomorphism, the machine is reversible | Reachable-language restriction and a precisely directed implication/equivalence | unreviewed |
-| `L4a-SIM1` | §4a(1) | One source step is simulated by finitely many reversible steps between checkpoints | Positive finite simulation theorem | proposed |
-| `L4a-SIM2` | §4a(2) | Source steps use an epimorphism `τ`; simulator steps use code isomorphism `θ` | Layered step-encoding theorems, after machine simulation is complete | proposed |
-| `L4a-SIM3` | §4a(3) | Checkpoint encodes source configuration and recoverable history between fresh delimiters | Encoding/decoding and checkpoint invariant | proposed |
-| `L4a-SIM4` | §4a(4) | History word records exactly the invoked nonidentity rules | History trace equals source transition trace, with identity-step policy explicit | proposed |
-| `L4a-SIM5` | §4a(5) | Reversible simulator halts exactly at source-halting checkpoints | Halting preservation and reflection | proposed |
-| `L4a-SIM6` | §4a(6) | Coupled machine reaches the starred initial configuration iff source halts | Computable reduction to distinct-target reachability | proposed |
-| `L4a-SIM7` | §4a(7) | Return or passage through a framed target can be made conditional on source halting | Positive-return and specified-target gadgets with iff theorems | proposed |
-| `L4a-SKETCH` | §4a proof | Representative instruction scheme for one relation; other control and tape-management instructions omitted | Complete cleaner construction first; historical encoding connection later | unreviewed |
-| `L4b-THM1H` | Theorem 1 | Halting is undecidable for general reversible Turing machines | Noncomputability of a well-formed finite reversible-machine halting predicate | proposed |
-| `L4b-THM1R` | Theorem 1 | Return to initial configuration is undecidable | Noncomputability of **positive** return | corrected |
-| `L4b-THM1T` | Theorem 1 | Passage through a specified noninitial configuration is undecidable | Noncomputability of reachability of a provably distinct target | proposed |
-| `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for given `w, θ` | Existence of a **positive**, defined iterate returning to `w`; interpretation still requires source audit | corrected |
-| `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, `w₁ ≠ w₂`, is recursively unsolvable in `n` | Existence of a defined iterate reaching a distinct word, with orientation checked | proposed |
+| `L0-ANNOUNCE` | Introduction | The note will define code isomorphisms, reversible machines, and derive iterate-equation undecidability | Organization only; the mathematical claims are inventoried separately below | source-confirmed |
+| `L0-FOLLOWUP` | Introduction | A second note will apply the results to a Schützenberger problem | Do not attribute the promised result to this paper or formalization | out-of-scope-follow-up |
+| `L1a-POST` | §1a | Post's diagonal equation problem is recursively unsolvable for arbitrary morphisms | Possible background reduction only; verify the cited theorem before reuse | cited-background |
+| `L1a-MONIC` | §1a | The problem remains unsolvable when one morphism is injective, attributed to Tag | Possible background reduction only; not proved in this note | cited-background |
+| `L1a-BOTH` | §1a | Unsolvability when both morphisms are injective | The note explicitly presents this as a conjecture, not a theorem | conjecture |
+| `L1b-EQ` | §1b | With injective `φ` and `ψ`, `φ(x) = ψ(x)` becomes `w = θ(w)` for `θ = ψ ∘ φ⁻¹` | Make injectivity hypotheses and exclusion of the empty-word solution explicit | source-confirmed |
+| `L1b-ISO` | §1b | `θ` is a multiplicative bijection from `φ(A†)` to `ψ(A†)` | Model an equivalence of generated submonoids and its induced ambient partial equivalence, not an ambient automorphism | source-confirmed |
+| `L1b-CODE` | §1b | The generator images are codes because a word has at most one indexed factorization | Use an ordered list of indices and injectivity of the induced `FreeMonoid.lift`; zero factorizations are allowed | corrected-target |
+| `L1c-EMPTY` | §1c | The empty word is fixed and is a trivial solution of every iterate equation | Preserve as a source fact; it is distinct from the separate `n = 0` loophole | source-confirmed |
+| `L1c-REL` | §1c | Two indexed code families in bijective correspondence determine a code isomorphism | Construct the equivalence of their generated submonoids and an ambient `PEquiv` | source-confirmed |
+| `L1d-RIGHT` | §1d | A fresh-marker union with a “right prefix-code” is a code | Formalize the displayed no-proper-right-extension condition; this is modern prefix-freeness | source-confirmed |
+| `L1d-LEFT` | §1d | The left-handed fresh-marker construction is dual | Formalize the displayed no-proper-left-extension condition; this is modern suffix-freeness | source-confirmed |
+| `L1e-EPI` | §1e | A source indexed family is a code and each assigned target word belongs to some target code | Define `PaperCodeEpi` with a source code, a target code, and a possibly repeating/non-surjective selector; expose stronger map properties separately | corrected-target |
+| `L2-RULEINV` | §2 | `(p₁,q₁,p₂,q₂,d)` has printed inverse `(p₂*,q₂,p₁*,q₁,-d)` | Retain only as `SyntacticInverseRule`; it is not a semantic inverse of standard read-write-move execution when `d ≠ 0` | corrected-target |
+| `L2-REV` | §2 | A machine is reversible when the printed inverse family constitutes a machine and starred runs reverse | Replace with explicit forward determinism plus a global partial inverse law; compile moves through reversible phases | corrected-target |
+| `L2-COUPLE` | §2 | Forward rules, inverse rules, and halt-to-star switches run forward and then backward | Rebuild with disjoint phase tags and prove the switch and reverse run do not create conflicts | spec-gap |
+| `L3-RELATIONS` | §3 | Three source relations per move rule, plus symbol identities, define an “epimorphism of codes” `τ_max` | Reconstruct every relation family and separately prove source codehood and the induced map's actual properties | spec-gap |
+| `L3-CONFIG` | §3 | `α/ω/β` markers record the next-read and previous-written positions so `uᵢ₊₁ = τ_max(uᵢ)` | Require a well-formed configuration language, encode/decode, and a one-step iff theorem | spec-gap |
+| `L3-MIN` | §3 | After conditional pruning to `τ_min`, code isomorphism implies machine reversibility | Formalize only this printed direction until reachable-language necessity is proved | source-confirmed |
+| `L4a-SIM1` | §4a(1) | Every source step is simulated by a finite reversible macro-run | Prove a positive finite checkpoint-to-checkpoint path; no uniform bound is claimed by the source | source-confirmed |
+| `L4a-SIM2` | §4a(2) | Source steps use an epimorphism `τ`; simulator steps use a code isomorphism `θ` | Keep machine simulation correctness separate from the later word encoding | source-confirmed |
+| `L4a-SIM3` | §4a(3) | A checkpoint `λ vᵢ μ wᵢ ν` recovers the source configuration and history | Define explicit encoding/decoding and a checkpoint invariant | spec-gap |
+| `L4a-SIM4` | §4a(4) | `wᵢ = b² rₖ₁ … rₖᵢ b` records one distinguished nonidentity relation per source step | Use an explicit empty initial history and record every actual source transition; the printed base case is inconsistent | corrected-target |
+| `L4a-SIM5` | §4a(5) | Simulator halting checkpoints are exactly source-halting checkpoints | Prove preservation and reflection, not merely forward simulation | source-confirmed |
+| `L4a-SIM6` | §4a(6) | The coupled machine reaches the starred initial configuration iff the source halts | Implement as a computable distinct-target reachability reduction | source-confirmed |
+| `L4a-SIM7` | §4a(7) | Return or passage through a framed target can be conditioned on source halting | Build a complete gadget and prove an iff; the prose only sketches the construction and directly supports one implication for the extra target | spec-gap |
+| `L4a-SKETCH` | §4a proof | One representative relation is simulated by sweeping, editing, appending history, shifting delimiters, and returning control | Treat as an incomplete construction; prove a clean complete simulator before any historical correspondence theorem | spec-gap |
+| `L4b-THM1H` | Theorem 1 | Halting is recursively unsolvable for arbitrary reversible Turing machines | Uniform noncomputability of a validity-checked finite reversible-machine halting predicate | source-confirmed |
+| `L4b-THM1R` | Theorem 1 | Return to the initial configuration is recursively unsolvable | Use `StateTransition.Reaches₁`; reflexive reachability would trivialize the claim | corrected-target |
+| `L4b-THM1T` | Theorem 1 | Passage through a specified configuration other than the initial one is recursively unsolvable | Include target distinctness in the predicate/reduction output and prove both reduction directions | source-confirmed |
+| `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for arbitrary given `w, θ` | Uniform existence of a positive, fully defined iterate; supplied-exponent evaluation is a separate decidable problem | corrected-target |
+| `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, with `w₁ ≠ w₂`, is recursively unsolvable in `n` | Uniform existence of a positive, fully defined iterate from start `w₂` to target `w₁` | corrected-target |
+
+## Fixed Stage-1 Conventions
+
+### Machine semantics
+
+- A concrete paper-facing machine will use a doubly infinite tape with a
+  distinguished blank and finite nonblank support. Configuration equality is
+  exact equality of state, head position, and the extensional tape modulo
+  blanks.
+- A source quintuple means read the current symbol, write the replacement,
+  then move by `-1`, `0`, or `+1`. Absence of an applicable rule means halt.
+- Under that convention the printed inverse quintuple fails for every moving
+  rule in general: after a forward move the head scans a neighboring cell, not
+  the symbol just written. The later library will split write and movement
+  into phases with a fresh intermediate state, or first define an atomic
+  configuration `PEquiv` and compile it to syntax.
+- Individually invertible operations, syntactic inverse rules, deterministic
+  rule lookup, global backward uniqueness, and a whole reversible machine are
+  separate notions. Starred states are phase-tagged copies of control states;
+  `star` alone does not move the head or alter the tape.
+
+### Codes and partial iteration
+
+- For an indexed family `c : I → FreeMonoid S`, project codehood is
+  `Function.Injective (FreeMonoid.lift c)`. It will be related to mathlib's
+  set-based `InformationTheory.UniquelyDecodable (Set.range ...)` together
+  with injectivity of `c`, because a set forgets duplicate indices.
+- “Complete code” is not a concept used by this note. English §1e mistranslates
+  French `est bien un code` (“is indeed a code”).
+- A code isomorphism is intrinsically a monoid equivalence between generated
+  submonoids. Its ambient action is partial. Every iterate must remain in the
+  next domain; undefinedness is represented by `none`, never by identity or a
+  sink.
+- The paper never defines whether `ℕ` contains zero. Since zero makes the
+  fixed-orbit existence predicate universally true, the formal theorem uses
+  `k + 1`. This is a necessary semantic repair, not a claim about Lecerf's
+  historical convention.
+- “Recursively unsolvable in `n`” is read uniformly: finite descriptions of
+  `(θ,w)` or `(θ,w₂,w₁)` are input and the question asks whether some positive
+  admissible exponent exists. Checking a supplied finite exponent remains a
+  separate computable/decidable theorem; existential yes-instances are
+  expected to be semidecidable.
+
+### Source limitations
+
+- The note does not provide a complete history simulator, rule table,
+  effectiveness proof, or code proof. Its §4 invariant also makes `w₀` both
+  empty and `b³`. The clean construction will use an explicit empty base
+  history and document any later correspondence with Lecerf's layout.
+- §3 prints only `τ_min` code-isomorphism implies reversibility, not an iff.
+- §4a(7) motivates return/reachability gadgets but does not prove their full
+  reduction iff. The later formalization must supply it.
+- The header records the proceedings session of 28 October 1963; the footnote
+  records presentation of the note on 21 October 1963. Both scan readings are
+  retained and have no mathematical effect.
 
 ## Planned Declaration Map
 
-Exact names are provisional and are not yet Lean declarations.
+Names are proposed API targets, not current Lean declarations.
 
-| Claim family | Candidate declaration family | Planned stage |
+| Claim family | Proposed declaration family | Planned stage |
 |---|---|---:|
 | Generic reversible execution | `ReversibleSystem`, `reaches_iff_reverse_reaches` | 2 |
-| Concrete machine inverse | `Machine.IsReversible`, `inverse_step_iff` | 3 |
-| History simulation | `historySim`, `historySim_checkpoint_iff`, `historySim_halts_iff` | 4 |
+| Concrete machine semantics | `Machine`, `Machine.step`, `Machine.Deterministic`, `Machine.Reversible` | 3 |
+| Repaired inverse compilation | `compileRule`, `compiled_inverse_step_iff` | 3 |
+| History simulation | `historySim`, `checkpoint_step`, `checkpoint_reflect`, `historySim_halts_iff` | 4 |
 | Coupling | `coupled_reaches_star_iff`, `coupled_returns₁_iff` | 5 |
 | Machine undecidability | `reversibleHalting_not_computable`, `reversibleReturn_not_computable`, `reversibleReachability_not_computable` | 6 |
-| Codes | `IsCode`, `IsPrefixCode`, `CodeIso`, `PaperCodeEpi` | 7 |
+| Indexed codes | `IsIndexedCode`, `IsPrefixCode`, `IsSuffixCode` | 7 |
+| Code maps | `CodeIso`, `PaperCodeEpi`, `iteratePEquiv` | 7 |
 | Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 |
 | Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 |
 
-## Source-Audit Checklist
+## Principal Reduction Map
 
-- Compare the meeting date in the bibliographic header and footnote.
-- Verify every use of “au plus un”/“at most one” in the code definition.
-- Determine whether `N` in the historical convention excludes zero; do not
-  infer this from modern Lean `Nat`.
-- Determine whether `θⁿ(w)` presupposes all intermediate words lie in the next
-  source code.
-- Reconstruct the exact read/write/move order required by the inverse
-  quintuple.
-- Determine whether repeated target relation words are allowed in the paper's
-  “epimorphism,” and whether “complete code” means a whole indexed source code
-  rather than completeness in modern coding theory.
-- Check the orientation of `w₁ = θⁿ(w₂)` against the machine-to-word encoding.
-- Separate statements proved in this note from announcements depending on the
-  promised second note.
+```text
+established encoded halting predicate
+  -- computable finite-machine compiler + semantic iff -->
+ordinary finite-machine halting
+  -- computable history simulator + halting iff -->
+reversible-machine halting
+  -- phase-tagged coupling gadgets + iff -->
+positive return / distinct-target reachability
+  -- configuration code + step/iterate iff -->
+positive fixed orbit / distinct orbit of a partial code isomorphism
+```
+
+Every arrow is a separate theorem obligation. A mathematical existence proof
+of a simulator cannot discharge computability, well-formedness, preservation,
+or reflection for any arrow.
