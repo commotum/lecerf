@@ -81,6 +81,8 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   does not expose the computable finite compiler needed to close that bridge.
 - Stage 1 is complete. It changed documentation/specification only; no
   substantive Lean declaration or project configuration was added.
+- Stage 2 is authorized and in progress. Before this stage the Lean project
+  contains only the dependency-smoke-test root; no transition modules exist.
 
 ## Current Design Decisions
 
@@ -158,7 +160,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 | Index | Shorthand | Status | Main output |
 |---:|---|---|---|
 | 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
-| 2 | `TRANSITION` | Not started | Reversible partial-transition API |
+| 2 | `TRANSITION` | In progress | Reversible partial-transition API |
 | 3 | `MACHINE` | Not started | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
 | 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
@@ -462,9 +464,8 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`1-SOURCE-AUDIT.md` is complete. The bilingual source, pinned mathlib surface,
-formal target predicates, and reduction boundaries have been audited and
-folded into the authoritative documents. `lake build Lecerf` passed with 831
-jobs; Lean shortcut scans, documentation whitespace checks, and
-`git diff --check` passed. No substantive Lean definition or proof has begun.
-Stage 2 remains unstarted pending explicit continuation instructions.
+`1-SOURCE-AUDIT.md` is complete. Stage 2 is now implementing only the generic
+partial-transition layer under `Lecerf/Transition`: core predicates,
+same-type `PEquiv` reversal theorems, finite audit examples, and a thin public
+API. Concrete machine, history, code, and reduction definitions remain
+unstarted.
