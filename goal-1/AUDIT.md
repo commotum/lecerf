@@ -100,5 +100,8 @@ executability or trust.
 - Bilingual Markdown and all four French/English scan pages were compared.
 - A temporary import/`#check` probe validated the exact pinned declaration
   names listed in `DEPENDENCIES.md`; it compiled successfully and was deleted.
-- Final build, shortcut, whitespace, and diff checks are recorded in
-  `1-SOURCE-AUDIT.md` once the stage closes.
+- `lake build Lecerf` passed with 831 jobs.
+- Lean proof-hole and shortcut scans, documentation whitespace checks, changed
+  Lean/configuration path checks, and `git diff --check` passed.
+- No substantive declaration exists to audit with `#print axioms`; the stage
+  boundary is documentation only.

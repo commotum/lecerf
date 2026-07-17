@@ -55,40 +55,54 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 
 - The repository contains English and French transcriptions, page images, and
   PDFs of the four-page 1963 note.
-- The French source says a code admits **at most one** factorization; the
-  English transcription currently omits “at most one.”
+- The French source says a code admits **at most one** ordered factorization;
+  the English translation omits “at most one.” English §1e also mistranslates
+  `est bien un code` (“is indeed a code”) as “a complete code.”
 - Section 4 gives only principles and one representative instruction family
   for the history-recording simulation; it does not give a complete machine or
-  a complete proof.
+  proof. Its displayed history formulas also make the initial history both
+  empty and `b³`.
 - The paper states undecidability of halting, return, and passage through a
   specified configuration for reversible machines, then states two iterate
   equation results for code isomorphisms.
+- Under conventional read-write-then-move semantics, the paper's printed
+  sign-reversed inverse quintuple is not a configuration-step inverse for a
+  moving rule. Later machine syntax must repair it with phased operations.
+- The paper does not define whether `N` contains zero. The fixed-orbit target
+  must use a positive exponent, and ambient code-isomorphism iteration is
+  partial because source and target generated submonoids can differ.
 - Lean `v4.31.0` is installed locally. The scaffold pins mathlib's `v4.31.0`
   commit `fabf563a7c95a166b8d7b6efca11c8b4dc9d911f`.
 - mathlib provides `StateTransition`, option-valued `PEquiv`, `FreeMonoid`,
-  Turing-machine models, `ComputablePred.halting_problem`, and computable
-  many-one reductions. A preliminary source scan found no ready-made API for
-  uniquely decodable codes.
-- Stage 1 is authorized and in progress. It is documentation/specification
-  work only: no substantive Lean declaration is required or permitted by this
-  stage's scope.
+  `InformationTheory.UniquelyDecodable`, Turing-machine models,
+  `ComputablePred.halting_problem`, and computable many-one reductions.
+- The existing halting theorem is over `Nat.Partrec.Code`, while the checked
+  partial-recursive-to-TM construction uses `Turing.ToPartrec.Code`; mathlib
+  does not expose the computable finite compiler needed to close that bridge.
+- Stage 1 is complete. It changed documentation/specification only; no
+  substantive Lean declaration or project configuration was added.
 
-## Current Assumptions (Provisional)
+## Current Design Decisions
 
-- A generic deterministic partial transition system `σ → Option σ`, plus an
-  explicit partial inverse or a `PEquiv σ σ`, is likely the right low-level
-  abstraction for reversible execution.
-- `StateTransition.Reaches` and `Reaches₁` are likely reusable, but their exact
-  zero-step behavior must be reflected in all return/reachability predicates.
-- A custom finite quintuple-style machine may be clearer for matching the
-  paper, while mathlib's computability infrastructure can supply the source
-  halting theorem. A verified compiler or semantic bridge will be needed.
+- Use `PEquiv σ σ` for generic reversible steps and reuse
+  `StateTransition.Reaches`, `Reaches₁`, and `eval`. Positive return is
+  `Reaches₁`; ordinary reachability remains reflexive.
+- Use a custom finite machine description with conventional read-write-move
+  source rules, a doubly infinite finite-support blank tape, and repaired
+  write/move phases for inverse execution. Stage 3 must choose a canonical
+  computable tape encoding and close the finite compiler bridge.
 - The first complete reversible simulation should use an explicit history log.
   A faithful tape-level version of Lecerf's marker construction can be a later
   refinement.
-- Words can be represented by `FreeMonoid α` (definitionally list-like), while
-  code properties and partial iteration will probably require project-local
-  definitions.
+- Use `FreeMonoid α` for words and define indexed codehood by injectivity of
+  `FreeMonoid.lift`. Relate this to mathlib's set-based uniquely-decodable API
+  only together with generator injectivity.
+- Model code isomorphisms intrinsically between generated submonoids and as
+  law-carrying partial equivalences on ambient words. Define project-local
+  positive partial iteration with `Option.bind` semantics.
+- Interpret “recursively unsolvable in `n`” as a uniform existential problem
+  over finite descriptions. Keep supplied-exponent evaluation,
+  semidecidability of existence, and noncomputability of existence distinct.
 
 ## Success Metrics and Final Verification
 
@@ -143,7 +157,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 
 | Index | Shorthand | Status | Main output |
 |---:|---|---|---|
-| 1 | `SOURCE-AUDIT` | In progress | Fixed conventions, claim inventory, corrected target statements |
+| 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
 | 2 | `TRANSITION` | Not started | Reversible partial-transition API |
 | 3 | `MACHINE` | Not started | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
@@ -197,10 +211,10 @@ reversibility, inverse steps, reachability, halting, and positive return.
 
 ### Detailed Implementation Plan
 
-- Reuse or wrap `StateTransition.Reaches`, `Reaches₁`, and `eval` only after
-  checking their semantics.
-- Compare a structure containing `next`/`prev` inverse laws against `PEquiv`;
-  choose the representation with the cleanest executable and theorem surface.
+- Reuse or thinly wrap the checked `StateTransition.Reaches`, `Reaches₁`, and
+  `eval` semantics.
+- Use `PEquiv σ σ` as the reversible-step carrier and add named `next`/`prev`
+  projections only where they improve theorem statements.
 - Prove one-step and multi-step reversal, determinism, backward uniqueness,
   reachability reversal, and terminal-state facts.
 - Define zero-step-free return and explicit-target reachability predicates.
@@ -225,14 +239,18 @@ source.
 
 ### Detailed Implementation Plan
 
-- Select a write/move convention and finite tape/configuration representation.
+- Implement the fixed read-write-then-move convention and select a canonical
+  computable representation of a doubly infinite finite-support blank tape.
 - Define rules, deterministic lookup, configurations, step, halting, and
   well-formed finite machine encodings.
-- Define individual rule inversion separately from machine reversibility.
+- Retain the paper's tuple inverse as audit syntax, compile moving rules through
+  reversible write/move phases, and keep rule inversion separate from machine
+  reversibility.
 - Prove exact local conditions under which the global step has a partial
   inverse.
-- Build an effective bridge from mathlib's halting source (likely partial
-  recursive code through a mathlib TM model) to this machine representation.
+- Start from the checked `Nat.Partrec.Code.evaln` search transition and build an
+  effective bridge to this machine representation. Reuse mathlib TM bridges
+  only if they yield an explicit computable finite compiler and semantic iff.
 
 ### Completion Requirements
 
@@ -333,9 +351,11 @@ prefix/suffix codes, code-generated submonoids, and the paper's map classes.
 
 ### Detailed Implementation Plan
 
-- Represent words with `FreeMonoid` or justify a `List` wrapper.
-- Define a code by injectivity of the induced map from words over code indices;
-  separate completeness/generation from unique decipherability.
+- Represent words with `FreeMonoid` and use lists through its checked
+  definition/API where convenient.
+- Define indexed codehood by injectivity of `FreeMonoid.lift`; prove its bridge
+  to `InformationTheory.UniquelyDecodable` plus generator injectivity, and keep
+  completeness/generation separate from unique decipherability.
 - Define left/right prefix predicates and prove the fresh-marker extension
   lemmas used in paper §1d.
 - Define monoid homomorphisms, injective code morphisms, code isomorphisms
@@ -346,8 +366,9 @@ prefix/suffix codes, code-generated submonoids, and the paper's map classes.
 
 ### Completion Requirements
 
-- Code uniqueness is equivalent to injectivity of the generator-induced
-  `FreeMonoid` homomorphism.
+- Indexed code uniqueness is equivalent to injectivity of the
+  generator-induced `FreeMonoid` homomorphism, and its relationship to the
+  set-based mathlib predicate accounts for duplicate indices.
 - Fresh-marker prefix/suffix extension lemmas are proved with all hypotheses.
 - Total, partial, injective, bijective, and paper-specific maps have distinct
   types or predicates.
@@ -441,7 +462,9 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`1-SOURCE-AUDIT.md` has been started under explicit continuation instructions.
-No substantive Lean definition or proof has begun. The pinned manifest was
-generated successfully; the scaffold build and Lean-source proof-hole scan
-were clean before the stage began.
+`1-SOURCE-AUDIT.md` is complete. The bilingual source, pinned mathlib surface,
+formal target predicates, and reduction boundaries have been audited and
+folded into the authoritative documents. `lake build Lecerf` passed with 831
+jobs; Lean shortcut scans, documentation whitespace checks, and
+`git diff --check` passed. No substantive Lean definition or proof has begun.
+Stage 2 remains unstarted pending explicit continuation instructions.
