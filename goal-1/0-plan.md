@@ -69,6 +69,9 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   Turing-machine models, `ComputablePred.halting_problem`, and computable
   many-one reductions. A preliminary source scan found no ready-made API for
   uniquely decodable codes.
+- Stage 1 is authorized and in progress. It is documentation/specification
+  work only: no substantive Lean declaration is required or permitted by this
+  stage's scope.
 
 ## Current Assumptions (Provisional)
 
@@ -140,7 +143,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 
 | Index | Shorthand | Status | Main output |
 |---:|---|---|---|
-| 1 | `SOURCE-AUDIT` | Not started | Fixed conventions, claim inventory, corrected target statements |
+| 1 | `SOURCE-AUDIT` | In progress | Fixed conventions, claim inventory, corrected target statements |
 | 2 | `TRANSITION` | Not started | Reversible partial-transition API |
 | 3 | `MACHINE` | Not started | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
@@ -436,10 +439,9 @@ paper, including documented corrections and trust assumptions.
   on names and semantics.
 - `git diff --check` passes and the next maintenance/research tasks are explicit.
 
-## Scaffold Status
+## Current Execution Status
 
-Scaffold only. No numbered stage file has been created and no substantive Lean
-definition or proof has begun. The pinned manifest was generated successfully;
-`lake build Lecerf` and `lake build` both pass with 831 jobs, and the Lean-source
-proof-hole scan is clean. Start `1-SOURCE-AUDIT.md` only after explicit user
-instruction.
+`1-SOURCE-AUDIT.md` has been started under explicit continuation instructions.
+No substantive Lean definition or proof has begun. The pinned manifest was
+generated successfully; the scaffold build and Lean-source proof-hole scan
+were clean before the stage began.
