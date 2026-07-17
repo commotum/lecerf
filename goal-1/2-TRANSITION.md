@@ -118,4 +118,58 @@ the critical distinctions with checked finite examples.
 
 ## Stage Results
 
-- In progress.
+- Added `formal/Lecerf/Transition/Core.lean` with `Step`, `StepRel`,
+  `BackwardUnique`, `Terminal`, `HaltsFrom`, `Reachable`,
+  `StrictlyReachable`, and `PositiveReturn`.
+- Core theorems include `Step.stepRel_rightUnique`,
+  `Step.successor_unique`, `terminal_iff_forall_not_step`, closure helpers,
+  `reachable_iff_strictlyReachable_of_ne`,
+  `haltsFrom_iff_exists_reachable_terminal`,
+  `reachable_terminal_unique`, and terminal-state no-positive-run facts.
+- Added `formal/Lecerf/Transition/Reversible.lean` with
+  `ReversibleStep := PEquiv σ σ`, `next`, `prev`, exact one-step inverse laws,
+  `backwardUnique`, `stepRel_biUnique`, reflexive and positive path reversal,
+  positive-return reversal, reverse-reachability halting characterization, and
+  endpoint evaluation reversal with both terminal hypotheses explicit.
+- Added non-public `formal/Lecerf/Transition/Audit.lean`. Checked examples show:
+  a terminal state is reflexively reachable but has no positive return; a
+  Boolean toggle has a positive return; the empty `PEquiv` is not globally
+  function-injective; a merge step is deterministic but not backward-unique;
+  and its two branches are individually reversible partial edges.
+- Added thin `formal/Lecerf/Transition/API.lean`; `formal/Lecerf.lean` now
+  imports only that API. The audit leaf is not publicly re-exported.
+- Initial focused probes exposed and corrected two implementation mistakes:
+  unqualified `.trans` inside project namespaces recursively selected the
+  theorem being defined, and using explicit `.toFun` projections obstructed
+  convenient reduction of finite audit examples. The final code qualifies
+  relation closure and defines `next`/`prev` through `PEquiv` coercions.
+- `lake build Lecerf.Transition.Core`: passed, 655 jobs.
+- `lake build Lecerf.Transition.Reversible`: passed, 657 jobs.
+- `lake build Lecerf.Transition.Audit`: passed, 658 jobs.
+- `lake build Lecerf.Transition.API Lecerf`: passed, 660 jobs.
+- Full `lake build`: passed, 660 jobs.
+- A temporary root-import API probe checked every principal public declaration
+  and theorem signature; it exited successfully and was deleted.
+- Temporary `#print axioms` audit results:
+  - `Step.successor_unique`: no axioms;
+  - `haltsFrom_iff_exists_reachable_terminal`:
+    `propext`, `Classical.choice`, `Quot.sound`;
+  - one-step inverse, reflexive reversal, and positive reversal:
+    `propext`, `Quot.sound`;
+  - endpoint evaluation reversal:
+    `propext`, `Classical.choice`, `Quot.sound`;
+  - diagnostic positive-cycle and merge-obstruction theorems use only the same
+    standard Lean/mathlib axioms. No project-specific axiom was introduced.
+- Lean scan for `sorry`, `admit`, `axiom`, and `unsafe`: no hits.
+- Transition-source scan for `noncomputable` and `Classical.choice`: no hits;
+  axiom-audit choice usage is inherited through mathlib proof semantics.
+- Out-of-scope transition scan for Turing machines, word codes, reductions,
+  iteration, and history declarations: no hits.
+- Signature scan confirms `PositiveReturn` unfolds through `Reaches₁`, while
+  the only `Function.Injective` transition occurrence is the proved negative
+  audit example.
+- Documentation scan hits for proof-hole terms are guardrail/evidence prose
+  only. Import inspection confirms Core and Reversible use only the planned
+  narrow dependencies.
+- Trailing-whitespace scan and `git diff --check`: passed.
+- Stage 2 is complete. Stage 3 was not started.

@@ -64,6 +64,37 @@ machine syntax, code multiplicativity, or a syntactic inverse instruction.
 Mathlib has no checked `PEquiv` power API, so define partial iteration locally
 and prove its forward map agrees with repeated `Option.bind`.
 
+### Stage 2 realized transition boundary
+
+The checked project modules are:
+
+```text
+Lecerf.Transition.Core
+  imports Mathlib.Computability.StateTransition
+
+Lecerf.Transition.Reversible
+  imports Lecerf.Transition.Core
+  imports Mathlib.Data.PEquiv
+
+Lecerf.Transition.API
+  imports Lecerf.Transition.Reversible
+```
+
+`Lecerf.Transition.Audit` imports the reversible leaf but is not re-exported.
+The public root now imports only `Lecerf.Transition.API`; heavy computability,
+Turing-machine, and word dependencies are absent from the compiled transition
+layer.
+
+Implementation confirmed three constraints for later stages:
+
+- forward determinism is right uniqueness of the successful `Option` step
+  relation and needs no extra machine predicate at the semantic-function
+  level;
+- `PEquiv` gives left uniqueness only for successful outputs, not
+  `Function.Injective` of the entire option-valued function; and
+- path reversal swaps endpoints, but forward and reverse terminality/halting
+  are not pointwise equivalent without endpoint boundary hypotheses.
+
 ### Halting and reductions
 
 Imports:

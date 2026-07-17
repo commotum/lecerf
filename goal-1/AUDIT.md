@@ -39,6 +39,8 @@ Status vocabulary:
 | `A-018` | Mathlib's established halting predicate and its partial-recursive-to-TM construction use different code types | `ComputablePred.halting_problem` is over `Nat.Partrec.Code`; `Turing.PartrecToTM2.tr_eval` is over `Turing.ToPartrec.Code` | Do not claim an existing end-to-end bridge. Stage 3 must implement a computable syntax compiler/semantic iff, prove an undecidability source for `ToPartrec.Code`, or select another explicit interpreter route | isolated-obligation |
 | `A-019` | Mathlib's set-based uniquely-decodable predicate forgets repeated indices in an indexed family | `InformationTheory.UniquelyDecodable` is defined for a `Set (List α)`; Lecerf's code data are indexed | Relate it to project `IsIndexedCode` only together with injectivity of the generator family | resolved-design |
 | `A-020` | Tape semantics and computable finite encodings pull in different directions | `Turing.Tape` has useful blank-normalized semantics, but Stage-1 inspection did not find a ready `Primcodable` instance for it | Fix doubly infinite finite-support semantics now. In Stage 3, reuse `Turing.Tape` only if an executable canonical encoding is supplied; otherwise define a canonical finite-support tape and bridge it | isolated-obligation |
+| `A-021` | Treating a partial equivalence's option-valued function as globally injective is false | Checked theorem `Audit.emptyReversibleStep_next_not_injective`: the empty `PEquiv` sends distinct Boolean inputs to `none` | Use `BackwardUnique`, i.e. left uniqueness only for successful steps; `ReversibleStep.backwardUnique` proves it | resolved-design |
+| `A-022` | A reversible step does not make forward and reverse terminality or same-start halting pointwise equal | Checked single-edge audit: the target is forward-terminal but not reverse-terminal | Reverse paths with exchanged endpoints; require both appropriate endpoint terminal hypotheses in `mem_eval_next_iff_mem_eval_prev` | resolved-design |
 
 ## Source Corrections Versus Design Choices
 
@@ -74,11 +76,16 @@ Every completed stage must classify findings under these headings:
 
 ## Axiom Audit Table
 
-There are no substantive project declarations yet.
+Stage 2 introduces the first substantive project declarations.
 
 | Lean declaration | Role | `#print axioms` result | Disposition |
 |---|---|---|---|
-| _none_ | Scaffold/source audit only | Not applicable | Await completed theorem modules |
+| `Lecerf.Transition.Step.successor_unique` | Forward determinism | no axioms | Fully constructive |
+| `Lecerf.Transition.haltsFrom_iff_exists_reachable_terminal` | Halting characterization | `propext`, `Classical.choice`, `Quot.sound` | Standard Lean/mathlib axioms inherited from `Part`/evaluation semantics; no project axiom |
+| `Lecerf.Transition.ReversibleStep.next_eq_some_iff_prev_eq_some` | One-step inverse law | `propext`, `Quot.sound` | Standard Lean/mathlib axioms; no project axiom |
+| `Lecerf.Transition.ReversibleStep.reachable_iff_reverse_reachable` | Reflexive path reversal | `propext`, `Quot.sound` | Standard Lean/mathlib axioms; no project axiom |
+| `Lecerf.Transition.ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable` | Positive path reversal | `propext`, `Quot.sound` | Standard Lean/mathlib axioms; no project axiom |
+| `Lecerf.Transition.ReversibleStep.mem_eval_next_iff_mem_eval_prev` | Endpoint evaluation reversal | `propext`, `Classical.choice`, `Quot.sound` | Standard Lean/mathlib axioms; endpoint terminal hypotheses are explicit |
 
 For every later headline theorem, record the exact command, Lean output,
 mathlib or logical axioms present, and whether those axioms affect
@@ -105,3 +112,16 @@ executability or trust.
   Lean/configuration path checks, and `git diff --check` passed.
 - No substantive declaration exists to audit with `#print axioms`; the stage
   boundary is documentation only.
+
+### Stage 2 transition API
+
+- Added `Lecerf.Transition.Core`, `Reversible`, `Audit`, and `API`; the public
+  root imports `API`, while `Audit` remains non-public.
+- Focused Core, Reversible, and Audit builds passed; the public/API build and
+  full `lake build` passed with 660 jobs.
+- A root-import API probe checked the exact public declaration signatures and
+  was deleted.
+- The Lean proof-hole/axiom/unsafe scan, noncomputable/classical-source scan,
+  out-of-scope import scan, whitespace check, and `git diff --check` passed.
+- Documentation scan hits are guardrail prose only. The exact `#print axioms`
+  results are in the table above; no project-specific axiom was introduced.

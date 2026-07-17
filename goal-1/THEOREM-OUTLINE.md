@@ -1,15 +1,29 @@
 # Proposed Theorem and Reduction Outline
 
-Everything in this file is a proposed Lean surface, not an existing
-declaration. Stage 1 fixes quantifiers and semantic layers; later numbered
-stages may refine names when implementation evidence requires it.
+Stage 2 declarations are identified as implemented below. All later-layer
+names remain proposed Lean surfaces and may be refined when implementation
+evidence requires it.
 
-## 1. Partial Transition Systems
+## 1. Partial Transition Systems (implemented)
 
-Proposed core predicates:
+Public modules:
+
+```text
+Lecerf.Transition.Core
+Lecerf.Transition.Reversible
+Lecerf.Transition.API
+```
+
+Checked core declarations:
 
 ```lean
 abbrev Step (σ : Type u) := σ → Option σ
+
+def StepRel (next : Step σ) (source target : σ) : Prop :=
+  target ∈ next source
+
+def BackwardUnique (next : Step σ) : Prop :=
+  Relator.LeftUnique (StepRel next)
 
 def Terminal (next : Step σ) (s : σ) : Prop :=
   next s = none
@@ -29,22 +43,43 @@ def PositiveReturn (next : Step σ) (s : σ) : Prop :=
 abbrev ReversibleStep (σ : Type u) := PEquiv σ σ
 ```
 
-Named projections of `r : ReversibleStep σ` will expose `r.toFun` as `next`
-and `r.symm.toFun` as `prev`. The `PEquiv` inverse law is the definition of a
-generic reversible step. It is stronger than deterministic forward execution
-and distinct from syntactic rule inversion.
-
-Required Stage-2 theorem families:
+Checked theorem families include:
 
 ```lean
-next_eq_some_iff_prev_eq_some
-reaches_iff_reverse_reaches
-strictlyReaches_iff_reverse_strictlyReaches
-positiveReturn_reverse_iff
-haltsFrom_iff_exists_terminal_reachable
+Step.stepRel_rightUnique
+Step.successor_unique
+terminal_iff_forall_not_step
+reachable_iff_strictlyReachable_of_ne
+haltsFrom_iff_exists_reachable_terminal
+reachable_terminal_unique
+Terminal.not_strictlyReachable
+
+ReversibleStep.next_eq_some_iff_prev_eq_some
+ReversibleStep.stepRel_iff_reverseStepRel
+ReversibleStep.backwardUnique
+ReversibleStep.stepRel_biUnique
+ReversibleStep.reachable_iff_reverse_reachable
+ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable
+ReversibleStep.positiveReturn_iff_reverse_positiveReturn
+ReversibleStep.haltsFrom_iff_exists_terminal_reverseReachable
+ReversibleStep.mem_eval_next_iff_mem_eval_prev
 ```
 
-`Reaches` is deliberately reflexive; dynamic return always uses `Reaches₁`.
+`ReversibleStep.next r` is `r`; `ReversibleStep.prev r` is `r.symm`. The exact
+`PEquiv` inverse law, rather than function injectivity into `Option`, supplies
+successful predecessor uniqueness. Multiple out-of-domain inputs may all map
+to `none`.
+
+`Reachable` is deliberately reflexive; dynamic return always uses
+`StrictlyReachable`/`Reaches₁`. “Strictly” means positive length, not unequal
+endpoints: a positive cycle returns to the same state. Forward and reverse
+terminality are not pointwise equal, so the evaluation reversal theorem
+requires both endpoint terminal hypotheses.
+
+`Lecerf.Transition.Audit` is a non-public diagnostic leaf. It checks a partial
+edge, a Boolean positive cycle, a noninjective bottom partial map, and a
+deterministic merge whose individual branches are reversible but whose union
+is not backward-unique.
 
 ## 2. Concrete Machine Syntax and Semantics
 

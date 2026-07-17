@@ -81,14 +81,22 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   does not expose the computable finite compiler needed to close that bridge.
 - Stage 1 is complete. It changed documentation/specification only; no
   substantive Lean declaration or project configuration was added.
-- Stage 2 is authorized and in progress. Before this stage the Lean project
-  contains only the dependency-smoke-test root; no transition modules exist.
+- Stage 2 is complete. `Lecerf.Transition.Core`, `Reversible`, `Audit`, and
+  `API` compile, and the public root exports the API without importing the
+  diagnostic leaf.
 
 ## Current Design Decisions
 
 - Use `PEquiv σ σ` for generic reversible steps and reuse
   `StateTransition.Reaches`, `Reaches₁`, and `eval`. Positive return is
   `Reaches₁`; ordinary reachability remains reflexive.
+- Forward determinism is automatic right uniqueness of a successful
+  option-valued step. Reversibility adds `BackwardUnique`, i.e. left uniqueness
+  only for successful outputs; it does not imply `Function.Injective` into
+  `Option` because multiple states may map to `none`.
+- Reversible path theorems exchange endpoints. Forward and reverse terminality
+  are not pointwise equal; evaluation reversal records both required endpoint
+  terminal hypotheses.
 - Use a custom finite machine description with conventional read-write-move
   source rules, a doubly infinite finite-support blank tape, and repaired
   write/move phases for inverse execution. Stage 3 must choose a canonical
@@ -160,7 +168,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 | Index | Shorthand | Status | Main output |
 |---:|---|---|---|
 | 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
-| 2 | `TRANSITION` | In progress | Reversible partial-transition API |
+| 2 | `TRANSITION` | Complete | Reversible partial-transition API |
 | 3 | `MACHINE` | Not started | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
 | 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
@@ -464,8 +472,12 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`1-SOURCE-AUDIT.md` is complete. Stage 2 is now implementing only the generic
-partial-transition layer under `Lecerf/Transition`: core predicates,
-same-type `PEquiv` reversal theorems, finite audit examples, and a thin public
-API. Concrete machine, history, code, and reduction definitions remain
+`2-TRANSITION.md` is complete. The public transition layer defines successful
+step relations, backward uniqueness, terminality, halting, reflexive and
+positive reachability, positive return, and semantic reversible steps. It
+proves exact one-step inversion, successful predecessor uniqueness, reflexive
+and positive path reversal, safe endpoint evaluation reversal, and halting via
+a reachable terminal state. Finite audit examples check the zero-step,
+partial-domain, terminal-asymmetry, positive-cycle, and merging-step
+boundaries. Focused/public/full builds and scans passed. Stage 3 remains
 unstarted.

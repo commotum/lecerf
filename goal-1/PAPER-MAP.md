@@ -112,13 +112,14 @@ Status labels in this file are:
   records presentation of the note on 21 October 1963. Both scan readings are
   retained and have no mathematical effect.
 
-## Planned Declaration Map
+## Declaration Map
 
-Names are proposed API targets, not current Lean declarations.
+Names in completed rows are exact checked declarations. Later rows remain
+proposed API targets.
 
 | Claim family | Proposed declaration family | Planned stage |
 |---|---|---:|
-| Generic reversible execution | `ReversibleSystem`, `reaches_iff_reverse_reaches` | 2 |
+| Generic reversible execution | `Step`, `BackwardUnique`, `ReversibleStep`, `ReversibleStep.next_eq_some_iff_prev_eq_some`, `ReversibleStep.reachable_iff_reverse_reachable`, `ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable` | 2 (implemented) |
 | Concrete machine semantics | `Machine`, `Machine.step`, `Machine.Deterministic`, `Machine.Reversible` | 3 |
 | Repaired inverse compilation | `compileRule`, `compiled_inverse_step_iff` | 3 |
 | History simulation | `historySim`, `checkpoint_step`, `checkpoint_reflect`, `historySim_halts_iff` | 4 |
@@ -128,6 +129,10 @@ Names are proposed API targets, not current Lean declarations.
 | Code maps | `CodeIso`, `PaperCodeEpi`, `iteratePEquiv` | 7 |
 | Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 |
 | Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 |
+
+Stage 2 supplies the semantic transition infrastructure for `L2-REV`, but it
+does not formalize the paper's concrete Turing-machine claim. That remains in
+Stages 3–5; `L2-REV` is therefore not marked formalized here.
 
 ## Principal Reduction Map
 
