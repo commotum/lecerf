@@ -1,13 +1,9 @@
-import Mathlib.Algebra.FreeMonoid.Basic
-import Mathlib.Computability.Reduce
-import Mathlib.Computability.StateTransition
-import Mathlib.Computability.TuringMachine.PostTuringMachine
-import Mathlib.Data.PEquiv
+import Lecerf.Transition.API
 
 /-!
 # Lecerf
 
-Dependency smoke test and future public root for the formalization of
-reversible machines and code isomorphisms. Substantive declarations will be
-added only after the corresponding goal stage begins.
+Public root for the formalization of reversible machines and code
+isomorphisms. It currently exports the generic deterministic and reversible
+partial-transition layer.
 -/

@@ -24,10 +24,13 @@ theorem singleEdge_reverse : singleEdge.prev true = some false :=
   (next_eq_some_iff_prev_eq_some singleEdge).mp singleEdge_forward
 
 theorem singleEdge_target_terminal : Terminal singleEdge.next true := by
-  decide
+  simp [Terminal, singleEdge, ReversibleStep.next, PEquiv.single]
 
 theorem singleEdge_target_not_reverse_terminal : ¬Terminal singleEdge.prev true := by
-  decide
+  intro h
+  unfold Terminal at h
+  have impossible : (some false : Option Bool) = none := singleEdge_reverse.symm.trans h
+  cases impossible
 
 theorem singleEdge_target_reachable_zero_steps : Reachable singleEdge.next true true :=
   Reachable.refl _ _
@@ -49,6 +52,14 @@ theorem toggle_true : toggleStep.next true = some false := by
 theorem toggle_positiveReturn : PositiveReturn toggleStep.next false :=
   StrictlyReachable.trans (StrictlyReachable.single toggle_false)
     (StrictlyReachable.single toggle_true)
+
+/-- `PEquiv` only guarantees injectivity on successful outputs: distinct
+out-of-domain states may both map to `none`. -/
+theorem emptyReversibleStep_next_not_injective :
+    ¬Function.Injective (ReversibleStep.next (⊥ : ReversibleStep Bool)) := by
+  intro h
+  have hEq : false = true := h rfl
+  cases hEq
 
 /-! ## Deterministic execution need not be reversible -/
 
