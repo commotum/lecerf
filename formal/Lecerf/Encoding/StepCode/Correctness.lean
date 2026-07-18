@@ -62,7 +62,8 @@ private theorem exists_edge_of_lift_sourceWord_eq
         ConfigCode.encodeConfigs [config] := by
     rw [← lift_sourceWord_eq_encodeConfigs, factorization,
       encodeConfigs_single]
-  have decodedEq := congrArg ConfigCode.decodeConfigs encodedListEq
+  have decodedEq := congrArg
+    (ConfigCode.decodeConfigs (C := Config Q Γ₁ Γ₂)) encodedListEq
   have sourceListEq : indices.toList.map Edge.source = [config] := by
     simpa using decodedEq
   cases indicesListEq : indices.toList with
