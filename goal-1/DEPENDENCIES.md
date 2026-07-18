@@ -162,7 +162,7 @@ split.
 
 Critical bridge mismatch: `ComputablePred.halting_problem` uses
 `Nat.Partrec.Code`, while `Turing.PartrecToTM2.tr_eval` uses
-`Turing.ToPartrec.Code`. `Turing.ToPartrec.exists_code` is existential rather
+`Turing.ToPartrec.Code`. `Turing.ToPartrec.Code.exists_code` is existential rather
 than an exposed computable syntax compiler, and the universal TM construction
 uses function-bearing/infinite label types plus code-dependent finite support.
 The existing semantic chain therefore does **not** yet provide the computable
@@ -180,8 +180,8 @@ Stage 3 checked this obstruction more precisely:
 
 The implemented replacement source is
 `Lecerf.Machine.Source.universalEvalSearchStep`. It is one fixed transition
-whose program/input are part of the configuration. Its step and start map are
-primitive recursive, and its halting predicate is exactly
+whose program/input are part of the configuration. Its step and joint
+program/input start map are primitive recursive, and its halting predicate is exactly
 `(Nat.Partrec.Code.eval code input).Dom`. This closes the source-transition
 side of the bridge without pretending to close the finite-machine compiler.
 

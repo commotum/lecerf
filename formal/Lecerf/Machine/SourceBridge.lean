@@ -160,4 +160,9 @@ theorem evalSearchStart_primrec (input : Nat) :
     Primrec fun code : Nat.Partrec.Code => evalSearchStart code input :=
   ((Primrec.id.pair (Primrec.const input)).pair (Primrec.const 0)).of_eq fun _ => rfl
 
+/-- Program and input may both vary computably in the start-state map. -/
+theorem evalSearchStart_joint_primrec :
+    Primrec fun data : Nat.Partrec.Code × Nat => evalSearchStart data.1 data.2 :=
+  ((Primrec.fst.pair Primrec.snd).pair (Primrec.const 0)).of_eq fun _ => rfl
+
 end Lecerf.Machine.Source

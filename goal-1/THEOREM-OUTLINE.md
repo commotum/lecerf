@@ -185,6 +185,8 @@ universalEvalSearchStep_halts_iff_eval_dom :
 
 universalEvalSearchStep_primrec : Primrec universalEvalSearchStep
 evalSearchStart_primrec : Primrec fun code => evalSearchStart code input
+evalSearchStart_joint_primrec :
+  Primrec fun data => evalSearchStart data.1 data.2
 ```
 
 This is a complete effective source-transition theorem, not yet the first

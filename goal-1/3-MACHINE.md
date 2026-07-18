@@ -159,7 +159,8 @@ effective halting source for the history simulation.
 - Added `Lecerf.Machine.SourceBridge`. The fixed transition
   `universalEvalSearchStep` carries a `Nat.Partrec.Code` and input in its state;
   `universalEvalSearchStep_halts_iff_eval_dom` proves exact halting equivalence.
-  The transition and source-to-start map have checked `Primrec` theorems.
+  The transition and joint program/input source-to-start map have checked
+  `Primrec` theorems.
 - The finite compiler requested as the preferred bridge is not claimed.
   Checked pinned-source obstruction: `Turing.ToPartrec.Code.exists_code`
   returns only an existential code; `PartrecToTM2.tr_supports` proves finite
