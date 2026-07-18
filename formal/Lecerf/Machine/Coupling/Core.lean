@@ -122,18 +122,18 @@ end Config
 reverse copy; then run the inverse until it becomes terminal. -/
 def turnaroundNext {σ : Type u} (step : ReversibleStep σ) : Step (Config σ)
   | ⟨.forward, state⟩ =>
-      match step.next state with
+      match step state with
       | some target => some (Config.forward target)
       | none => some (Config.reverse state)
   | ⟨.reverse, state⟩ =>
-      (step.prev state).map Config.reverse
+      (step.symm state).map Config.reverse
 
 /-- Exact inverse transition for `turnaroundNext`. -/
 def turnaroundPrev {σ : Type u} (step : ReversibleStep σ) : Step (Config σ)
   | ⟨.forward, state⟩ =>
-      (step.prev state).map Config.forward
+      (step.symm state).map Config.forward
   | ⟨.reverse, state⟩ =>
-      match step.next state with
+      match step state with
       | some target => some (Config.reverse target)
       | none => some (Config.forward state)
 
@@ -143,11 +143,75 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
     (step : ReversibleStep σ) (source target : Config σ) :
     turnaroundNext step source = some target ↔
       turnaroundPrev step target = some source := by
-  rcases source with ⟨sourceDirection, source⟩
-  rcases target with ⟨targetDirection, target⟩
-  cases sourceDirection <;> cases targetDirection <;>
-    simp [turnaroundNext, turnaroundPrev, Config.forward, Config.reverse,
-      ReversibleStep.next, ReversibleStep.prev, step.eq_some_iff]
+  constructor
+  · intro executed
+    rcases source with ⟨direction, state⟩
+    cases direction with
+    | forward =>
+        cases forwardStep : step state with
+        | none =>
+            have targetEq : target = Config.reverse state := by
+              simpa [turnaroundNext, Config.forward, Config.reverse,
+                ReversibleStep.next, forwardStep] using executed.symm
+            subst target
+            simp [turnaroundPrev, Config.forward, Config.reverse,
+              ReversibleStep.next, forwardStep]
+        | some nextState =>
+            have targetEq : target = Config.forward nextState := by
+              simpa [turnaroundNext, Config.forward, ReversibleStep.next,
+                forwardStep] using executed.symm
+            subst target
+            have inverseStep : step.symm nextState = some state :=
+              step.eq_some_iff.mpr forwardStep
+            simp [turnaroundPrev, Config.forward, ReversibleStep.prev,
+              inverseStep]
+    | reverse =>
+        cases inverseStep : step.symm state with
+        | none =>
+            simp [turnaroundNext, Config.reverse, inverseStep] at executed
+        | some previous =>
+            have targetEq : target = Config.reverse previous := by
+              simpa [turnaroundNext, Config.reverse, ReversibleStep.prev,
+                inverseStep] using executed.symm
+            subst target
+            have forwardStep : step previous = some state :=
+              step.eq_some_iff.mp inverseStep
+            simp [turnaroundPrev, Config.reverse, ReversibleStep.next,
+              forwardStep]
+  · intro reversed
+    rcases target with ⟨direction, state⟩
+    cases direction with
+    | forward =>
+        cases inverseStep : step.symm state with
+        | none =>
+            simp [turnaroundPrev, Config.forward, inverseStep] at reversed
+        | some previous =>
+            have sourceEq : source = Config.forward previous := by
+              simpa [turnaroundPrev, Config.forward, ReversibleStep.prev,
+                inverseStep] using reversed.symm
+            subst source
+            have forwardStep : step previous = some state :=
+              step.eq_some_iff.mp inverseStep
+            simp [turnaroundNext, Config.forward, ReversibleStep.next,
+              forwardStep]
+    | reverse =>
+        cases forwardStep : step state with
+        | none =>
+            have sourceEq : source = Config.forward state := by
+              simpa [turnaroundPrev, Config.forward, Config.reverse,
+                ReversibleStep.next, forwardStep] using reversed.symm
+            subst source
+            simp [turnaroundNext, Config.forward, Config.reverse,
+              ReversibleStep.next, forwardStep]
+        | some nextState =>
+            have sourceEq : source = Config.reverse nextState := by
+              simpa [turnaroundPrev, Config.reverse, ReversibleStep.next,
+                forwardStep] using reversed.symm
+            subst source
+            have inverseStep : step.symm nextState = some state :=
+              step.eq_some_iff.mpr forwardStep
+            simp [turnaroundNext, Config.reverse, ReversibleStep.prev,
+              inverseStep]
 
 /-- The open coupling bundled as a reversible partial step. -/
 def turnaround {σ : Type u} (step : ReversibleStep σ) :
@@ -171,22 +235,22 @@ theorem turnaround_prev {σ : Type u} (step : ReversibleStep σ) :
 state crosses back to its matching forward copy. -/
 def returnNext {σ : Type u} (step : ReversibleStep σ) : Step (Config σ)
   | ⟨.forward, state⟩ =>
-      match step.next state with
+      match step state with
       | some target => some (Config.forward target)
       | none => some (Config.reverse state)
   | ⟨.reverse, state⟩ =>
-      match step.prev state with
+      match step.symm state with
       | some previous => some (Config.reverse previous)
       | none => some (Config.forward state)
 
 /-- Exact inverse transition for `returnNext`. -/
 def returnPrev {σ : Type u} (step : ReversibleStep σ) : Step (Config σ)
   | ⟨.forward, state⟩ =>
-      match step.prev state with
+      match step.symm state with
       | some previous => some (Config.forward previous)
       | none => some (Config.reverse state)
   | ⟨.reverse, state⟩ =>
-      match step.next state with
+      match step state with
       | some target => some (Config.reverse target)
       | none => some (Config.forward state)
 
@@ -196,11 +260,85 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
     (step : ReversibleStep σ) (source target : Config σ) :
     returnNext step source = some target ↔
       returnPrev step target = some source := by
-  rcases source with ⟨sourceDirection, source⟩
-  rcases target with ⟨targetDirection, target⟩
-  cases sourceDirection <;> cases targetDirection <;>
-    simp [returnNext, returnPrev, Config.forward, Config.reverse,
-      ReversibleStep.next, ReversibleStep.prev, step.eq_some_iff]
+  constructor
+  · intro executed
+    rcases source with ⟨direction, state⟩
+    cases direction with
+    | forward =>
+        cases forwardStep : step state with
+        | none =>
+            have targetEq : target = Config.reverse state := by
+              simpa [returnNext, Config.forward, Config.reverse,
+                ReversibleStep.next, forwardStep] using executed.symm
+            subst target
+            simp [returnPrev, Config.forward, Config.reverse,
+              ReversibleStep.next, forwardStep]
+        | some nextState =>
+            have targetEq : target = Config.forward nextState := by
+              simpa [returnNext, Config.forward, ReversibleStep.next,
+                forwardStep] using executed.symm
+            subst target
+            have inverseStep : step.symm nextState = some state :=
+              step.eq_some_iff.mpr forwardStep
+            simp [returnPrev, Config.forward, ReversibleStep.prev,
+              inverseStep]
+    | reverse =>
+        cases inverseStep : step.symm state with
+        | none =>
+            have targetEq : target = Config.forward state := by
+              simpa [returnNext, Config.forward, Config.reverse,
+                ReversibleStep.prev, inverseStep] using executed.symm
+            subst target
+            simp [returnPrev, Config.forward, Config.reverse,
+              ReversibleStep.prev, inverseStep]
+        | some previous =>
+            have targetEq : target = Config.reverse previous := by
+              simpa [returnNext, Config.reverse, ReversibleStep.prev,
+                inverseStep] using executed.symm
+            subst target
+            have forwardStep : step previous = some state :=
+              step.eq_some_iff.mp inverseStep
+            simp [returnPrev, Config.reverse, ReversibleStep.next,
+              forwardStep]
+  · intro reversed
+    rcases target with ⟨direction, state⟩
+    cases direction with
+    | forward =>
+        cases inverseStep : step.symm state with
+        | none =>
+            have sourceEq : source = Config.reverse state := by
+              simpa [returnPrev, Config.forward, Config.reverse,
+                ReversibleStep.prev, inverseStep] using reversed.symm
+            subst source
+            simp [returnNext, Config.forward, Config.reverse,
+              ReversibleStep.prev, inverseStep]
+        | some previous =>
+            have sourceEq : source = Config.forward previous := by
+              simpa [returnPrev, Config.forward, ReversibleStep.prev,
+                inverseStep] using reversed.symm
+            subst source
+            have forwardStep : step previous = some state :=
+              step.eq_some_iff.mp inverseStep
+            simp [returnNext, Config.forward, ReversibleStep.next,
+              forwardStep]
+    | reverse =>
+        cases forwardStep : step state with
+        | none =>
+            have sourceEq : source = Config.forward state := by
+              simpa [returnPrev, Config.forward, Config.reverse,
+                ReversibleStep.next, forwardStep] using reversed.symm
+            subst source
+            simp [returnNext, Config.forward, Config.reverse,
+              ReversibleStep.next, forwardStep]
+        | some nextState =>
+            have sourceEq : source = Config.reverse nextState := by
+              simpa [returnPrev, Config.reverse, ReversibleStep.next,
+                forwardStep] using reversed.symm
+            subst source
+            have inverseStep : step.symm nextState = some state :=
+              step.eq_some_iff.mpr forwardStep
+            simp [returnNext, Config.reverse, ReversibleStep.prev,
+              inverseStep]
 
 /-- The uniformly closed return transition bundled as a reversible step. -/
 def returnGadget {σ : Type u} (step : ReversibleStep σ) :
