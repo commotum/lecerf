@@ -35,7 +35,12 @@ Feature-specific APIs are also available through:
 - `Lecerf.Undecidability.API`
 
 Diagnostic examples and `#print axioms` commands live in non-public `Audit`
-modules.
+modules. Run the consolidated diagnostic surface with:
+
+```sh
+cd formal
+lake build Lecerf.Audit
+```
 
 ## Formalized results
 
