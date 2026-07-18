@@ -124,11 +124,17 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   not the paper's finite local `alpha`/`omega`/`beta` relation list.
 - Stage 9 is complete. Raw finite descriptor/word products define strictly
   positive fixed- and distinct-orbit problems; exact checked iteration agrees
-  with proof-side `CodeIso` iteration, including partial definedness. Checking
-  a supplied nonzero exponent is primitive recursive, existential yes-
+  with the proof-side partial ambient action `CodeIso.toPEquiv`, including
+  definedness. Checking a supplied nonzero exponent is primitive recursive, existential yes-
   instances are recursively enumerable, and explicit computable reductions
   from positive return and distinct-target reachability prove both existential
   problems noncomputable.
+- Stage 10 is complete. The public exact/two-tape APIs are intentional rather
+  than incidental; `PublicAudit` and aggregate `Lecerf.Audit` cover headline
+  signatures and trust. All 32 paper claims and 36 correction/audit items are
+  reconciled. A clean root build passed with 936 jobs and the post-clean audit
+  build with 938; final scans found no proof hole, project axiom declaration,
+  `unsafe`, or `native_decide`.
 
 ## Current Design Decisions
 
@@ -304,7 +310,7 @@ two-tape history compiler, are recorded in `DEPENDENCIES.md`.
 | 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Complete | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Complete | Iterate-equation reductions |
-| 10 | `PAPER-AUDIT` | In progress | Claim map, public API, corrections, axiom audit |
+| 10 | `PAPER-AUDIT` | Complete | Claim map, public API, corrections, axiom audit |
 
 ## 1-SOURCE-AUDIT
 
@@ -696,7 +702,8 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-Stages 1--9, including `9-ITERATE-UNDEC.md`, are complete. The public machine API
+Stages 1--10, including `10-PAPER-AUDIT.md`, are complete for the expressly
+permitted cleaner theorem branch. The public machine API
 contains fixed finite
 two-tape forward-history, open-turnaround, and closed-return tables; checked
 syntactic certificates implying semantic reversibility; exact source-halting
@@ -724,5 +731,10 @@ finite guarded descriptor/word problem inputs, strictly positive partial
 iteration, primitive-recursive supplied-exponent recognition, recursively
 enumerable existential predicates, executable/semantic correspondence,
 explicit computable reductions, and both iterate-equation noncomputability
-results. Stage 10 is in progress as the final public-surface, claim-map,
-correction, dependency, clean-build, and axiom audit.
+results. Stage 10 makes the exact-transition and conventional two-tape APIs
+intentional, supplies root-only and aggregate audit targets, removes hidden
+native-decision axioms, reconciles the authoritative documents, and validates
+the pinned project from a clean Lake state. The one-tape lowering, literal
+marker/sweeping construction, finite local `alpha`/`omega`/`beta` presentation,
+and `tau_min` comparison remain explicit historical research follow-ups rather
+than claims of this completed cleaner branch.

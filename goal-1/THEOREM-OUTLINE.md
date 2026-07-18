@@ -1265,3 +1265,17 @@ though the final compositions reuse all three. A finite local edge presentation,
 the two-to-one-tape lowering, and correspondence with Lecerf's historical
 marker encoding remain separate from the implemented Stage-6/8/9 branch.
 They are not silently folded into the current code-isomorphism claim.
+
+## Integrated Public and Trust Surface
+
+`Lecerf.Transition.API` intentionally exports the Word-free exact execution
+and effectivity layer, while `Lecerf.Transition.Exact` isolates the semantic
+`PEquiv` bridge. `Lecerf.Machine.API` intentionally exports
+`Lecerf.Machine.TwoTape.API`, including finite history-compiler correctness and
+endpoint effectivity.
+
+Non-public `Lecerf.PublicAudit` imports only `Lecerf` and checks the headline
+signatures and axiom dependencies in this outline. `Lecerf.Audit` aggregates
+that root probe with every feature diagnostic leaf. The clean Stage-10 builds
+passed with 936 public jobs and 938 aggregate-audit jobs; printed dependencies
+are limited to `propext`, `Classical.choice`, and `Quot.sound`.

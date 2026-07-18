@@ -165,9 +165,51 @@ build and consolidated no-cheating/axiom audit.
 | 7 | Met for that corrected presentation | `PositiveFixedOrbitYes` and `DistinctOrbitYes` use exponent `k + 1`; supplied nonzero exponent recognition is computable, existence is RE, and the two explicit many-one reductions establish noncomputability. `ExactSteps` preserves partial failure and the distinct problem carries endpoint inequality. |
 | 8 | Met | All 32 material source claim IDs in `PAPER-MAP.md` have a checked declaration or an explicit non-formal disposition: source-confirmed, corrected target, cited background, conjecture, out-of-scope follow-up, or `spec-gap`/historical obligation. |
 | 9 | Met after trust repair | `AUDIT.md` records corrections `A-001`--`A-036`, noncomputable boundaries, validation history, and headline axioms. `PublicAudit` imports only `Lecerf`; aggregate `Lecerf.Audit` adds every diagnostic leaf. Stage 10 removed 21 `native_decide` uses whose generated axioms evaded source-token scans. |
-| 10 | Pending final clean verification | Focused public/audit builds have passed. Completion still requires the final clean-state root build, post-clean aggregate audit build, complete scans, Markdown checks, and `git diff --check`. |
+| 10 | Met | `lake clean` followed by `lake build` passed with 936 jobs; the post-clean `lake build Lecerf.Audit` passed with 938. Complete proof-hole/native-axiom/import/shortcut/stale-doc scans, Markdown fence parity, and `git diff --check` passed. |
 
 ## Stage Results
 
-- In progress. This contract records the initial contradictions and direct
-  evidence requirements before any Stage-10 integration edits.
+- Reconciled the 32-entry paper claim map, 36-entry correction/trust ledger,
+  realized dependency graph, theorem outline, root README, and authoritative
+  plan. Historical one-tape, literal marker, finite local relation-list, and
+  `tau_min` work remains explicitly labeled rather than inferred.
+- Added Word-free `Transition.ExactCore`; retained `Transition.Exact` as the
+  isolated `PEquiv` bridge; exported exact effectivity intentionally through
+  `Transition.API`; narrowed internal History/Coupling imports; and added
+  public `Machine.TwoTape.API` through `Machine.API`.
+- Added non-public `Lecerf.PublicAudit`, which imports only `Lecerf` and checks
+  all headline signatures/axioms, plus aggregate `Lecerf.Audit`, which imports
+  every diagnostic leaf. No public or internal proof/runtime module imports an
+  audit or umbrella root.
+- Found 21 `native_decide` uses across four diagnostic modules whose generated
+  axioms escaped the source-token audit. Replaced all with kernel `decide`;
+  the focused four-audit build passed with 889 jobs, and representative repaired
+  diagnostic theorems now use no axioms or only `propext`.
+- Focused API/root and `PublicAudit` builds passed with 929 jobs. From a clean
+  Lake state, `lake build` passed with 936 jobs; the subsequent aggregate audit
+  passed with 938. Headline axiom output contains only `propext`,
+  `Classical.choice`, and `Quot.sound`, with no project-specific axiom.
+- Full Lean scans found no `sorry`, `admit`, project `axiom` declaration,
+  proof-bypassing `unsafe`, or `native_decide`. Noncomputable occurrences are
+  confined to documented fixed universal data, finite enumeration, arbitrary
+  semantic code decoding/action, or proof-side semantic comparison; every
+  varying reduction map has a checked `Primrec`/`Computable` theorem.
+- Reduction scans confirmed named maps, exact preservation/reflection iff
+  theorems, `ManyOneReducible` witnesses, and source noncomputability for all
+  five final target problems. Positive-exponent, partial-failure, unequal-word,
+  map-class, and local/global reversibility boundaries remain explicit.
+- Claim/correction counts, Markdown fence parity, authoritative stale-status
+  scans, API/audit import scans, whitespace checks, and `git diff --check`
+  passed. This completes Stage 10 and the permitted cleaner goal branch.
+
+## Explicit Follow-Up Research
+
+- Lower the finite reversible two-tape target tables to the one-tape machine
+  convention and prove the corresponding semantic and reduction theorems.
+- Reconstruct Lecerf's literal sweeping/marker history machine and compare its
+  checkpoints with the cleaner history compiler.
+- Formalize the finite local `alpha`/`omega`/`beta` relation presentation,
+  conditional `tau_min` pruning, and its connection to the present edge schema.
+- If a uniform generated turnaround/return table compiler is needed as data,
+  replace bare `Fintype` enumeration by explicit effective enumerations and
+  prove the corresponding `Primrec`/`Computable` theorem.

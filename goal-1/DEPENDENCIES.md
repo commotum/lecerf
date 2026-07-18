@@ -1034,3 +1034,10 @@ Lecerf/PublicAudit
 Lecerf/Audit
   -> Lecerf/PublicAudit and every feature Audit leaf  (diagnostic only)
 ```
+
+Stage-10 verification first passed focused `Lecerf`/API/`PublicAudit` builds
+with 929 jobs and the four repaired diagnostic leaves with 889 jobs. After
+`lake clean`, the default public build passed with 936 jobs; the subsequent
+`lake build Lecerf.Audit` passed with 938 jobs. Public and internal modules
+import no audit leaf, and the transition API dependency graph contains no Word
+module despite exporting exact execution and its effectivity theorem.

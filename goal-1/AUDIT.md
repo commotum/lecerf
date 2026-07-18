@@ -145,6 +145,7 @@ semantic and executable machine/code bridge.
 | `Lecerf.Machine.History.haltsFrom_forward_iff` | History simulation halting preservation/reflection | `propext`, `Classical.choice`, `Quot.sound` | Standard transition/`Part` dependencies; both directions are proved |
 | `Lecerf.Machine.FiniteMachine.step_uniform_primrec` | Joint finite-description interpreter | `propext`, `Classical.choice`, `Quot.sound` | Runtime definition is constructive and alphabet-enumeration-free; proof uses standard encoded-computability infrastructure |
 | `Lecerf.Machine.History.finiteForward_uniform_primrec` | Joint effective finite-source history execution | `propext`, `Classical.choice`, `Quot.sound` | Effective abstract interpreter, not a generated conventional finite tape machine |
+| `Lecerf.Transition.exactIterate_uniform_primrec` | Uniform primitive-recursive bind-preserving exact iteration | `propext`, `Classical.choice`, `Quot.sound` | The runtime retains `Option` failure; choice is inherited from mathlib's encoded-computability infrastructure, not a totalization or project axiom |
 | `Lecerf.Machine.History.universalHistory_halts_iff_eval_dom` | Effective universal-source history halting iff | `propext`, `Classical.choice`, `Quot.sound` | Composes checked Stage-3 and Stage-4 equivalences; no project axiom |
 | `Lecerf.Machine.Coupling.turnaround` | Open phase-tagged reversible coupling | `propext`, `Quot.sound` | Exact `PEquiv` assembled from executable forward, terminal-switch, and inverse branches; no project axiom |
 | `Lecerf.Machine.Coupling.returnGadget` | Uniformly closed reversible return gadget | `propext`, `Quot.sound` | Exact `PEquiv`; every inverse-terminal component is closed uniformly |
@@ -501,3 +502,34 @@ executability or trust.
   The completed theorem is for the finite-machine-presented successful-edge
   code-isomorphism subclass. The historical finite local relation encoding and
   two-to-one-tape lowering remain explicitly unresolved.
+
+### Stage 10 integrated paper and trust audit
+
+- Added `Transition.ExactCore` and intentionally exported it with
+  `ExactEffectivity` from `Transition.API` while keeping the Word-dependent
+  `PEquiv` bridge in `Transition.Exact`. Added `Machine.TwoTape.API` and
+  exported the conventional finite two-tape/history-compiler surface through
+  `Machine.API`. Focused root and public-audit builds passed with 929 jobs.
+- Added `Lecerf.PublicAudit`, importing only `Lecerf`, for principal public
+  signatures and headline `#print axioms`; `Lecerf.Audit` aggregates it and
+  every feature audit without public re-export.
+- The audit exposed 21 `native_decide` uses in `Machine.Audit`,
+  `Machine.History.Audit`, `Machine.Coupling.Audit`, and
+  `ReversibleTwoTape.Audit`. Their generated native-decision axioms had evaded
+  source scans. Replacing them with kernel `decide` made representative
+  diagnostics axiom-free or dependent only on `propext`; the focused repair
+  build passed with 889 jobs and the repository now has zero
+  `native_decide` uses.
+- `lake clean` completed, followed by a clean `lake build` with 936 jobs. The
+  post-clean `lake build Lecerf.Audit` completed with 938 jobs. Every printed
+  headline dependency is drawn only from `propext`, `Classical.choice`, and
+  `Quot.sound`; no project-specific or generated native-decision axiom remains.
+- Complete Lean scans found no `sorry`, `admit`, project `axiom` declaration,
+  proof-bypassing `unsafe`, or `native_decide`. Public/import-boundary scans,
+  explicit reduction-chain scans, positive/partiality/map-class checks, the
+  32-claim and 36-correction counts, Markdown fence parity, authoritative
+  stale-status checks, whitespace checks, and `git diff --check` passed.
+- Noncomputable declarations are classified as arbitrary semantic code
+  decoding/action, fixed universal programs/supports/encodings/tables, generic
+  finite enumeration, or proof-side comparison. All varying reduction maps
+  have explicit `Primrec` and `Computable` theorems.
