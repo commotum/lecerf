@@ -50,8 +50,13 @@ Status vocabulary:
 | `A-029` | The closed coupling is total, so it cannot itself serve as the halting machine in a halting reduction | Both branches of `returnNext` succeed, formalized by `exists_returnNext` and `returnGadget_not_terminal`; the open `turnaround` instead stops at the reverse-initial checkpoint | Use the Stage-4 partial history simulator for halting, the open coupling for distinct-target reachability, and the closed gadget only for positive return. Do not conflate these target predicates | resolved-design |
 | `A-030` | Moving the history head right while erasing a restored token breaks multi-token retracing | After `scanRule` moves left onto the newest token, a right-moving restore would revisit the freshly erased blank; the next scan would then encounter blank rather than the preceding token | The checked finite compiler uses `restoreRule.move₂ = .stay`. Each reverse macro is scan-left, inspect/move-work-back, then restore/erase in place; only `bottomRule` moves right when closing the return cycle | correction-required |
 | `A-031` | Generic finite enumeration and selected encodings are noncomputable even though a reduction witness must be computable | `Finset.univ.toList`, the existential universal program, and fixed `Primcodable` choices occur in compiler constants; treating a varying compilation as computable would be unjustified | Stage 6 fixes the universal program, finite source table, and three target tables once. Only `sourceStart`, `startCheckpoint`, `bottomTarget`, and `compileHalting`/`compileReturn`/`compileReachability` vary, and each has a checked primitive-recursive theorem. The noncomputable boundary is therefore closed data, not a varying oracle | resolved-design |
-| `A-032` | The paper requires the fresh marker to be absent from both the existing code `C` and the auxiliary prefix/suffix family `K` | In the marker construction every auxiliary word receives a new boundary marker, so occurrences of that marker inside an auxiliary word do not compromise boundary recognition | Stage 7 proves the sharper `isIndexedCode_prependMarkerExtension_of_freshFor_left` and its append dual using freshness only for `C`. The paper-shaped wrapper theorems retain the stated, redundant `FreshFor marker k` hypothesis for source fidelity | resolved-design |
+| `A-032` | The paper requires the fresh marker to be absent from both the existing code `C` and the auxiliary prefix/suffix family `K` | In the marker construction every auxiliary word receives a new boundary marker, so occurrences of that marker inside an auxiliary word do not compromise boundary recognition | Stage 7 proves the sharper `isIndexedCode_prependMarkerExtension_of_freshFor_left` and `isIndexedCode_appendMarkerExtension_of_freshFor_left` using freshness only for `C`. The paper-shaped wrapper theorems retain the stated, redundant `FreshFor marker k` hypothesis for source fidelity | resolved-design |
 | `A-033` | A semantic code equivalence does not by itself provide executable decoding or generated-submonoid membership | Inverting an arbitrary injective free-monoid lift and deciding membership in an arbitrary `Submonoid.closure` have no uniform decision procedure in the Stage-7 representation | `encodingEquiv`, `CodeIso.ofCodes`, `CodeIso.toPEquiv`, and `PaperCodeEpi.ofCodes` are deliberately `noncomputable`. Stage 7 is a semantic API; a later finite syntax must supply effective decoding and membership before these objects can occur in a computable reduction | isolated-obligation |
+
+Stage 7 closes `A-001`, `A-003`, `A-009`, and `A-019` at the semantic API
+level. Their source corrections and representation distinctions remain part of
+the trust record; `A-033` states the separate executable-syntax obligation
+that was not discharged by those semantic results.
 
 ## Source Corrections Versus Design Choices
 
@@ -312,9 +317,50 @@ executability or trust.
   `[propext, Classical.choice, Quot.sound]`; no project-specific axiom appears.
 - Focused scans found no `sorry`, `admit`, project `axiom`, or proof-bypassing
   `unsafe`. All `noncomputable`/`Classical.choose` occurrences were classified
-  at the fixed-data boundary, the Stage-7 code/iterate token scan had no hits,
-  and whitespace plus `git diff --check` passed.
+  at the fixed-data boundary. At the Stage-6 boundary, the then-future
+  code/iterate scan had no hits, and whitespace plus `git diff --check` passed.
 - These are exact results for conventional finite reversible **two-tape**
   machines. No lowering to the project's one-tape `FiniteMachine` and no
   correspondence with Lecerf's literal one-tape marker/sweeping relations is
   claimed; that historical representation gap remains explicit.
+
+### Stage 7 free monoids, codes, and code maps
+
+- Added `Word.{Code,Prefix,CodeMorphism,API,Audit}` and re-exported only the
+  thin public API from `Lecerf`. `Word.Audit` remains diagnostic and
+  non-public.
+- `IsIndexedCode` is injectivity of the indexed substitution morphism.
+  `isIndexedCode_iff_injective_and_uniquelyDecodable` proves the exact bridge
+  to mathlib's set-based predicate, including the necessary injectivity of the
+  generator family. Audit examples reject duplicate indices and an empty
+  generator.
+- Prefix and suffix codehood imply indexed codehood. The two sharp
+  fresh-marker theorems require marker freshness only for the already-coded
+  family; `isIndexedCode_prependMarkerExtension` and
+  `isIndexedCode_appendMarkerExtension` retain the paper's redundant
+  auxiliary-family freshness hypothesis as source-shaped wrappers.
+- `CodeIso` is an intrinsic generated-submonoid equivalence respecting every
+  displayed generator. `CodeIso.ofCodes` constructs the canonical
+  correspondence, and `CodeIso.toPEquiv` exposes its exactly partial ambient
+  action. `PaperCodeEpi` remains separate: its selector may repeat or omit
+  target generators, as checked by the audit example.
+- `PEquiv.iterate` uses literal partial composition, its exact addition and
+  inverse laws compile, and `positiveIterate` represents exponent `k + 1`.
+  Undefinedness is propagated by `Option.bind`; zero is never silently used
+  for a positive-orbit predicate.
+- The generic decoding inverses and generated-submonoid membership tests are
+  semantic and explicitly `noncomputable`. No effective finite code syntax,
+  machine-step encoding, computable iterate evaluator, reduction, or iterate
+  undecidability theorem is claimed in Stage 7; those remain later work.
+- Focused builds passed for `Lecerf.Word.Code` (522 jobs),
+  `Lecerf.Word.Prefix` (526), and `Lecerf.Word.CodeMorphism` (693). The API and
+  audit build passed with 696 jobs; `Lecerf.Word.Audit Lecerf` passed with 914
+  jobs; full `lake build` passed with 913 jobs.
+- The seven Stage-7 axiom prints are recorded above. The indexed/set bridge
+  and pure iterate declarations report exactly `[propext, Quot.sound]`; the
+  marker theorems and code-isomorphism generator theorem report exactly
+  `[propext, Classical.choice, Quot.sound]`. No project axiom appears.
+- Project Lean scans found no `sorry`, `admit`, project `axiom`, or
+  proof-bypassing `unsafe`. Noncomputable declarations are confined to the
+  documented semantic code-decoding/membership boundary. Whitespace and
+  `git diff --check` passed.

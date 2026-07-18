@@ -24,8 +24,9 @@
   noncomputable, so executable later reduction descriptions must not be hidden
   inside that construction.
 - `PEquiv.trans` uses `Option.bind`, and mathlib provides no checked natural
-  power API for `PEquiv`. Stage 7 must define partial iteration locally and
-  expose the bind recurrence rather than totalizing undefined applications.
+  power API for `PEquiv`. `Lecerf.PEquiv.iterate` now supplies zero, successor,
+  addition, inverse, and definedness laws, while `positiveIterate` separates
+  the nontrivial `k + 1` problems from zero-step identity.
 - Paper §1d uses right/left prefix-code in an orientation opposite some modern
   naming conventions: `m_i = m_j y` is the right-extension/prefix-free case,
   while `m_i = y m_j` is the left-extension/suffix-free case. Public names must
@@ -38,11 +39,13 @@
 ## Updated Assumptions
 
 - Use `Word A := FreeMonoid A` and define indexed codehood by injectivity of
-  `FreeMonoid.lift`. Add a separately named set-code predicate only where the
-  paper's union/fresh-marker lemma is naturally set-based.
-- Generated submonoids are the `mrange` of the generator-induced lift. An
-  intrinsic code isomorphism should retain its source and target generator
-  families and an equivalence of exactly those generated submonoids.
+  `FreeMonoid.lift`. Use mathlib's set-based `UniquelyDecodable` predicate
+  directly rather than adding a redundant alias; represent paper unions by
+  tagged `Sum`-indexed families so duplicate indices remain visible.
+- Define generated submonoids as `Submonoid.closure (Set.range codewords)` and
+  connect them to the lift image through `FreeMonoid.mrange_lift`. An intrinsic
+  code isomorphism retains its source and target generator families and an
+  equivalence of exactly those generated submonoids.
 - It is acceptable for the semantic ambient partial equivalence of arbitrary
   code families to use classical membership choice, provided this is explicit
   and no later finite computability claim is inferred from it. Stage 9 must use
@@ -56,16 +59,17 @@
 
 ## Big Picture Objective
 
-Create a precise reusable API for free-monoid words, indexed and set-based
-codes, prefix/suffix code constructions, generated submonoids, code morphism
-classes, intrinsic code isomorphisms, the paper's weaker epimorphism notion,
-and partial positive iteration.
+Create a precise reusable API for free-monoid words, indexed codes and their
+exact bridge to mathlib's set-based unique decipherability, prefix/suffix code
+constructions, generated submonoids, code morphism classes, intrinsic code
+isomorphisms, the paper's weaker epimorphism notion, and partial positive
+iteration.
 
 ## Detailed Implementation Plan
 
 1. Add `Word/Code.lean` with `Word`, `IsIndexedCode`, the exact bridge to
-   `InformationTheory.UniquelyDecodable`, generated-submonoid definitions, and
-   cheap consequences such as generator and nonempty-word injectivity.
+   `InformationTheory.UniquelyDecodable`, and consequences such as generator
+   injectivity and exclusion of the empty codeword.
 2. Add `Word/Prefix.lean` with equation-explicit prefix/suffix-free predicates,
    freshness, marker-prefix/marker-suffix constructions, and both §1d code
    extension theorems with all hypotheses visible.
@@ -152,4 +156,35 @@ and partial positive iteration.
 
 ## Stage Results
 
-- In progress.
+- Complete. `Word.Code` defines indexed codehood as injectivity of the induced
+  `FreeMonoid.lift` and proves
+  `isIndexedCode_iff_injective_and_uniquelyDecodable`. The extra generator
+  injectivity is necessary because `Set.range` forgets duplicate indices; the
+  audit rejects both duplicate indexed codewords and a singleton empty word.
+- `Word.Prefix` defines equation-explicit prefix/suffix code predicates and
+  proves both marker-extension constructions for tagged `Sum` families. The
+  paper-shaped theorems retain freshness for both families, while sharper
+  variants show that marker freshness for the prefix/suffix-code family is
+  redundant; only freshness for the existing indexed code is needed.
+- `Word.CodeMorphism` keeps `InjectiveMorphism`, intrinsic `CodeIso`, and the
+  deliberately weaker `PaperCodeEpi` distinct. A `CodeIso` acts between the
+  exact generated submonoids, and its semantic ambient `PEquiv` is undefined
+  outside the source generated submonoid. The audit includes a valid paper
+  selector that repeats a target and omits another target.
+- `Lecerf.PEquiv` supplies bind-based partial iteration, addition, exact inverse
+  laws, definedness propagation, and a separate positive-iterate surface. Zero
+  iteration is identity even for an empty partial equivalence; positive
+  iteration remains undefined there, as checked by the audit.
+- Arbitrary-code decoding, generated-submonoid equivalences, and the semantic
+  ambient action are explicitly `noncomputable` because they use classical
+  membership/decoding choice. No executable finite code-description
+  interpreter or machine-step encoding is claimed; that boundary belongs to
+  Stage 8.
+- Focused builds completed with 522 (`Word.Code`), 526 (`Word.Prefix`), 693
+  (`Word.CodeMorphism`), and 696 (`Word.API`/`Word.Audit`) jobs. The root/audit
+  build completed 914 jobs and the full build completed 913 jobs.
+- Representative axiom audits report `[propext, Quot.sound]` for the exact
+  code bridge and pure iteration, and `[propext, Classical.choice, Quot.sound]`
+  for marker/code-isomorphism results. Proof-hole, `unsafe`, project-axiom,
+  public-audit-import, noncomputable-boundary, whitespace, and diff checks pass.
+  Stage 8 has not started.

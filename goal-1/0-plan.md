@@ -109,11 +109,12 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   computable many-one reductions and noncomputability of guarded halting,
   positive return, and distinct-target strict reachability. These are explicitly
   two-tape results; a conventional one-tape lowering remains future work.
-- Stage 7 is in progress. The checked word-layer basis is `FreeMonoid`, with
-  indexed codehood defined by injectivity of `FreeMonoid.lift`. Mathlib's
-  `InformationTheory.UniquelyDecodable` is set-based, so the exact bridge must
-  retain generator injectivity. Partial code-isomorphism iteration will use
-  `PEquiv.trans`/`Option.bind`, with a separate positive wrapper.
+- Stage 7 is complete. The word layer defines indexed codehood by injectivity
+  of `FreeMonoid.lift` and proves its exact equivalence with generator
+  injectivity plus mathlib's set-based `UniquelyDecodable`. Tagged marker
+  extensions, intrinsic generated-submonoid code isomorphisms, the weaker paper
+  epimorphism, exact ambient partial domains, and bind-based positive iteration
+  now form the public `Lecerf.Word` API.
 
 ## Current Design Decisions
 
@@ -185,10 +186,22 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   primitive-recursive varying endpoints.
 - Use `FreeMonoid α` for words and define indexed codehood by injectivity of
   `FreeMonoid.lift`. Relate this to mathlib's set-based uniquely-decodable API
-  only together with generator injectivity.
-- Model code isomorphisms intrinsically between generated submonoids and as
-  law-carrying partial equivalences on ambient words. Define project-local
-  positive partial iteration with `Option.bind` semantics.
+  only together with generator injectivity; use the mathlib predicate directly
+  and preserve paper unions as tagged `Sum`-indexed families.
+- Define `generated c` as `Submonoid.closure (Set.range c)` and connect it to
+  the lift image via `FreeMonoid.mrange_lift`. `CodeIso` is intrinsic to exactly
+  the generated source and target submonoids; its ambient `PEquiv` has those
+  exact domains. `InjectiveMorphism` and the arbitrary-selector `PaperCodeEpi`
+  remain separate structures.
+- The paper-shaped prefix/suffix marker theorems retain freshness hypotheses for
+  both families. Sharper proved variants show that freshness for the already
+  prefix/suffix-free family is redundant.
+- Arbitrary semantic decoding and ambient code action are explicitly
+  `noncomputable`; no computability theorem is inferred from them. Stage 8 must
+  introduce independently executable finite syntax.
+- Project-local `Lecerf.PEquiv.iterate` uses `Option.bind`, and
+  `positiveIterate θ k` means exactly `k + 1` iterations, with checked inverse
+  and definedness laws.
 - Interpret “recursively unsolvable in `n`” as a uniform existential problem
   over finite descriptions. Keep supplied-exponent evaluation,
   semidecidability of existence, and noncomputability of existence distinct.
@@ -255,7 +268,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 4 | `HISTORY-SIM` | Complete | Constructive reversible history simulation |
 | 5 | `COUPLING` | Complete | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Complete | Three finite reversible two-tape undecidability reductions |
-| 7 | `WORD-CODES` | In progress | Free-monoid code and morphism API |
+| 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Not started | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Not started | Iterate-equation reductions |
 | 10 | `PAPER-AUDIT` | Not started | Claim map, public API, corrections, axiom audit |
@@ -267,7 +280,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 Turn the French source, English transcription, and relevant mathlib APIs into
 an explicit formal specification without proving the substantive results.
 
-### Detailed Implementation Plan
+### Implemented Direction
 
 - Compare every mathematical statement in the English transcription against
   the French transcription and scans; assign stable claim identifiers.
@@ -456,18 +469,17 @@ prefix/suffix codes, code-generated submonoids, and the paper's map classes.
 
 ### Detailed Implementation Plan
 
-- Represent words with `FreeMonoid` and use lists through its checked
-  definition/API where convenient.
-- Define indexed codehood by injectivity of `FreeMonoid.lift`; prove its bridge
-  to `InformationTheory.UniquelyDecodable` plus generator injectivity, and keep
+- Words use `FreeMonoid`; lists are accessed only through its checked API.
+- Indexed codehood is injectivity of `FreeMonoid.lift`. Its exact bridge to
+  `InformationTheory.UniquelyDecodable` includes generator injectivity, keeping
   completeness/generation separate from unique decipherability.
-- Define left/right prefix predicates and prove the fresh-marker extension
-  lemmas used in paper §1d.
-- Define monoid homomorphisms, injective code morphisms, code isomorphisms
-  between generated submonoids, and a separately named reconstruction of the
-  paper's “epimorphism of codes.”
-- Define partial application and partial positive iteration where domains do
-  not coincide.
+- Equation-explicit prefix/suffix predicates support tagged fresh-marker
+  extension lemmas for paper §1d, including sharper minimal-hypothesis forms.
+- `InjectiveMorphism`, intrinsic generated-submonoid `CodeIso`, and the paper's
+  arbitrary-selector `PaperCodeEpi` are distinct. Ambient code-isomorphism
+  application is an exactly scoped partial equivalence.
+- Partial iteration exposes bind recurrence, inverse, domain/definedness,
+  addition, and a separate positive-iterate wrapper.
 
 ### Completion Requirements
 
@@ -567,8 +579,8 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`6-MACHINE-UNDEC.md` is complete, and `7-WORD-CODES.md` is in progress. The
-public machine API contains fixed finite
+`6-MACHINE-UNDEC.md` and `7-WORD-CODES.md` are complete. The public machine API
+contains fixed finite
 two-tape forward-history, open-turnaround, and closed-return tables; checked
 syntactic certificates implying semantic reversibility; exact source-halting
 iff target-halting/positive-return/distinct-target-strict-reachability theorems;
@@ -579,9 +591,11 @@ the concrete compiler. The selected universal program and finite encodings are
 one-time classical choices; all varying maps are proved primitive recursive,
 and representative headline results audit to only `propext`,
 `Classical.choice`, and `Quot.sound`. The theorem is currently for a finite
-two-tape target model. Stage 7 now builds the independent free-monoid surface:
-indexed and set-based codes, prefix/suffix marker constructions, distinct map
-classes, intrinsic generated-submonoid isomorphisms, ambient partial action,
-and positive partial iteration. A one-tape lowering and a closer connection to
-Lecerf's historical marker encoding remain explicit follow-up work. Stage 8
-has not been started.
+two-tape target model. The independent Stage-7 word surface now includes the
+exact indexed/set-code bridge, tagged prefix/suffix marker constructions,
+distinct map classes, intrinsic generated-submonoid isomorphisms, exactly
+scoped ambient partial action, and positive partial iteration. Its arbitrary
+semantic decoding is explicitly noncomputable; Stage 8 must supply executable
+finite syntax before any reduction data is claimed. A one-tape lowering and a
+closer connection to Lecerf's historical marker encoding remain explicit
+follow-up work. Stage 8 has not been started.

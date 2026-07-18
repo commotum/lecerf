@@ -13,7 +13,8 @@
 Status labels in this file are:
 
 - `cited-background`: cited rather than proved in the note;
-- `source-confirmed`: the source meaning is stable, but no Lean result exists;
+- `source-confirmed`: the source meaning is stable; the formal-disposition
+  column records whether a checked Lean result now exists;
 - `corrected-target`: the formal target deliberately repairs or disambiguates
   the printed claim;
 - `spec-gap`: the source omits information needed for a proof;
@@ -30,13 +31,13 @@ Status labels in this file are:
 | `L1a-MONIC` | §1a | The problem remains unsolvable when one morphism is injective, attributed to Tag | Possible background reduction only; not proved in this note | cited-background |
 | `L1a-BOTH` | §1a | Unsolvability when both morphisms are injective | The note explicitly presents this as a conjecture, not a theorem | conjecture |
 | `L1b-EQ` | §1b | With injective `φ` and `ψ`, `φ(x) = ψ(x)` becomes `w = θ(w)` for `θ = ψ ∘ φ⁻¹` | Make injectivity hypotheses and exclusion of the empty-word solution explicit | source-confirmed |
-| `L1b-ISO` | §1b | `θ` is a multiplicative bijection from `φ(A†)` to `ψ(A†)` | Model an equivalence of generated submonoids and its induced ambient partial equivalence, not an ambient automorphism | source-confirmed |
-| `L1b-CODE` | §1b | The generator images are codes because a word has at most one indexed factorization | Use an ordered list of indices and injectivity of the induced `FreeMonoid.lift`; zero factorizations are allowed | corrected-target |
-| `L1c-EMPTY` | §1c | The empty word is fixed and is a trivial solution of every iterate equation | Preserve as a source fact; it is distinct from the separate `n = 0` loophole | source-confirmed |
-| `L1c-REL` | §1c | Two indexed code families in bijective correspondence determine a code isomorphism | Construct the equivalence of their generated submonoids and an ambient `PEquiv` | source-confirmed |
-| `L1d-RIGHT` | §1d | A fresh-marker union with a “right prefix-code” is a code | Formalize the displayed no-proper-right-extension condition; this is modern prefix-freeness | source-confirmed |
-| `L1d-LEFT` | §1d | The left-handed fresh-marker construction is dual | Formalize the displayed no-proper-left-extension condition; this is modern suffix-freeness | source-confirmed |
-| `L1e-EPI` | §1e | A source indexed family is a code and each assigned target word belongs to some target code | Define `PaperCodeEpi` with a source code, a target code, and a possibly repeating/non-surjective selector; expose stronger map properties separately | corrected-target |
+| `L1b-ISO` | §1b | `θ` is a multiplicative bijection from `φ(A†)` to `ψ(A†)` | Stage 7's `CodeIso` bundles an equivalence of `generated source` and `generated target`, generator correspondence, and its exactly partial ambient `toPEquiv`. `toPEquiv_isSome_iff` identifies the source domain; no ambient automorphism is claimed | source-confirmed |
+| `L1b-CODE` | §1b | The generator images are codes because a word has at most one indexed factorization | `IsIndexedCode c` is injectivity of `FreeMonoid.lift c`. `isIndexedCode_iff_injective_and_uniquelyDecodable` proves the exact bridge to mathlib's set predicate, retaining generator injectivity because a set forgets repeated indices | corrected-target |
+| `L1c-EMPTY` | §1c | The empty word is fixed and is a trivial solution of every iterate equation | `CodeIso.toPEquiv_one` checks that the ambient partial action maps the empty word to itself. The independent `PEquiv.iterate`/`positiveIterate` API keeps this source fixed point distinct from the separate zero-exponent loophole | source-confirmed |
+| `L1c-REL` | §1c | Two indexed code families in bijective correspondence determine a code isomorphism | `CodeIso.ofCodes` canonically constructs the generated-submonoid equivalence for two codes on the same index type, and `CodeIso.toPEquiv_generator` checks every displayed generator correspondence | source-confirmed |
+| `L1d-RIGHT` | §1d | A fresh-marker union with a “right prefix-code” is a code | `isIndexedCode_prependMarkerExtension` proves the paper-shaped modern prefix-free theorem. The sharper `_of_freshFor_left` theorem proves freshness for the auxiliary family `K` redundant while retaining freshness for the existing code | source-confirmed |
+| `L1d-LEFT` | §1d | The left-handed fresh-marker construction is dual | `isIndexedCode_appendMarkerExtension` proves the suffix-free dual, with `_of_freshFor_left` again exposing the sharper freshness hypothesis | source-confirmed |
+| `L1e-EPI` | §1e | A source indexed family is a code and each assigned target word belongs to some target code | `PaperCodeEpi` and `PaperCodeEpi.ofCodes` implement the paper-specific generated-submonoid morphism with an unrestricted selector. The selector may repeat or omit target generators; no categorical epi, injectivity, or surjectivity is inferred. `CodeIso.toPaperCodeEpi` records the stronger special case | corrected-target |
 | `L2-RULEINV` | §2 | `(p₁,q₁,p₂,q₂,d)` has printed inverse `(p₂*,q₂,p₁*,q₁,-d)` | Audit syntax `printedInverse` is non-public; `printedInverse_fails_on_moving_rule` checks the failure. Public `Rule.apply_eq_some_iff_undo_eq_some` proves the repaired semantic inverse | corrected-target |
 | `L2-REV` | §2 | A machine is reversible when the printed inverse family constitutes a machine and starred runs reverse | `Rule.tapeAction` composes checked-write and movement phases. `FiniteMachine.Reversible`, `backwardCompatible_iff_backwardUnique`, and `toPEquiv` separate table determinism from global inverse execution | corrected-target |
 | `L2-COUPLE` | §2 | Forward rules, inverse rules, and halt-to-star switches run forward and then backward | `Coupling.turnaround` and `returnGadget` use disjoint phase tags and exact ambient inverse laws. The open gadget switches only at forward terminality and retraces through the supplied inverse; the closed gadget uniformly closes inverse-terminal boundaries. Correspondence with the paper's omitted finite rule table remains open | spec-gap |
@@ -80,15 +81,26 @@ Status labels in this file are:
 ### Codes and partial iteration
 
 - For an indexed family `c : I → FreeMonoid S`, project codehood is
-  `Function.Injective (FreeMonoid.lift c)`. It will be related to mathlib's
-  set-based `InformationTheory.UniquelyDecodable (Set.range ...)` together
-  with injectivity of `c`, because a set forgets duplicate indices.
+  `Function.Injective (FreeMonoid.lift c)`. Stage 7 proves it equivalent to
+  mathlib's set-based
+  `InformationTheory.UniquelyDecodable (Set.range ...)` together with
+  injectivity of `c`, exactly accounting for the indices forgotten by a set.
 - “Complete code” is not a concept used by this note. English §1e mistranslates
   French `est bien un code` (“is indeed a code”).
 - A code isomorphism is intrinsically a monoid equivalence between generated
-  submonoids. Its ambient action is partial. Every iterate must remain in the
-  next domain; undefinedness is represented by `none`, never by identity or a
-  sink.
+  submonoids. Stage 7 implements its ambient action as a partial equivalence.
+  Every iterate must remain in the next domain; undefinedness is represented
+  by `none`, never by identity or a sink.
+- The inverse of an arbitrary indexed-code encoding and membership in an
+  arbitrary generated submonoid are semantic, so `encodingEquiv`, the
+  canonical code-map constructors, and `CodeIso.toPEquiv` are explicitly
+  noncomputable. Stage 7 does not provide a finite code description,
+  executable decoder, or decidable membership procedure; the machine-step
+  encoding must introduce those separately.
+- The paper's fresh-marker hypothesis for the auxiliary family `K` is
+  mathematically redundant. Sharp Stage-7 theorems omit it, while separate
+  paper-shaped wrapper theorems retain it so the source statement remains
+  directly recognizable.
 - The paper never defines whether `ℕ` contains zero. Since zero makes the
   fixed-orbit existence predicate universally true, the formal theorem uses
   `k + 1`. This is a necessary semantic repair, not a claim about Lecerf's
@@ -111,6 +123,10 @@ Status labels in this file are:
   reduction iff. Stage 5 supplies cleaner abstract gadgets and both semantic
   directions; a correspondence with the historical finite tape construction
   remains open.
+- Stage 7 supplies the independent semantic code and partial-iterate API, but
+  it does not encode any machine configuration or transition as a code map.
+  The §3 relation families, executable finite code syntax, and the
+  step/iterate correspondence remain Stage-8 obligations.
 - The header records the proceedings session of 28 October 1963; the footnote
   records presentation of the note on 21 October 1963. Both scan readings are
   retained and have no mathematical effect.
@@ -134,10 +150,13 @@ proposed API targets.
 | Finite two-tape validity | `TwoTape.FiniteMachine.SyntacticallyReversible`, `TwoTape.FiniteMachine.syntacticallyReversible_primrec`, `HistoryCompiler.historyMachine_syntacticallyReversible`, `turnaroundMachine_syntacticallyReversible`, `returnMachine_syntacticallyReversible` | 6 (implemented sufficient guard) |
 | Fixed universal reversible tables | `Compiler.ReversibleUniversal.historyTable`, `turnaroundTable`, `returnTable`, `startCheckpoint_primrec`, `bottomTarget_primrec`, `eval_dom_iff_history_halts`, `eval_dom_iff_turnaround_bottom_strictlyReachable`, `eval_dom_iff_return_positiveReturn` | 6 (implemented; finite two-tape) |
 | Machine undecidability | `ReversibleTwoTape.HaltingYes`, `ReturnYes`, `ReachabilityYes`, `partrecHalts0_manyOne_haltingYes`, `partrecHalts0_manyOne_returnYes`, `partrecHalts0_manyOne_reachabilityYes`, `haltingYes_not_computable`, `returnYes_not_computable`, `reachabilityYes_not_computable` | 6 (implemented; finite two-tape) |
-| Indexed codes | `IsIndexedCode`, `IsPrefixCode`, `IsSuffixCode` | 7 |
-| Code maps | `CodeIso`, `PaperCodeEpi`, `iteratePEquiv` | 7 |
-| Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 |
-| Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 |
+| Indexed codes and mathlib bridge | `Word`, `IsIndexedCode`, `codewordSet`, `IsIndexedCode.injective`, `IsIndexedCode.ne_one`, `isIndexedCode_iff_injective_and_uniquelyDecodable` | 7 (implemented semantically) |
+| Prefix/suffix and marker criteria | `FreshFor`, `IsPrefixFree`, `IsSuffixFree`, `IsPrefixCode`, `IsSuffixCode`, `IsPrefixCode.isIndexedCode`, `IsSuffixCode.isIndexedCode`, `isIndexedCode_prependMarkerExtension_of_freshFor_left`, `isIndexedCode_appendMarkerExtension_of_freshFor_left`, `isIndexedCode_prependMarkerExtension`, `isIndexedCode_appendMarkerExtension` | 7 (implemented) |
+| Intrinsic and ambient code isomorphism | `generated`, `generator`, `encodingEquiv`, `CodeIso`, `CodeIso.ofCodes`, `CodeIso.toInjectiveMorphism`, `CodeIso.toPEquiv`, `CodeIso.toPEquiv_generator` | 7 (implemented semantically; arbitrary decoding/membership noncomputable) |
+| Paper-specific code epimorphism | `PaperCodeEpi`, `PaperCodeEpi.ofCodes`, `CodeIso.toPaperCodeEpi` | 7 (implemented; unrestricted selector) |
+| Partial and positive iteration | `PEquiv.iterate`, `iterate_succ_apply`, `iterate_add`, `iterate_symm`, `positiveIterate`, `PositiveDefined`, `PositiveIterate`, `positiveIterate_iff_exists_ne_zero` | 7 (implemented semantically) |
+| Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 (unstarted) |
+| Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 (unstarted) |
 
 Stage 3 supplies the concrete read-write-move semantics and repaired local and
 global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stages
@@ -145,9 +164,14 @@ global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stages
 fixed conventional one-tape universal source, a complete finite reversible
 two-tape history/coupling compiler, primitive-recursive validity and endpoint
 maps, three exact many-one reductions, and three noncomputability theorems.
-The result is deliberately two-tape. Lowering it to the project's one-tape
-`FiniteMachine`, identifying it with Lecerf's literal marker/sweeping table,
-and constructing the code-map layer remain separate obligations.
+Stage 7 adds the independent semantic free-monoid layer: exact indexed
+codehood, the set-code bridge, prefix/suffix marker theorems, intrinsic code
+isomorphisms, the paper-specific epimorphism class, ambient partial action, and
+positive iteration. Its arbitrary generated-submonoid decoding and membership
+are deliberately noncomputable. Stage 8 has not started: lowering the machine
+result to the project's one-tape `FiniteMachine`, identifying it with
+Lecerf's literal marker/sweeping table, and constructing executable
+configuration/step code syntax remain separate obligations.
 
 ## Principal Reduction Map
 
@@ -169,10 +193,14 @@ ReachabilityYes (compileReachability code)
 ¬ComputablePred ReachabilityYes
 
 finite reversible two-tape steps/configurations
-  -- pending configuration code + step/iterate iff -->
+  -- Stage 7 now supplies semantic CodeIso/PEquiv infrastructure;
+     Stage 8 still owes finite configuration syntax and the step/iterate iff -->
 positive fixed orbit / distinct orbit of a partial code isomorphism
 ```
 
 Every Stage-6 arrow above is checked separately; the fixed tables do not hide a
-varying compiler. The final code-isomorphism arrow remains a later theorem
-obligation, as do any one-tape lowering and historical-encoding correspondence.
+varying compiler. Stage 7 checks the independent semantic code-isomorphism and
+positive-iterate vocabulary only; it does not establish the displayed final
+arrow or its computability. The machine-step encoding is still a Stage-8
+theorem obligation, as are any one-tape lowering and historical-encoding
+correspondence.
