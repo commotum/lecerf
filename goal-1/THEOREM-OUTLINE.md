@@ -1,4 +1,4 @@
-# Proposed Theorem and Reduction Outline
+# Theorem and Reduction Outline
 
 Stage 2 through Stage 9 declarations are identified as implemented below.
 The remaining paper audit and historical-encoding reconciliation are not

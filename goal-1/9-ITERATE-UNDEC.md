@@ -159,6 +159,61 @@ a supplied positive exponent.
 
 ## Stage Results
 
-- In progress. The stage contract was created from the checked Stage-6 and
-  Stage-8 APIs before substantive Lean implementation.
-
+- Added `Lecerf.Transition.ExactEffectivity.exactIterate_uniform_primrec`.
+  Its recursive accumulator remains `Option X`, so failed intermediate steps
+  are propagated rather than totalized.
+- Added `CodeIterates.Problems` with `CodeDescriptor`, `FixedOrbitInput`,
+  `DistinctOrbitInput`, `SuppliedExponentInput`, `PositiveFixedOrbitYes`,
+  `DistinctOrbitYes`, and `PositiveIterateAtYes`. Runtime products contain no
+  function, proof, `PEquiv`, semantic `CodeIso`, or orbit witness. Both
+  existential predicates use exponent `k + 1`; supplied recognition requires
+  `n ≠ 0`.
+- Added `CodeIterates.Effectivity`. `checkedExactIterate_uniform_primrec` and
+  `positiveIterateAtYes_primrec` prove uniform exact evaluation and recognition
+  primitive recursive. `FixedOrbitWitnessYes` and
+  `DistinctOrbitWitnessYes` have primitive-recursive/computable predicates;
+  `positiveFixedOrbitYes_re` and `distinctOrbitYes_re` use partial recursive
+  `Nat.rfind` search. These RE results do not claim a total finder or decider.
+- Added `CodeIterates.Correspondence`. The checked exact and positive iterates
+  agree with the partial action of `stepCodeIso` under the explicit validity
+  guard. `encodedCheckedExactSteps_iff_exactSteps` and
+  `encodedCheckedPositiveExactSteps_iff_strictlyReachable` prove exact
+  canonical configuration preservation/reflection. The final canonical iff
+  theorems cover positive return/fixed orbit and guarded distinct-target
+  reachability/distinct word orbit for arbitrary raw descriptors.
+- Added `CodeIterates.Reduction`. `encodeReturnInput` and
+  `encodeReachabilityInput` preserve the descriptor verbatim and are primitive
+  recursive/computable. `returnYes_iff_positiveFixedOrbitYes` and
+  `reachabilityYes_iff_distinctOrbitYes` prove both directions even for invalid
+  inputs; codec injectivity proves distinct output words. Generic many-one
+  reductions are composed with Stage 6 to obtain
+  `partrecHalts0_manyOne_positiveFixedOrbitYes` and
+  `partrecHalts0_manyOne_distinctOrbitYes`, followed by
+  `positiveFixedOrbitYes_not_computable` and
+  `distinctOrbitYes_not_computable`.
+- Added a thin `CodeIterates.API`, exported it through `Undecidability.API` and
+  `Lecerf`, and kept `CodeIterates.Audit` non-public. The audit proves supplied
+  exponent zero is rejected, exact-iteration failure persists under every
+  extension, and canonical return-reduction words are nonempty.
+- Focused builds passed: `Lecerf.Transition.ExactEffectivity` (812 jobs),
+  `CodeIterates.Problems` (892), `CodeIterates.Effectivity` (894),
+  `CodeIterates.Correspondence` (894), `CodeIterates.Reduction` (907), and
+  `CodeIterates.Audit` (908). The new API, undecidability API, and public root
+  built together with 927 jobs; an audit/root replay passed with 928 jobs;
+  full `lake build` passed with 927 jobs.
+- A temporary `import Lecerf` signature probe checked all public Stage-9 input,
+  predicate, effectivity, correspondence, many-one, and noncomputability names
+  and was deleted. Lean scans found no `sorry`, `admit`, project `axiom`, or
+  proof-bypassing `unsafe`. The two `noncomputable section` declarations merely
+  inherit Stage 6's documented fixed target encodings; all varying maps carry
+  primitive-recursive/computable proofs. Shortcut scans confirmed literal
+  `k + 1`, `n ≠ 0`, `ExactSteps`, and absence of a fallback totalizer.
+- All nine `#print axioms` diagnostics report exactly `[propext,
+  Classical.choice, Quot.sound]`. These are the already classified Lean/mathlib
+  dependencies; no project-specific axiom was introduced. Documentation fence
+  checks and stale Stage-9 text scans passed, and `git diff --check` passed.
+- The theorem is scoped to the finite-machine-presented successful-edge
+  code-isomorphism subclass. The generally infinite semantic edge family, a
+  finite presentation of arbitrary `CodeIso`s, Lecerf's literal finite local
+  `alpha`/`omega`/`beta` relations, and the two-to-one-tape lowering remain
+  explicit Stage-10 audit/follow-up boundaries.

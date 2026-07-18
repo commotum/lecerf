@@ -122,6 +122,13 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   one-step/iterate reflection and an all-word executable interpreter. This is
   a uniformly finite-machine-described but generally infinite code schema,
   not the paper's finite local `alpha`/`omega`/`beta` relation list.
+- Stage 9 is complete. Raw finite descriptor/word products define strictly
+  positive fixed- and distinct-orbit problems; exact checked iteration agrees
+  with proof-side `CodeIso` iteration, including partial definedness. Checking
+  a supplied nonzero exponent is primitive recursive, existential yes-
+  instances are recursively enumerable, and explicit computable reductions
+  from positive return and distinct-target reachability prove both existential
+  problems noncomputable.
 
 ## Current Design Decisions
 
@@ -220,8 +227,12 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   and noncomputable `CodeIso` constructor. A comparison with Lecerf's finite
   local `alpha`/`omega`/`beta` relations remains an explicit later obligation.
 - Interpret “recursively unsolvable in `n`” as a uniform existential problem
-  over finite descriptions. Keep supplied-exponent evaluation,
-  semidecidability of existence, and noncomputability of existence distinct.
+  over finite descriptions. Stage 9 uses raw finite machine tables as the
+  presentation class, retains `Descriptor.Valid` as an explicit guard, and
+  stores start before target even though the paper writes the target on the
+  left. Supplied-exponent recognition is primitive recursive; partial witness
+  search/recursive enumerability and noncomputability of total existence are
+  separate checked results.
 
 ## Success Metrics and Final Verification
 
@@ -287,7 +298,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 6 | `MACHINE-UNDEC` | Complete | Three finite reversible two-tape undecidability reductions |
 | 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Complete | Machine-step representation by code maps |
-| 9 | `ITERATE-UNDEC` | In progress | Iterate-equation reductions |
+| 9 | `ITERATE-UNDEC` | Complete | Iterate-equation reductions |
 | 10 | `PAPER-AUDIT` | Not started | Claim map, public API, corrections, axiom audit |
 
 ## 1-SOURCE-AUDIT
@@ -438,7 +449,8 @@ by recording sufficient history, with full correctness and halting reflection.
   API/root, and full builds plus forbidden-construct and axiom scans passed.
 - The construction remains a cleaner generally infinite edge schema. No
   theorem claims the historical finite local relation list or a two-to-one-tape
-  lowering. Stage 9 has not started.
+  lowering. Stage 9 consumes exactly its finite descriptor/interpreter
+  boundary without claiming that historical identification.
 
 ## 5-COUPLING
 
@@ -596,6 +608,42 @@ equation problems for code isomorphisms.
 - The theorem names and quantifiers are recorded in `PAPER-MAP.md` and
   `AUDIT.md`; focused builds, scans, axiom audit, and diff checks pass.
 
+### Stage Results
+
+- `Transition.ExactEffectivity` proves exact bind-preserving partial iteration
+  uniformly primitive recursive in a finite description, start state, and
+  exponent.
+- `CodeIterates.Problems` defines inherited product inputs containing only a
+  raw finite descriptor, Boolean words, and (for supplied recognition) a
+  natural exponent. `PositiveFixedOrbitYes` and `DistinctOrbitYes` use exact
+  exponent `k + 1`; `PositiveIterateAtYes` explicitly rejects zero.
+- `CodeIterates.Effectivity` proves supplied-exponent recognition primitive
+  recursive/computable, both positive witness relations primitive recursive,
+  and both existential predicates recursively enumerable by partial search.
+- `CodeIterates.Correspondence` proves checked iteration equals semantic
+  successful-edge `CodeIso` iteration and specializes canonical words to exact
+  machine steps, positive return, and strict reachability in both directions.
+- `CodeIterates.Reduction` provides primitive-recursive descriptor-preserving
+  endpoint maps, generic guarded return/reachability iff theorems, generic and
+  direct halting `ManyOneReducible` witnesses, and
+  `positiveFixedOrbitYes_not_computable` /
+  `distinctOrbitYes_not_computable`. Canonical codec injectivity proves the
+  distinct reduction outputs unequal words.
+- The public API/root and non-public audit compile. Focused builds passed for
+  `ExactEffectivity` (812 jobs), `Problems` (892), `Effectivity` (894),
+  `Correspondence` (894), `Reduction` (907), and `Audit` (908). The public
+  API/root build passed with 927 jobs, the audit/root replay passed with 928,
+  and full `lake build` passed with 927.
+- A root-import signature probe checked the public problem, effectivity,
+  semantic, reduction, and noncomputability declarations and was deleted.
+  Lean proof-hole/project-axiom/unsafe scans had no hits; the only Stage-9
+  `noncomputable` declarations are sections inheriting the documented one-time
+  fixed target encodings. `git diff --check` passed.
+- All nine Stage-9 axiom prints report exactly `propext`,
+  `Classical.choice`, and `Quot.sound`; no project-specific axiom appears.
+  Diagnostics separately check zero-exponent rejection, persistent partial
+  failure, and nonempty canonical fixed-orbit reduction words.
+
 ## 10-PAPER-AUDIT
 
 ### Big Picture Objective
@@ -625,7 +673,7 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-Stages 1--8, including `8-STEP-CODE.md`, are complete. The public machine API
+Stages 1--9, including `9-ITERATE-UNDEC.md`, are complete. The public machine API
 contains fixed finite
 two-tape forward-history, open-turnaround, and closed-return tables; checked
 syntactic certificates implying semantic reversibility; exact source-halting
@@ -648,7 +696,9 @@ table descriptor whose validity guard and forward interpreter are uniformly
 primitive recursive. The semantic edge family remains generally infinite and
 the semantic `CodeIso` constructor remains noncomputable; neither is stored as
 runtime input. A one-tape lowering and the paper's finite local
-`alpha`/`omega`/`beta` encoding remain explicit follow-up work. Stage 9 is in
-progress with finite raw descriptor/word inputs, strictly positive partial
-iteration, explicit validity guards, and a separate supplied-exponent
-effectivity boundary fixed as its implementation contract.
+`alpha`/`omega`/`beta` encoding remain explicit follow-up work. Stage 9 adds
+finite guarded descriptor/word problem inputs, strictly positive partial
+iteration, primitive-recursive supplied-exponent recognition, recursively
+enumerable existential predicates, executable/semantic correspondence,
+explicit computable reductions, and both iterate-equation noncomputability
+results. Stage 10 is the first incomplete stage.
