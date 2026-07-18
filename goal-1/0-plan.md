@@ -84,6 +84,9 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - Stage 2 is complete. `Lecerf.Transition.Core`, `Reversible`, `Audit`, and
   `API` compile, and the public root exports the API without importing the
   diagnostic leaf.
+- Stage 3 is in progress. Its fixed design uses an intrinsically canonical
+  finite-support tape, first-match finite rule tables, repaired phased inverse
+  execution, and an explicit `Nat.Partrec.Code.evaln` budget-search source.
 
 ## Current Design Decisions
 
@@ -169,7 +172,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 |---:|---|---|---|
 | 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
 | 2 | `TRANSITION` | Complete | Reversible partial-transition API |
-| 3 | `MACHINE` | Not started | Concrete deterministic Turing-machine semantics |
+| 3 | `MACHINE` | In progress | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
 | 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |
