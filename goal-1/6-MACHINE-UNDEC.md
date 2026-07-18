@@ -17,18 +17,40 @@
   `Nat.Partrec.Code`. `ManyOneReducible` requires a computable witness and an
   iff for every source input; `ComputablePred.computable_of_manyOneReducible`
   transfers a hypothetical target decision procedure back to the source.
-- `FiniteMachine` is a finite ordered table of conventional read-write-move
-  rules over canonical finite-support tapes. `FiniteMachine.Reversible`
-  separates table determinism from semantic predecessor uniqueness.
-  `ReverseTableCompatible` is an executable-looking pairwise sufficient
-  condition for backward compatibility, but no packaged decidable raw
-  validity predicate is yet public.
-- Four finite-construction gaps remain. There is no checked compiler from
-  `Nat.Partrec.Code` to a finite source rule table (`A-018`), no ordinary
-  phase-rule compiler for semantic macro rules (`A-023`), no finalized
-  decidable finite validity interface (`A-024`), and no compiler from the
-  abstract unbounded history list to a conventional finite tape machine
-  (`A-025`).
+- `Compiler.UniversalSource` isolates one classically selected closed
+  universal `ToPartrec.Code`. `Compiler.FiniteSource` lowers it through
+  mathlib's checked TM2-to-TM1-to-TM0 simulations, restricts the result to its
+  proved finite support, and compiles an actual fixed one-tape
+  `FiniteMachine`. `FiniteSource.halts_iff_eval_dom` preserves and reflects
+  source halting, while `FiniteSourceComputable.initial_primrec` proves that
+  the varying program/input tape map is primitive recursive.
+- `Machine.Validity` and `Machine.TwoTape.Validity` package decidable,
+  primitive-recursive pairwise certificates implying semantic
+  whole-machine reversibility. They are sufficient subclasses; no false
+  converse to semantic reversibility is asserted.
+- `Machine.TwoTape.Core`, `Reversible`, and `Effectivity` define a conventional
+  finite two-tape table model, exact inverse execution, whole-machine
+  reversibility, primitive-recursive table execution, and primitive-recursive
+  validity checking.
+- `Machine.TwoTape.HistoryCompiler` now has finite runtime syntax, membership
+  facts, normalized concrete rule traces, effectivity of varying endpoint
+  maps, executable microstep equations, and checked global reversibility for
+  the forward-history, open-turnaround, and closed-return tables. The reverse
+  macro is `scan-left; inspect-and-move-work-back; restore-and-erase-staying`;
+  only the final bottom rule moves the history head right.
+- The original sketch saying that token restoration moves the history head
+  right was corrected: doing so revisits the erased cell on the next scan and
+  prematurely stops multi-step retracing. `restoreRule.move₂ = .stay` is the
+  checked construction.
+- `Undecidability.ReversibleTwoTape.Problems` defines validity-guarded raw
+  halting, positive-return, and distinct-target strict-reachability predicates
+  over fixed finite target types. The generic table enumeration uses
+  `Finset.toList` through fixed `Fintype` data and is deliberately not claimed
+  as a varying primitive-recursive compiler; the intended reduction uses one
+  fixed closed target table and primitive-recursive start/target maps.
+- The remaining checked work is the global generated-run invariant and three
+  semantic iff theorems, fixed universal instantiation, explicit finite
+  `ManyOneReducible` witnesses/noncomputability results, and final audits/API.
 - Primitive-recursive abstract interpreters are not finite-machine output
   compilers. Stage 6 cannot be completed merely by renaming the Stage-4/5
   semantic iff theorems as Turing-machine reductions.
@@ -48,14 +70,16 @@
   reduction outputs belong to it. It must not be presented as an iff
   characterization of every semantically reversible table unless the converse
   is proved.
-- The finite source/history/coupling bridge may use a fixed universal machine
-  whose start tape encodes the source program, or a computable per-program
-  compiler. Either route must yield an actual finite local rule table and an
-  executable configuration encoding with both halting directions.
-- A cleaner finite reversible compiler may replace Lecerf's incomplete marker
-  scheme. Any use of classical choice to select a fixed universal program must
-  be isolated, axiom-audited, and must not hide a noncomputable varying output
-  map.
+- The selected route is a fixed universal finite one-tape source whose start
+  tape encodes the source program, followed by fixed finite two-tape history
+  and coupling tables. The machine component of every reduction output is a
+  closed constant; only configurations vary, and those maps must be proved
+  primitive recursive with both semantic directions.
+- A cleaner finite reversible compiler replaces Lecerf's incomplete marker
+  scheme at this stage. It is explicitly a two-tape theorem, not a claim about
+  the existing one-tape `FiniteMachine`; a later two-to-one lowering remains a
+  separate design choice. Classical choice selects only a fixed universal
+  program and fixed finite encodings and must remain isolated in the audit.
 
 ## Big Picture Objective
 
