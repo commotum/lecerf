@@ -363,6 +363,39 @@ theorem returnGadget_prev {σ : Type u} (step : ReversibleStep σ) :
     (returnGadget step).prev = returnPrev step :=
   rfl
 
+/-- Every state has a successful next step in the uniformly closed gadget. -/
+theorem exists_returnNext {σ : Type u} (step : ReversibleStep σ)
+    (config : Config σ) : ∃ target, returnNext step config = some target := by
+  rcases config with ⟨direction, state⟩
+  cases direction with
+  | forward =>
+      cases executed : step state <;>
+        simp [returnNext, Config.forward, Config.reverse, executed]
+  | reverse =>
+      cases executed : step.symm state <;>
+        simp [returnNext, Config.forward, Config.reverse, executed]
+
+/-- The inverse transition of the uniformly closed gadget is total as well. -/
+theorem exists_returnPrev {σ : Type u} (step : ReversibleStep σ)
+    (config : Config σ) : ∃ source, returnPrev step config = some source := by
+  rcases config with ⟨direction, state⟩
+  cases direction with
+  | forward =>
+      cases executed : step.symm state <;>
+        simp [returnPrev, Config.forward, Config.reverse, executed]
+  | reverse =>
+      cases executed : step state <;>
+        simp [returnPrev, Config.forward, Config.reverse, executed]
+
+/-- In particular, the closed gadget has no forward-terminal states. -/
+theorem returnGadget_not_terminal {σ : Type u} (step : ReversibleStep σ)
+    (config : Config σ) : ¬Terminal (returnGadget step).next config := by
+  intro terminal
+  obtain ⟨target, executed⟩ := exists_returnNext step config
+  change returnNext step config = none at terminal
+  rw [terminal] at executed
+  contradiction
+
 section BoundaryEquations
 
 variable {σ : Type u} (step : ReversibleStep σ) (state target previous : σ)

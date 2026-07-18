@@ -71,4 +71,10 @@ example : ¬PositiveReturn (returnStep loop).next (start 0) := by
 
 end History
 
+#print axioms Lecerf.Machine.Coupling.turnaround
+#print axioms Lecerf.Machine.Coupling.returnGadget
+#print axioms Lecerf.Machine.Coupling.History.target_strictlyReachable_iff_halts
+#print axioms Lecerf.Machine.Coupling.History.positiveReturn_iff_halts
+#print axioms Lecerf.Machine.Coupling.History.universalReturnNext_primrec
+
 end Lecerf.Machine.Coupling.Audit
