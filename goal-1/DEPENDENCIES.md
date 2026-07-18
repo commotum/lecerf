@@ -331,11 +331,14 @@ induced by the definitional list equivalence,
 conversions primitive recursive. This is a representation theorem for words,
 not a computable representation of semantic `CodeIso` or `PEquiv` values.
 
-Decision: reduction codomains will be finite rule lists, alphabet codes, and
-finite generator-image lists. Validity/reversibility/codehood are decidable
-predicates on raw descriptions. Do not hide the target in a proof-bearing
-subtype unless its membership predicate has the required primitive-recursive
-encoding theorem.
+Updated decision: the implemented Stage-8 runtime boundary, and the planned
+Stage-9 target input built from it, use a finite two-tape rule list together
+with one or more `Word Bool` values. Its validity guard is a decidable
+primitive-recursive predicate on the raw table. The table uniformly describes
+the generally infinite successful-edge code schema; no finite generator-image
+list is currently claimed. Do not hide the target in a proof-bearing subtype
+or store the semantic `CodeIso` unless the resulting representation has an
+explicit primitive-recursive encoding theorem.
 
 For tapes, semantics are fixed as a doubly infinite blank tape with finite
 nonblank support. Stage 3 evaluated two routes:
@@ -787,6 +790,10 @@ particular, the stable joint results include
 reachability and with `Lecerf.PEquiv.iterate`. The successful-edge schema then
 has the following checked layers:
 
+- Stage-8 support lemmas `IsIndexedCode.comp`,
+  `mem_generated_iff_exists_lift`, and `CodeIso.toPEquiv_lift` respectively
+  preserve codehood under injective reindexing, expose generated-word
+  factorization, and extend the generator equation to an arbitrary index word;
 - `Edge machine` displays `machine.step source = some target`;
 - `sourceWord_isIndexedCode` follows from deterministic option-valued
   execution, whereas `targetWord_isIndexedCode_iff_backwardUnique` makes

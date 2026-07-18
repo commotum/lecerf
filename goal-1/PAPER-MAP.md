@@ -41,11 +41,11 @@ Status labels in this file are:
 | `L2-RULEINV` | §2 | `(p₁,q₁,p₂,q₂,d)` has printed inverse `(p₂*,q₂,p₁*,q₁,-d)` | Audit syntax `printedInverse` is non-public; `printedInverse_fails_on_moving_rule` checks the failure. Public `Rule.apply_eq_some_iff_undo_eq_some` proves the repaired semantic inverse | corrected-target |
 | `L2-REV` | §2 | A machine is reversible when the printed inverse family constitutes a machine and starred runs reverse | `Rule.tapeAction` composes checked-write and movement phases. `FiniteMachine.Reversible`, `backwardCompatible_iff_backwardUnique`, and `toPEquiv` separate table determinism from global inverse execution | corrected-target |
 | `L2-COUPLE` | §2 | Forward rules, inverse rules, and halt-to-star switches run forward and then backward | `Coupling.turnaround` and `returnGadget` use disjoint phase tags and exact ambient inverse laws. The open gadget switches only at forward terminality and retraces through the supplied inverse; the closed gadget uniformly closes inverse-terminal boundaries. Correspondence with the paper's omitted finite rule table remains open | spec-gap |
-| `L3-RELATIONS` | §3 | Three source relations per move rule, plus symbol identities, define an “epimorphism of codes” `τ_max` | Reconstruct every relation family and separately prove source codehood and the induced map's actual properties | spec-gap |
-| `L3-CONFIG` | §3 | `α/ω/β` markers record the next-read and previous-written positions so `uᵢ₊₁ = τ_max(uᵢ)` | Require a well-formed configuration language, encode/decode, and a one-step iff theorem | spec-gap |
-| `L3-MIN` | §3 | After conditional pruning to `τ_min`, code isomorphism implies machine reversibility | Formalize only this printed direction until reachable-language necessity is proved | source-confirmed |
+| `L3-RELATIONS` | §3 | Three source relations per move rule, plus symbol identities, define an “epimorphism of codes” `τ_max` | Stage 8 proves a cleaner analogue: `Edge`, `sourceWord`, `targetWord`, and `stepCodeEpi` give a `PaperCodeEpi` indexed by every successful whole-configuration edge. The schema is generally infinite, although uniformly described by the finite two-tape table. It is not the printed finite local relation family | spec-gap |
+| `L3-CONFIG` | §3 | `α/ω/β` markers record the next-read and previous-written positions so `uᵢ₊₁ = τ_max(uᵢ)` | `ConfigCode.encodeConfig`/`decodeConfig` use self-delimiting complete-configuration words over finite `Bool`. `stepCodeIso_apply_eq_some_iff_exists`, `stepCodeIso_apply_eq_some_iff`, and the exact iterate theorems prove the functional step claim with strong reflection, but no theorem identifies these words with the historical marker language | corrected-target |
+| `L3-MIN` | §3 | After conditional pruning to `τ_min`, code isomorphism implies machine reversibility | For the cleaner edge schema, `targetWord_isIndexedCode_iff_backwardUnique` exactly characterizes target codehood, and `stepCodeIso` constructs a genuine `CodeIso` under whole-step backward uniqueness. This is not a theorem about `τ_min`; the printed historical implication remains unformalized | spec-gap |
 | `L4a-SIM1` | §4a(1) | Every source step is simulated by a finite reversible macro-run | `History.strictlyReachable_of_source_step` gives one positive abstract simulator step, and `History.reversible` supplies the exact inverse. A later tape encoding may refine it to several microsteps | source-confirmed |
-| `L4a-SIM2` | §4a(2) | Source steps use an epimorphism `τ`; simulator steps use a code isomorphism `θ` | Keep machine simulation correctness separate from the later word encoding | source-confirmed |
+| `L4a-SIM2` | §4a(2) | Source steps use an epimorphism `τ`; simulator steps use a code isomorphism `θ` | `stepCodeEpi` supplies the weaker paper map for any deterministic option-valued two-tape step; under `BackwardUnique`, `stepCodeIso` and its one-step/iterate iff theorems supply a genuine code isomorphism action. This is a clean whole-configuration realization, not Lecerf's local marker construction | corrected-target |
 | `L4a-SIM3` | §4a(3) | A checkpoint `λ vᵢ μ wᵢ ν` recovers the source configuration and history | `History.Config.encode/decode/project` and `History.reachable_iff_valid` implement a cleaner full-predecessor checkpoint with exact recovery and no-spurious-checkpoint reflection; correspondence with the printed marker word remains open | spec-gap |
 | `L4a-SIM4` | §4a(4) | `wᵢ = b² rₖ₁ … rₖᵢ b` records one distinguished nonidentity relation per source step | Stage 4 uses an explicit empty initial list and pushes the complete predecessor on every actual source step. `history_length_of_forward` proves one-entry growth. This is intentionally more redundant than the printed token scheme | corrected-target |
 | `L4a-SIM5` | §4a(5) | Simulator halting checkpoints are exactly source-halting checkpoints | `terminal_forward_iff`, `haltsFrom_forward_iff`, and `universalHistory_halts_iff_eval_dom` prove preservation and reflection for the clean simulator | source-confirmed |
@@ -55,8 +55,8 @@ Status labels in this file are:
 | `L4b-THM1H` | Theorem 1 | Halting is recursively unsolvable for arbitrary reversible Turing machines | For fixed finite two-tape control/alphabet types, `HaltingYes` guards an arbitrary supplied table by primitive-recursive `Certified`; `partrecHalts0_manyOne_haltingYes` is an explicit computable reduction and `haltingYes_not_computable` proves noncomputability. This establishes the finite two-tape version, not a one-tape lowering | source-confirmed |
 | `L4b-THM1R` | Theorem 1 | Return to the initial configuration is recursively unsolvable | `ReturnYes` uses `PositiveReturn`, excluding the zero-step loophole. `partrecHalts0_manyOne_returnYes` and `returnYes_not_computable` establish the validity-guarded finite reversible two-tape result | corrected-target |
 | `L4b-THM1T` | Theorem 1 | Passage through a specified configuration other than the initial one is recursively unsolvable | `ReachabilityYes` explicitly requires unequal endpoints and `StrictlyReachable`. `partrecHalts0_manyOne_reachabilityYes` and `reachabilityYes_not_computable` establish the validity-guarded finite reversible two-tape result with both reduction directions | source-confirmed |
-| `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for arbitrary given `w, θ` | Uniform existence of a positive, fully defined iterate; supplied-exponent evaluation is a separate decidable problem | corrected-target |
-| `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, with `w₁ ≠ w₂`, is recursively unsolvable in `n` | Uniform existence of a positive, fully defined iterate from start `w₂` to target `w₁` | corrected-target |
+| `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for arbitrary given `w, θ` | Stage 8 proves the semantic bridge `stepCodeIso_positiveIterate_iff_strictlyReachable`, which also covers positive return when the endpoints coincide. The uniform fixed-orbit predicate, explicit reduction, and undecidability proof remain Stage 9; supplied-exponent evaluation stays separate | corrected-target |
+| `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, with `w₁ ≠ w₂`, is recursively unsolvable in `n` | The same Stage-8 theorem maps positive code orbit reachability exactly to strict machine reachability for supplied endpoints. Packaging unequal words, a computable reduction, and noncomputability remains Stage 9 | corrected-target |
 
 ## Fixed Stage-1 Conventions
 
@@ -94,9 +94,11 @@ Status labels in this file are:
 - The inverse of an arbitrary indexed-code encoding and membership in an
   arbitrary generated submonoid are semantic, so `encodingEquiv`, the
   canonical code-map constructors, and `CodeIso.toPEquiv` are explicitly
-  noncomputable. Stage 7 does not provide a finite code description,
-  executable decoder, or decidable membership procedure; the machine-step
-  encoding must introduce those separately.
+  noncomputable. Stage 8 does not change that general fact. For its specialized
+  successful-edge schema it instead supplies an explicit primitive-recursive
+  Boolean frame codec and a raw finite-table descriptor whose checked
+  interpreter agrees with the semantic action. Runtime input never stores the
+  infinite edge family, a semantic `CodeIso`, or a proof.
 - The paper's fresh-marker hypothesis for the auxiliary family `K` is
   mathematically redundant. Sharp Stage-7 theorems omit it, while separate
   paper-shaped wrapper theorems retain it so the source statement remains
@@ -123,10 +125,12 @@ Status labels in this file are:
   reduction iff. Stage 5 supplies cleaner abstract gadgets and both semantic
   directions; a correspondence with the historical finite tape construction
   remains open.
-- Stage 7 supplies the independent semantic code and partial-iterate API, but
-  it does not encode any machine configuration or transition as a code map.
-  The §3 relation families, executable finite code syntax, and the
-  step/iterate correspondence remain Stage-8 obligations.
+- Stage 8 supplies a cleaner complete-configuration encoding and exact
+  machine-step/iterate correspondence over `Bool`, together with a
+  primitive-recursive finite-table interpreter. Its successful-edge index is
+  generally infinite. The paper's finite local one-tape `α`/`ω`/`β`
+  relations, the `τ_min` claim, and a lowering of the project's reversible
+  two-tape target tables remain separate historical obligations.
 - The header records the proceedings session of 28 October 1963; the footnote
   records presentation of the note on 21 October 1963. Both scan readings are
   retained and have no mathematical effect.
@@ -155,7 +159,10 @@ proposed API targets.
 | Intrinsic and ambient code isomorphism | `generated`, `generator`, `encodingEquiv`, `CodeIso`, `CodeIso.ofCodes`, `CodeIso.toInjectiveMorphism`, `CodeIso.toPEquiv`, `CodeIso.toPEquiv_generator` | 7 (implemented semantically; arbitrary decoding/membership noncomputable) |
 | Paper-specific code epimorphism | `PaperCodeEpi`, `PaperCodeEpi.ofCodes`, `CodeIso.toPaperCodeEpi` | 7 (implemented; unrestricted selector) |
 | Partial and positive iteration | `PEquiv.iterate`, `iterate_succ_apply`, `iterate_add`, `iterate_symm`, `positiveIterate`, `PositiveDefined`, `PositiveIterate`, `positiveIterate_iff_exists_ne_zero` | 7 (implemented semantically) |
-| Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 (unstarted) |
+| Executable Boolean configuration codec | `ConfigCode.unaryFrame`, `encodeConfig`, `decodeConfig`, `encodeConfigs`, `decodeConfigs`, `decodeConfig_eq_some_iff`, `decodeConfigs_eq_some_iff`, `encodeConfig_isIndexedCode`, `encodeConfigs_primrec`, `decodeConfigs_primrec` | 8 (implemented; finite alphabet and exact accepted language) |
+| Successful-edge code maps | `StepCode.Edge`, `sourceWord`, `targetWord`, `sourceWord_isIndexedCode`, `targetWord_isIndexedCode_iff_backwardUnique`, `stepCodeEpi`, `stepCodeIso`, `stepCodeIso_edge` | 8 (implemented as a generally infinite schema uniformly described by a finite table) |
+| Exact step and orbit correspondence | `exactIterate`, `ExactSteps`, `reachable_iff_exists_exactSteps`, `strictlyReachable_iff_exists_exactSteps_succ`, `stepCodeIso_apply_eq_some_iff_exists`, `stepCodeIso_apply_eq_some_iff`, `stepCodeIso_iterate_eq_some_iff_exists`, `stepCodeIso_iterate_eq_some_iff`, `stepCodeIso_positiveIterate_iff_strictlyReachable` | 8 (implemented with strong preservation/reflection) |
+| Executable step-code interpretation | `StepCode.applyWord`, `liftPEquiv`, `liftPEquiv_machine_eq_stepCodeIso_toPEquiv`, `Descriptor`, `Descriptor.Valid`, `Descriptor.checkedApply`, `Descriptor.applyWord_uniform_primrec`, `Descriptor.valid_primrec`, `Descriptor.checkedApply_uniform_primrec`, `Descriptor.applyWord_eq_stepCodeIso_toPEquiv` | 8 (implemented; raw finite-table runtime boundary) |
 | Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 (unstarted) |
 
 Stage 3 supplies the concrete read-write-move semantics and repaired local and
@@ -168,10 +175,13 @@ Stage 7 adds the independent semantic free-monoid layer: exact indexed
 codehood, the set-code bridge, prefix/suffix marker theorems, intrinsic code
 isomorphisms, the paper-specific epimorphism class, ambient partial action, and
 positive iteration. Its arbitrary generated-submonoid decoding and membership
-are deliberately noncomputable. Stage 8 has not started: lowering the machine
-result to the project's one-tape `FiniteMachine`, identifying it with
-Lecerf's literal marker/sweeping table, and constructing executable
-configuration/step code syntax remain separate obligations.
+are deliberately noncomputable. Stage 8 adds a primitive-recursive
+self-delimiting Boolean codec, the successful-edge `PaperCodeEpi`/`CodeIso`,
+strong one-step and iterate reflection, an all-word executable interpreter,
+and a primitive-recursive validity-guarded raw finite-table descriptor. This
+is the completed cleaner edge-schema route. Identifying it with Lecerf's
+literal finite marker/sweeping table or lowering the reversible target tables
+to one tape remains open. Stage 9 has not started.
 
 ## Principal Reduction Map
 
@@ -193,14 +203,22 @@ ReachabilityYes (compileReachability code)
 ¬ComputablePred ReachabilityYes
 
 finite reversible two-tape steps/configurations
-  -- Stage 7 now supplies semantic CodeIso/PEquiv infrastructure;
-     Stage 8 still owes finite configuration syntax and the step/iterate iff -->
-positive fixed orbit / distinct orbit of a partial code isomorphism
+  -- primitive-recursive Bool framing and finite-table descriptor;
+     generally infinite successful-edge CodeIso as proof-side semantics;
+     checked one-step/iterate/positive-reachability iff -->
+semantic positive fixed orbit / distinct orbit of the edge code isomorphism
+
+  -- Stage 9 still owes finite target problem inputs, explicit computable
+     reduction maps, endpoint guards, and both undecidability transfers -->
+positiveFixedOrbit_not_computable / distinctOrbit_not_computable
 ```
 
 Every Stage-6 arrow above is checked separately; the fixed tables do not hide a
-varying compiler. Stage 7 checks the independent semantic code-isomorphism and
-positive-iterate vocabulary only; it does not establish the displayed final
-arrow or its computability. The machine-step encoding is still a Stage-8
-theorem obligation, as are any one-tape lowering and historical-encoding
-correspondence.
+varying compiler. Stage 8 checks the displayed machine-to-semantic-orbit arrow
+and separately proves that its Boolean codec, raw finite descriptor, validity
+guard, and forward interpreter are primitive recursive. The generally
+infinite `Edge` family and noncomputable semantic `CodeIso` are not runtime
+input. Stage 9 still must define the two uniform orbit decision problems and
+give explicit computable reductions with both directions. A one-tape lowering
+and correspondence with Lecerf's historical local encoding remain open and
+are not prerequisites silently inferred from the cleaner theorem.

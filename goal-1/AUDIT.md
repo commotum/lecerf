@@ -52,7 +52,7 @@ Status vocabulary:
 | `A-031` | Generic finite enumeration and selected encodings are noncomputable even though a reduction witness must be computable | `Finset.univ.toList`, the existential universal program, and fixed `Primcodable` choices occur in compiler constants; treating a varying compilation as computable would be unjustified | Stage 6 fixes the universal program, finite source table, and three target tables once. Only `sourceStart`, `startCheckpoint`, `bottomTarget`, and `compileHalting`/`compileReturn`/`compileReachability` vary, and each has a checked primitive-recursive theorem. The noncomputable boundary is therefore closed data, not a varying oracle | resolved-design |
 | `A-032` | The paper requires the fresh marker to be absent from both the existing code `C` and the auxiliary prefix/suffix family `K` | In the marker construction every auxiliary word receives a new boundary marker, so occurrences of that marker inside an auxiliary word do not compromise boundary recognition | Stage 7 proves the sharper `isIndexedCode_prependMarkerExtension_of_freshFor_left` and `isIndexedCode_appendMarkerExtension_of_freshFor_left` using freshness only for `C`. The paper-shaped wrapper theorems retain the stated, redundant `FreshFor marker k` hypothesis for source fidelity | resolved-design |
 | `A-033` | A semantic code equivalence does not by itself provide executable decoding or generated-submonoid membership | Inverting an arbitrary injective free-monoid lift and deciding membership in an arbitrary `Submonoid.closure` have no uniform decision procedure in the Stage-7 representation | `encodingEquiv`, `CodeIso.ofCodes`, `CodeIso.toPEquiv`, and `PaperCodeEpi.ofCodes` remain deliberately `noncomputable`. Stage 8 does not claim a general algorithm for them: it supplies a specialized primitive-recursive Boolean codec and a raw finite-table `Descriptor` whose checked executable interpreter agrees with the semantic edge-code action whenever the table is valid. Thus no semantic choice or proof object is stored in later runtime input | resolved-design |
-| `A-034` | A complete-configuration edge schema is not Lecerf's finite local `alpha`/`omega`/`beta` relation list | §3 prints finitely many local one-tape relation families per rule. The project's undecidability source is instead a conventional finite reversible two-tape table, and no two-tape-to-one-tape lowering for those target tables has been proved | Stage 8 uses self-delimiting words over the finite alphabet `Bool` and indexes source/target words by all successful configuration edges. This family is generally infinite but uniformly described and interpreted by the supplied finite table. It proves the required step and iterate semantics as a cleaner construction, but no declaration identifies it with `tau_max`, `tau_min`, the historical marker words, or a one-tape lowering | isolated-obligation |
+| `A-034` | A complete-configuration edge schema is not Lecerf's finite local `α`/`ω`/`β` relation list | §3 prints finitely many local one-tape relation families per rule. The project's undecidability source is instead a conventional finite reversible two-tape table, and no two-tape-to-one-tape lowering for those target tables has been proved | Stage 8 uses self-delimiting words over the finite alphabet `Bool` and indexes source/target words by all successful configuration edges. This family is generally infinite but uniformly described and interpreted by the supplied finite table. It proves the required step and iterate semantics as a cleaner construction, but no declaration identifies it with `τ_max`, `τ_min`, the historical marker words, or a one-tape lowering | isolated-obligation |
 
 Stage 7 closes `A-001`, `A-003`, `A-009`, and `A-019` at the semantic API
 level. Stage 8 closes the specialized executable boundary in `A-033` for its
@@ -92,7 +92,7 @@ unary self-delimiting encodings of complete configurations over `Bool` and a
 generally infinite successful-edge index. The raw runtime descriptor is only
 the finite two-tape table; the edge family and semantic `CodeIso` remain
 proof-side objects. This is a cleaner replacement theorem, not a transcription
-of Lecerf's local `alpha`/`omega`/`beta` syntax.
+of Lecerf's local `α`/`ω`/`β` syntax.
 
 ## No-Cheating Audit Categories
 
@@ -386,8 +386,9 @@ executability or trust.
 
 - Added `Transition.Exact`, executable
   `Encoding.{ConfigCode,ConfigCodeEffectivity}`, and
-  `Encoding.StepCode.{Core,Correctness,Interpreter,Effectivity,Audit}`. The
-  audit is a diagnostic leaf and is not a runtime dependency.
+  `Encoding.StepCode.{Core,Correctness,Interpreter,Effectivity,API,Audit}`.
+  `API` is a thin semantic/effectivity boundary re-exported by `Lecerf`; the
+  audit is a diagnostic leaf and is not a public or runtime dependency.
 - `ConfigCode` frames the canonical `Primcodable` number of a complete
   two-tape configuration as `true^n false` over the finite alphabet `Bool`.
   Single and concatenated decoders have exact accepted-language theorems;
@@ -423,14 +424,16 @@ executability or trust.
   `decide`, not generated native-evaluation axioms.
 - Available focused evidence includes `Transition.Exact` (729 jobs),
   `ConfigCodeEffectivity` (805), `StepCode.Interpreter` (844),
-  `StepCode.Correctness` (845), `StepCode.Audit` (850), and
-  `StepCode.Effectivity` (852). The audit replays the representative axiom
-  results above; they contain only `propext`, `Classical.choice`, and
-  `Quot.sound`, with the pure exact-transition bridge omitting choice.
-  Focused forbidden-construct and whitespace/diff checks passed. Final
-  API/root/full-build counts are left for the main Stage-8 integration pass.
+  `StepCode.Correctness` (845), and `StepCode.Effectivity` (852). A focused
+  audit integration build passed with 855 jobs before the final import
+  refactor. After that refactor, the public root and full builds passed with
+  921 jobs, and the combined post-refactor audit/root build passed with 922.
+  The audit replays the representative axiom results above; they contain only
+  `propext`, `Classical.choice`, and `Quot.sound`, with the pure
+  exact-transition bridge omitting choice. Focused and whole-project
+  forbidden-construct, whitespace, and diff checks passed.
 - This completed stage is a cleaner, generally infinite configuration-edge
   schema uniformly described by a finite two-tape table. It is **not**
-  Lecerf's finite local `alpha`/`omega`/`beta` list, a proof about `tau_min`, or
+  Lecerf's finite local `α`/`ω`/`β` list, a proof about `τ_min`, or
   a lowering of the reversible two-tape tables to a one-tape machine. Stage 9
   remains unstarted.

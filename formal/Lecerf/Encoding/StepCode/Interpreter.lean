@@ -155,51 +155,6 @@ variable {Q : Type u} {Γ₁ : Type v} {Γ₂ : Type w}
   [Primcodable Q] [Primcodable Γ₁] [Primcodable Γ₂]
   [DecidableEq Q] [DecidableEq Γ₁] [DecidableEq Γ₂]
 
-private theorem lift_generator_coe {A : Type x} {I : Type y}
-    (codewords : I → Word A) (indices : Word I) :
-    ((FreeMonoid.lift (generator codewords) indices : generated codewords) :
-        Word A) =
-      FreeMonoid.lift codewords indices := by
-  induction indices using FreeMonoid.inductionOn' with
-  | one => simp
-  | mul_of index indices ih =>
-      simp only [map_mul, FreeMonoid.lift_eval_of]
-      exact congrArg (fun word : Word A => codewords index * word) ih
-
-/-- A code isomorphism acts generatorwise on every finite word of indices. -/
-private theorem codeIso_toPEquiv_lift {A : Type x} {I : Type y}
-    (iso : CodeIso A I) (indices : Word I) :
-    iso.toPEquiv (FreeMonoid.lift iso.source indices) =
-      some (FreeMonoid.lift iso.target indices) := by
-  classical
-  have sourceMem :
-      FreeMonoid.lift iso.source indices ∈ generated iso.source := by
-    change FreeMonoid.lift iso.source indices ∈
-      Submonoid.closure (Set.range iso.source)
-    rw [← FreeMonoid.mrange_lift]
-    exact ⟨indices, rfl⟩
-  rw [iso.toPEquiv_apply_of_mem _ sourceMem]
-  congr 1
-  let sourceLift : Word I →* generated iso.source :=
-    FreeMonoid.lift (generator iso.source)
-  let targetLift : Word I →* generated iso.target :=
-    FreeMonoid.lift (generator iso.target)
-  have mappedLift : iso.toMulEquiv.toMonoidHom.comp sourceLift = targetLift := by
-    apply FreeMonoid.hom_eq
-    intro index
-    exact iso.map_generator index
-  have sourceEq :
-      (⟨FreeMonoid.lift iso.source indices, sourceMem⟩ :
-          generated iso.source) = sourceLift indices := by
-    apply Subtype.ext
-    exact (lift_generator_coe iso.source indices).symm
-  rw [sourceEq]
-  have mapped := congrArg (fun hom : Word I →* generated iso.target => hom indices)
-    mappedLift
-  change iso.toMulEquiv (sourceLift indices) = targetLift indices at mapped
-  rw [mapped]
-  exact lift_generator_coe iso.target indices
-
 private theorem encodeEdgeSources {machine : FiniteMachine Q Γ₁ Γ₂}
     (edges : List (Edge machine)) :
     ConfigCode.encodeConfigs (edges.map Edge.source) =
@@ -267,7 +222,7 @@ private theorem semantic_apply_edgeWords
         (ConfigCode.encodeConfigs (edges.map Edge.source)) =
       some (ConfigCode.encodeConfigs (edges.map Edge.target)) := by
   rw [encodeEdgeSources, encodeEdgeTargets]
-  exact codeIso_toPEquiv_lift (stepCodeIso machine backward)
+  exact (stepCodeIso machine backward).toPEquiv_lift
     (FreeMonoid.ofList edges)
 
 private theorem applyWord_machine_eq_some_iff_edges

@@ -257,8 +257,10 @@ theorem mergeMachine_targetWord_not_isIndexedCode :
 #print axioms Lecerf.Encoding.StepCode.targetWord_isIndexedCode_iff_backwardUnique
 #print axioms Lecerf.Encoding.StepCode.stepCodeIso_apply_eq_some_iff_exists
 #print axioms Lecerf.Encoding.StepCode.stepCodeIso_iterate_eq_some_iff
+#print axioms Lecerf.Encoding.StepCode.stepCodeIso_positiveIterate_iff_strictlyReachable
 #print axioms Lecerf.Encoding.StepCode.liftPEquiv_machine_eq_stepCodeIso_toPEquiv
 #print axioms Lecerf.Encoding.StepCode.Descriptor.checkedApply_uniform_primrec
+#print axioms Lecerf.Encoding.StepCode.Descriptor.applyWord_eq_stepCodeIso_toPEquiv
 #print axioms Lecerf.Encoding.StepCode.Descriptor.checkedApply_eq_stepCodeIso_toPEquiv
 #print axioms Lecerf.Transition.pequiv_positiveIterate_iff_strictlyReachable
 
