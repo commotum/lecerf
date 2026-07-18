@@ -523,15 +523,19 @@ recursive. The historical correspondence to Lecerf's compact one-tape marker
 scheme, including a two-to-one-tape lowering, remains future work and must not
 be inferred from these two-tape declarations.
 
-## Tentative Module Layout
+## Realized Module Layout
 
 ```text
 formal/
   Lecerf.lean
   Lecerf/
+    PublicAudit.lean
+    Audit.lean
     Transition/
       Core.lean
       Reversible.lean
+      Exact.lean
+      ExactEffectivity.lean
       Audit.lean
       API.lean
     Machine/
@@ -583,8 +587,15 @@ formal/
       Audit.lean
       API.lean
     Encoding/
-      MachineStep.lean
-      Audit.lean
+      ConfigCode.lean
+      ConfigCodeEffectivity.lean
+      StepCode/
+        Core.lean
+        Interpreter.lean
+        Correctness.lean
+        Effectivity.lean
+        Audit.lean
+        API.lean
     Undecidability/
       EffectiveTransition.lean
       API.lean
@@ -593,13 +604,19 @@ formal/
         Reduction.lean
         Audit.lean
         API.lean
-      CodeIterates.lean
-    Paper/
-      Claims.lean
+      CodeIterates/
+        Problems.lean
+        Effectivity.lean
+        Correspondence.lean
+        Reduction.lean
+        Audit.lean
+        API.lean
 ```
 
-Create files only when their stage needs them. Audit probes remain leaves;
-internal modules never import the public root.
+`Lecerf.lean` and feature `API` leaves are the public re-export surface.
+Feature `Audit` leaves, `PublicAudit`, and the aggregate `Lecerf.Audit` are
+diagnostic targets only; no public or internal proof/runtime module imports
+them. Internal leaves import narrow dependencies rather than the public root.
 
 ## Build Policy
 
@@ -985,5 +1002,6 @@ infinite successful-edge schema uniformly interpreted from a finite machine
 table; there is still no finite generator-image list for that schema. A
 literal finite local `alpha`/`omega`/`beta` encoding, a connection from it to
 the present whole-configuration encoding, and the two-to-one-tape lowering
-remain separate obligations. Stage 10 has not begun those historical
-reconciliation tasks.
+remain separate obligations. Stage 10 records them as historical follow-up
+work and does not claim that the cleaner construction is the printed local
+presentation.

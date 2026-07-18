@@ -1230,15 +1230,15 @@ Implemented Stage-8 semantic/effective bridge:
 
 Implemented Stage-9 generic arrows:
   finite reversible two-tape positive return
-    -> positive fixed orbit of a partial code isomorphism
+    -> positive fixed orbit of a code isomorphism's partial ambient action
   finite reversible two-tape distinct reachability
-    -> distinct orbit of a partial code isomorphism
+    -> distinct orbit of a code isomorphism's partial ambient action
 
 Implemented direct compositions:
   Nat.Partrec.Code halting
-    -> positive fixed orbit of a partial code isomorphism
+    -> positive fixed orbit of a code isomorphism's partial ambient action
   Nat.Partrec.Code halting
-    -> distinct orbit of a partial code isomorphism
+    -> distinct orbit of a code isomorphism's partial ambient action
 ```
 
 The three Stage-6 arrows are direct packaged reductions. Internally, their iff

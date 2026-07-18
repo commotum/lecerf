@@ -262,29 +262,32 @@ The original goal is complete only when all of the following are checked:
 10. Focused module builds and `lake build` succeed; scans find no unclassified
     `sorry`, `admit`, `axiom`, or forbidden shortcut; `git diff --check` passes.
 
-## Proposed Lean Dependency Shape
+## Realized Lean Dependency Shape
 
 ```text
 Transition/Core
   -> Transition/Reversible
-  -> Machine/Core
-  -> Machine/History/Core
-  -> Machine/History/Correctness
-  -> Machine/History/Computable
-  -> Machine/Coupling
-  -> Undecidability/ReversibleMachine
+  -> Transition/Exact
+  -> Transition/ExactEffectivity
 
-Word/Code
-  -> Word/CodeMorphism
-  -> Encoding/MachineStep
-  -> Undecidability/CodeIterates
+Machine/{Tape,Core,Reversible,Effectivity}
+  -> Machine/History/{Core,Correctness,Computable}
+  -> Machine/Coupling/{Core,Correctness,Computable}
+  -> Machine/Compiler/*
+  -> Machine/TwoTape/{Core,Reversible,Validity,HistoryCompiler/*}
+  -> Undecidability/ReversibleTwoTape/{Problems,Reduction}
 
-Audit/* and API leaves depend downward; core modules never import them.
+Word/{Code,Prefix,CodeMorphism}
+  -> Encoding/{ConfigCode,ConfigCodeEffectivity}
+  -> Encoding/StepCode/{Core,Interpreter,Correctness,Effectivity}
+  -> Undecidability/CodeIterates/{Problems,Effectivity,Correspondence,Reduction}
+
+Thin API leaves and Lecerf.lean re-export stable declarations.
+Audit leaves and Lecerf.Audit depend downward and are never publicly imported.
 ```
 
-The realized history hierarchy also depends sideways on
-`Machine/Effectivity` and `Machine/SourceBridge`; exact import edges are
-recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
+Exact import edges, including the fixed universal-source compiler and the
+two-tape history compiler, are recorded in `DEPENDENCIES.md`.
 
 ## Stage Index
 
@@ -431,26 +434,19 @@ by recording sufficient history, with full correctness and halting reflection.
 
 ### Stage Results
 
-- `ConfigCode` and `ConfigCodeEffectivity` provide exact self-delimiting
-  Boolean codecs, indexed codehood, and primitive-recursive/computable single
-  and concatenated encoders/decoders.
-- `StepCode.Core` separates the always-available `PaperCodeEpi` from the
-  genuine `CodeIso`; target codehood is equivalent to `BackwardUnique` for the
-  whole executable step.
-- `StepCode.Correctness` and `Transition.Exact` prove strong one-step, exact
-  iterate, definedness, terminal-failure, and positive-reachability
-  preservation and reflection.
-- `StepCode.Interpreter` agrees with the semantic ambient code action on every
-  Boolean word. `StepCode.Effectivity` stores only a raw finite table, uses the
-  primitive-recursive syntactic validity guard, and proves its forward raw and
-  checked word interpreters uniformly primitive recursive and computable.
-- Audits cover all moves, blank extension, malformed/noncanonical frames,
-  terminal failure, and the non-backward-unique target-code boundary. Focused,
-  API/root, and full builds plus forbidden-construct and axiom scans passed.
-- The construction remains a cleaner generally infinite edge schema. No
-  theorem claims the historical finite local relation list or a two-to-one-tape
-  lowering. Stage 9 consumes exactly its finite descriptor/interpreter
-  boundary without claiming that historical identification.
+- `History.forward` records each complete predecessor configuration, while
+  `History.backward` recomputes and validates the popped edge; together they
+  form an exact ambient `PEquiv`, including on malformed states.
+- `History.reachable_iff_valid` proves initialization, preservation, and
+  reflection of the generated-history invariant. Forward simulation, source
+  projection, checkpoint uniqueness, one-token-per-step growth, reverse
+  retracing, terminality, and `haltsFrom_forward_iff` are checked.
+- `FiniteMachine.step_uniform_primrec` and the finite history interpreters are
+  uniformly primitive recursive in a raw finite source description. The later
+  Stage-6 two-tape compiler realizes the same history principle as an ordinary
+  finite local machine; it is not identified with Lecerf's marker layout.
+- Focused, public-root, audit, and full builds passed, and representative axiom
+  prints contain only Lean/mathlib foundational axioms.
 
 ## 5-COUPLING
 
@@ -578,6 +574,29 @@ morphism/isomorphism, closing the construction omitted by the note.
 - The result says exactly when an iterate is defined and remains a valid
   encoded configuration.
 - Focused and adjacent builds, scans, and diff checks pass.
+
+### Stage Results
+
+- `ConfigCode` and `ConfigCodeEffectivity` provide exact self-delimiting
+  Boolean codecs, indexed codehood, and primitive-recursive/computable single
+  and concatenated encoders/decoders.
+- `StepCode.Core` separates the always-available `PaperCodeEpi` from the
+  genuine `CodeIso`; target codehood is equivalent to `BackwardUnique` for the
+  whole executable step.
+- `StepCode.Correctness` and `Transition.Exact` prove strong one-step, exact
+  iterate, definedness, terminal-failure, and positive-reachability
+  preservation and reflection.
+- `StepCode.Interpreter` agrees with the semantic ambient code action on every
+  Boolean word. `StepCode.Effectivity` stores only a raw finite table, uses the
+  primitive-recursive syntactic validity guard, and proves its forward raw and
+  checked word interpreters uniformly primitive recursive and computable.
+- Audits cover all moves, blank extension, malformed/noncanonical frames,
+  terminal failure, and the non-backward-unique target-code boundary. Focused,
+  API/root, and full builds plus forbidden-construct and axiom scans passed.
+- The construction remains a cleaner generally infinite edge schema. No
+  theorem claims the historical finite local relation list or a two-to-one-tape
+  lowering. Stage 9 consumes exactly its finite descriptor/interpreter
+  boundary without claiming that historical identification.
 
 ## 9-ITERATE-UNDEC
 

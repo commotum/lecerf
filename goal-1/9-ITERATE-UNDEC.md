@@ -67,7 +67,8 @@ a supplied positive exponent.
    checked step-code interpreter. Prove supplied-exponent predicates primitive
    recursive/computable and, if the pinned API supports a clean proof, prove
    the existential problems recursively enumerable by partial witness search.
-3. Prove checked iteration agrees with semantic partial `CodeIso` iteration
+3. Prove checked iteration agrees with iteration of the semantic partial
+   ambient action `CodeIso.toPEquiv`
    for every exponent. Specialize to canonical configuration frames and derive
    exact positive-orbit iff strict machine reachability.
 4. Define primitive-recursive maps from Stage-6 return/reachability inputs to

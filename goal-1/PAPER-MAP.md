@@ -126,7 +126,8 @@ Status labels in this file are:
   The checked action and `ExactSteps` propagate `none` through every
   intermediate application. Under the guard,
   `checkedExactSteps_iff_stepCodeIso_iterate_eq_some` and its positive wrapper
-  identify that executable behavior with the proof-side partial `CodeIso`;
+  identify that executable behavior with the proof-side partial ambient action
+  `CodeIso.toPEquiv`;
   neither an invalid table nor an undefined iterate is repaired or totalized.
 
 ### Source limitations
@@ -160,7 +161,7 @@ Status labels in this file are:
 Names in completed rows are exact checked declarations. Scope qualifications
 in the stage column are part of the claim mapping.
 
-| Claim family | Declaration family | Planned stage |
+| Claim family | Declaration family | Stage and status |
 |---|---|---:|
 | Generic reversible execution | `Step`, `BackwardUnique`, `ReversibleStep`, `ReversibleStep.next_eq_some_iff_prev_eq_some`, `ReversibleStep.reachable_iff_reverse_reachable`, `ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable` | 2 (implemented) |
 | Concrete machine semantics | `Tape`, `Config`, `Rule`, `FiniteMachine`, `FiniteMachine.step`, `FiniteMachine.TableDeterministic`, `FiniteMachine.Reversible` | 3 (implemented) |
