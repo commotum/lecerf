@@ -89,11 +89,12 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   finite-support tapes, finite first-match rule tables, repaired phased inverse
   execution, whole-machine reversibility, and a fixed primitive-recursive
   `Nat.Partrec.Code.evaln` search source.
-- Stage 4 is in progress. Its boundary is an abstract reversible simulator
-  that stores complete predecessor configurations, proves its history
-  invariant from initialization and execution, and preserves computability
-  for an explicitly computable source interpreter. Coupling and
-  undecidability remain outside this stage.
+- Stage 4 is complete. `Lecerf.Machine.Effectivity` and
+  `Lecerf.Machine.History.{Core,Correctness,Computable,Audit,API}` compile.
+  The public construction stores complete predecessor configurations, is an
+  exact `PEquiv` on all history states, proves generated history exactly
+  equivalent to reachability, preserves and reflects halting, and is primitive
+  recursive jointly in an existing finite-machine description.
 
 ## Current Design Decisions
 
@@ -132,6 +133,19 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - The first complete reversible simulation should use an explicit history log.
   A faithful tape-level version of Lecerf's marker construction can be a later
   refinement.
+- The implemented history log stores the entire previous source configuration
+  on each successful step. `backward` recomputes and validates the popped edge,
+  so `reversible` is a genuine `PEquiv` even on malformed ambient histories.
+  `reachable_iff_valid` excludes malformed checkpoints from runs starting at
+  an empty history, and `haltsFrom_forward_iff` proves halting in both
+  directions.
+- `FiniteMachine.step_uniform_primrec`,
+  `History.finiteForward_uniform_primrec`, and
+  `History.finiteBackward_uniform_primrec` establish effective interpretation
+  jointly in a finite source description without enumerating its alphabet.
+  The simulator state nevertheless contains an unbounded abstract list; no
+  generated ordinary `FiniteMachine` implementing that log is claimed. That
+  tape/microstate compiler remains a later reduction bridge.
 - Use `FreeMonoid α` for words and define indexed codehood by injectivity of
   `FreeMonoid.lift`. Relate this to mathlib's set-based uniquely-decodable API
   only together with generator injectivity.
@@ -198,7 +212,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 | 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
 | 2 | `TRANSITION` | Complete | Reversible partial-transition API |
 | 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
-| 4 | `HISTORY-SIM` | In progress | Constructive reversible history simulation |
+| 4 | `HISTORY-SIM` | Complete | Constructive reversible history simulation |
 | 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |
 | 7 | `WORD-CODES` | Not started | Free-monoid code and morphism API |

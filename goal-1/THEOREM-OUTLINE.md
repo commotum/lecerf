@@ -1,6 +1,6 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 and Stage 3 declarations are identified as implemented below. All
+Stage 2 through Stage 4 declarations are identified as implemented below. All
 later-layer names remain proposed Lean surfaces and may be refined when
 implementation evidence requires it.
 
@@ -203,46 +203,121 @@ project records that obstruction instead of fabricating a compiler. A later
 undecidability stage must still provide an explicit computable finite-machine
 compiler and its own halting iff.
 
-## 3. History-Recording Reversible Simulation
+## 3. History-Recording Reversible Simulation (implemented)
 
-For a deterministic source `next : C → Option C`, a simulator checkpoint
-contains the current source configuration and a history list. Each item records
-the selected transition/rule and precisely the information erased by that
-step. Microstep control uses a finite phase type.
+Public modules:
 
-The base checkpoint has an empty history. This deliberately repairs the
-paper's inconsistent `w₀ = e` versus `w₀ = b³` formulas.
-
-Required theorem chain:
-
-```lean
-encode_initial :
-  decodeCheckpoint (initialCheckpoint c) = some (c, [])
-
-checkpoint_step :
-  sourceStep c = some c' →
-  StateTransition.Reaches₁ simStep
-    (checkpoint c h) (checkpoint c' (record c c' :: h))
-
-checkpoint_reflect :
-  StateTransition.Reaches simStep
-    (checkpoint c []) (checkpoint c' h) →
-  ∃ trace, sourceTrace sourceStep c trace c' ∧ historyMatches trace h
-
-history_spec :
-  decodeCheckpoint s = some (c, h) → historyInvariant sourceMachine c h
-
-historySim_halts_iff :
-  HaltsFrom simStep (checkpoint c []) ↔ HaltsFrom sourceStep c
-
-historySim_reversible :
-  Machine.Reversible historySimulator
+```text
+Lecerf.Machine.Effectivity
+Lecerf.Machine.History.Core
+Lecerf.Machine.History.Correctness
+Lecerf.Machine.History.Computable
+Lecerf.Machine.History.API
 ```
 
-The actual statement may use `StateTransition.Respects` for forward macro-step
-simulation, but that theorem does not replace checkpoint reflection. The
-construction on finite machine descriptions and its validity evidence must be
-computable.
+`Lecerf.Machine.History.Audit` is a non-public diagnostic leaf.
+
+For any deterministic partial source `next : Step σ`, the clean simulator
+stores the current source state and the complete predecessor at every
+successful step:
+
+```lean
+structure History.Config (σ) where
+  current : σ
+  history : List σ
+
+History.forward next ⟨current, history⟩ =
+  (next current).map fun target => ⟨target, current :: history⟩
+```
+
+`History.backward` accepts a popped predecessor only if recomputing its source
+step produces the recorded current state. Thus a blind pop from malformed
+ambient data is impossible. Checked representation and inverse declarations
+include:
+
+```lean
+History.Config.encode
+History.Config.decode
+History.Config.project
+History.Config.decode_encode
+History.Config.encode_decode
+History.Config.encode_injective
+
+History.forward_eq_some_iff_backward_eq_some
+History.reversible : ReversibleStep (History.Config σ)
+```
+
+This is a correctness-first equivalent construction, not Lecerf's compact
+marker tape. One source step is one simulator step; the complete predecessor
+contains more information than the minimal erased symbol/rule identifier.
+The empty `Config.initial` repairs the paper's inconsistent empty versus `b³`
+base history.
+
+The invariant is generated from the initial state and actual source steps:
+
+```lean
+History.Valid next start : History.Config σ → Prop
+
+History.reachable_iff_valid :
+  Reachable (History.forward next) (History.Config.initial start) config ↔
+    History.Valid next start config
+
+History.strictlyReachable_of_source_step :
+  next current = some target →
+  StrictlyReachable (History.forward next)
+    (History.Config.encode current history)
+    (History.Config.encode target (current :: history))
+
+History.source_reachable_iff_exists_reachable_checkpoint :
+  Reachable next start target ↔
+    ∃ history, Reachable (History.forward next)
+      (History.Config.initial start)
+      (History.Config.encode target history)
+
+History.terminal_forward_iff :
+  Terminal (History.forward next) config ↔ Terminal next config.current
+
+History.haltsFrom_forward_iff :
+  HaltsFrom (History.forward next) (History.Config.initial start) ↔
+    HaltsFrom next start
+```
+
+`reachable_iff_valid` is the exact reflection/no-spurious-checkpoint theorem;
+the invariant is not a theorem precondition that callers must assume.
+`history_length_of_forward` proves one-entry growth. Checkpoint uniqueness is
+correctly indexed by elapsed time:
+`Valid.eq_of_history_length_eq` and
+`reachable_checkpoint_unique_of_history_length_eq` show equality at equal
+history lengths. A cycle may revisit the same source state with a longer valid
+history, as the audit checks. `Valid.history_eq_nil_iff` makes the fresh
+checkpoint unique, and `Valid.backward_reachable_initial` proves inverse
+retracking to it.
+
+Effectivity is checked at both abstraction levels:
+
+```lean
+FiniteMachine.step_uniform_primrec :
+  Primrec fun data : FiniteMachine Q Γ × Machine.Config Q Γ =>
+    data.1.step data.2
+
+History.forwardInterpreter_primrec
+History.backwardInterpreter_primrec
+
+History.finiteForward_uniform_primrec
+History.finiteBackward_uniform_primrec
+History.finiteDescribedInitial_primrec
+
+History.universalHistoryStart_joint_primrec
+History.universalForward_primrec
+History.universalBackward_primrec
+History.universalHistory_halts_iff_eval_dom
+```
+
+The finite theorems interpret an existing finite machine description against
+an unbounded abstract history log. They do not generate a conventional
+one-tape `FiniteMachine` implementing that log. The latter tape/microstate
+compiler remains a distinct bridge before a finite reversible-machine
+undecidability target can be claimed.
 
 ## 4. Forward–Reverse Coupling
 

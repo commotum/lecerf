@@ -164,4 +164,92 @@ universal source. Do not begin coupling or any undecidability reduction.
 
 ## Stage Results
 
-- In progress.
+- Added `Lecerf.Machine.History.Core`. `History.Config σ` stores a current
+  source state and a newest-first `List σ` of complete predecessors, with a
+  constructive `Primcodable` instance. `Config.encode`, `decode`, and
+  `project` have checked round trips/projection laws, and `Config.initial`
+  starts with an empty history.
+- `History.forward` executes one source step and pushes its predecessor.
+  `History.backward` pops only after recomputing the predecessor and checking
+  that it produces the recorded current state. The exact ambient-state law
+  `forward_eq_some_iff_backward_eq_some` packages these operations as
+  `History.reversible : ReversibleStep (History.Config σ)`. Consequently the
+  simulator is forward deterministic and backward-unique even when the source
+  transition merges configurations.
+- `History.Valid` is generated only by the empty initial history and actual
+  source steps. `valid_of_reachable`, `Valid.reachable`, and
+  `reachable_iff_valid` prove initialization, preservation, and the exact
+  no-spurious-checkpoint characterization instead of assuming an invariant.
+- Added `Lecerf.Machine.History.Correctness`. A successful source step is one
+  positive simulator step (`strictlyReachable_of_source_step`), and
+  `history_length_of_forward` proves exact one-entry growth.
+  `source_reachable_iff_exists_reachable_checkpoint` proves both lifting and
+  reflection. `terminal_forward_iff`, `haltsFrom_forward_iff`, and
+  `haltsFrom_reversible_iff` prove terminality and halting preservation and
+  reflection.
+- Checkpoint uniqueness is stated with the necessary qualifier:
+  `Valid.eq_of_history_length_eq` and
+  `reachable_checkpoint_unique_of_history_length_eq` show that generated
+  checkpoints at the same elapsed step count are equal. It would be false to
+  claim that a current source state has only one history, because a cycle may
+  revisit it. `Valid.history_eq_nil_iff` proves that the only generated empty
+  history is the initial checkpoint. `Valid.backward_reachable_initial`
+  proves that checked inverse execution retraces every valid log to it.
+- Added `Lecerf.Machine.Effectivity`. It proves primitive recursiveness of
+  canonical side operations, tape read/write/move/action, rule application,
+  first-success list execution, and the joint finite-machine interpreter.
+  The headline result is `FiniteMachine.step_uniform_primrec`; it requires
+  `Primcodable`/decidable equality for states and alphabet plus the chosen
+  blank, but no `Finite` or `Fintype` enumeration.
+- Added `Lecerf.Machine.History.Computable`. `forwardInterpreter_primrec` and
+  `backwardInterpreter_primrec` prove the construction uniform for any jointly
+  primitive-recursive description interpreter. The finite specializations
+  `finiteForward_uniform_primrec`, `finiteBackward_uniform_primrec`, and
+  `finiteDescribedInitial_primrec` establish effectivity jointly in the
+  existing `FiniteMachine` description. Fixed-source and `Computable`
+  corollaries are also exported.
+- `universalHistoryStart_joint_primrec`, `universalForward_primrec`, and
+  `universalBackward_primrec` instantiate the construction for the checked
+  universal evaluator search. `universalHistory_halts_iff_eval_dom` gives the
+  exact effective halting equivalence with `Nat.Partrec.Code.eval`. A derived
+  structural `DecidableEq Nat.Partrec.Code` instance was added to
+  `SourceBridge` so checked reverse execution of this source remains
+  constructive.
+- This is an effective abstract history interpreter whose runtime state has an
+  unbounded list of source configurations. It is not a generated conventional
+  one-tape `FiniteMachine`, a compact erased-symbol recorder, or a proof of
+  correspondence with Lecerf's marker layout. The finite tape/microstate
+  compiler and historical encoding connection remain explicit later bridges;
+  no undecidability conclusion follows in this stage.
+- Added non-public `Lecerf.Machine.History.Audit`. A merging source is not
+  backward-unique, while its full-history lift is; executable examples check
+  branch disambiguation and malformed-pop rejection. A Boolean cycle exhibits
+  two valid histories for the same current source state at different lengths.
+  `History.API` is public through `Machine.API`; neither audit leaf is
+  re-exported.
+- Focused builds passed for `Machine.Effectivity` (820 jobs), `History.Core`
+  (821), `History.Correctness` (822), `History.Computable` (830 after the
+  finite-machine effectivity import), and `History.Audit` (831). The history
+  API, machine API, and root adjacent build passed with 835 jobs. Full
+  `lake build` passed with 835 jobs.
+- A temporary root-import axiom probe was deleted after checking representative
+  declarations. Exact results were:
+  - `forward_eq_some_iff_backward_eq_some` and `reachable_iff_valid`:
+    `propext`, `Quot.sound`;
+  - `Valid.eq_of_history_length_eq`, `haltsFrom_forward_iff`,
+    `FiniteMachine.step_uniform_primrec`,
+    `finiteForward_uniform_primrec`, and
+    `universalHistory_halts_iff_eval_dom`: `propext`,
+    `Classical.choice`, `Quot.sound` inherited through mathlib encodings,
+    simplification, and transition/`Part` infrastructure.
+  No project-specific axiom was introduced.
+- Scans over `Machine.Effectivity` and all history Lean sources found no
+  `sorry`, `admit`, `axiom`, `unsafe`, `noncomputable`, or explicit
+  `Classical.choice`. Boundary scans found no `StateTransition.eval` runtime
+  dependency, coupling/positive-return gadget, many-one reduction,
+  undecidability conclusion, free-monoid layer, or iterate API. The audit
+  imports no public root and is absent from public API imports.
+  Trailing-whitespace checks and `git diff --check` passed.
+- Results were folded into `0-plan.md`, `DEPENDENCIES.md`,
+  `THEOREM-OUTLINE.md`, `AUDIT.md`, and `PAPER-MAP.md`. Stage 4 is complete;
+  Stage 5 was not started.
