@@ -1,8 +1,8 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 through Stage 8 declarations are identified as implemented below.
-The iterate-problem undecidability layer remains a proposed Lean surface and
-may be refined when Stage-9 reduction evidence requires it.
+Stage 2 through Stage 9 declarations are identified as implemented below.
+The remaining paper audit and historical-encoding reconciliation are not
+claimed by these declarations.
 
 ## 1. Partial Transition Systems (implemented)
 
@@ -1039,46 +1039,180 @@ successful-edge schema uniformly described by a finite raw machine. A literal
 finite local `α/ω/β` construction, and the two-to-one-tape lowering needed
 to connect the project's two-tape source to that syntax, remain unresolved.
 
-## 8. Iterate Decision Problems (Stage 9, unstarted)
+## 8. Iterate Decision Problems (Stage 9, implemented)
 
-The provisional concrete input route is the Stage-8 finite raw `Descriptor`
-together with one or two Boolean words. Inputs must not contain the infinite
-`Edge` type, a semantic `CodeIso`, a proof object, or a raw `PEquiv` function.
-The executable predicates can be stated using exact positive iteration of
-`Descriptor.checkedApply`; Stage-8 agreement then relates every valid input to
-the corresponding semantic `stepCodeIso.toPEquiv`. A proposed shape is:
-
-```lean
-def PositiveFixedOrbitYes (x : FixedOrbitInput) : Prop :=
-  x.descriptor.Valid ∧
-    ∃ k : Nat,
-      exactIterate x.descriptor.checkedApply (k + 1) x.word = some x.word
-
-def DistinctOrbitYes (x : DistinctOrbitInput) : Prop :=
-  x.descriptor.Valid ∧ x.start ≠ x.target ∧
-    ∃ k : Nat,
-      exactIterate x.descriptor.checkedApply (k + 1) x.start = some x.target
-```
-
-This fixes the paper's orientation: in `w₁ = θⁿ(w₂)`, `w₂` is the start and
-`w₁` is the target. Positive iteration is explicit in both predicates; it is
-logically redundant in the distinct case but keeps the API uniform.
-
-Separate effective results:
+Public module:
 
 ```text
-iterateAtExponent_decidable   checking a supplied finite exponent
-positiveFixedOrbit_re         existential yes-instances are semidecidable
-distinctOrbit_re              existential yes-instances are semidecidable
-positiveFixedOrbit_not_computable
-distinctOrbit_not_computable
+Lecerf.Undecidability.CodeIterates.API
 ```
 
-No declaration in this section is implemented yet, and Stage 9 must finalize
-the input structures and prove equivalence between the checked executable
-predicate and the semantic code-isomorphism equation. Semidecidability uses
-the now-implemented finite descriptor and decidable word equality. It does not
-imply a total witness finder or a decision procedure for no-instances.
+Implementation leaves:
+
+```text
+Lecerf.Transition.ExactEffectivity
+Lecerf.Undecidability.CodeIterates.Problems
+Lecerf.Undecidability.CodeIterates.Effectivity
+Lecerf.Undecidability.CodeIterates.Correspondence
+Lecerf.Undecidability.CodeIterates.Reduction
+```
+
+`Lecerf.Undecidability.CodeIterates.Audit` is a non-public diagnostic leaf.
+The runtime input uses the Stage-8 finite raw descriptor and Boolean words; it
+does not store the generally infinite `Edge` type, a semantic `CodeIso`, a
+`PEquiv`, a function, a validity proof, or an orbit witness:
+
+```lean
+abbrev CodeDescriptor :=
+  StepCode.Descriptor ReversibleTwoTape.MachineState
+    ReversibleTwoTape.WorkSymbol ReversibleTwoTape.HistorySymbol
+
+abbrev FixedOrbitInput := CodeDescriptor × Word Bool
+
+abbrev DistinctOrbitInput :=
+  CodeDescriptor × Word Bool × Word Bool
+
+abbrev SuppliedExponentInput :=
+  CodeDescriptor × Nat × Word Bool × Word Bool
+```
+
+The products associate to the right. For `DistinctOrbitInput`, the order is
+descriptor, start, target. For `SuppliedExponentInput`, it is descriptor,
+exponent, start, target. Hence the paper's `w₁ = θⁿ(w₂)` is represented with
+`w₂` as the stored start and `w₁` as the stored target.
+
+The checked predicates are exactly:
+
+```lean
+def PositiveFixedOrbitYes (input : FixedOrbitInput) : Prop :=
+  input.1.Valid ∧
+    ∃ k : Nat,
+      ExactSteps input.1.checkedApply (k + 1) input.2 input.2
+
+def DistinctOrbitYes (input : DistinctOrbitInput) : Prop :=
+  input.1.Valid ∧ input.2.1 ≠ input.2.2 ∧
+    ∃ k : Nat,
+      ExactSteps input.1.checkedApply (k + 1)
+        input.2.1 input.2.2
+
+def PositiveIterateAtYes (input : SuppliedExponentInput) : Prop :=
+  input.1.Valid ∧ input.2.1 ≠ 0 ∧
+    ExactSteps input.1.checkedApply input.2.1
+      input.2.2.1 input.2.2.2
+```
+
+The existential predicates quantify a predecessor `k`; their actual exponent
+is definitionally `k + 1`. The supplied predicate instead stores the exponent
+and rejects zero explicitly. All three use `ExactSteps`, whose
+`Option.bind` semantics preserves undefined intermediate applications rather
+than replacing them with an identity, sink, or default word.
+
+The uniform effectivity declarations are:
+
+```text
+Transition.exactIterate_uniform_primrec
+checkedExactIterate_uniform_primrec
+positiveIterateAtYes_primrec
+positiveIterateAtYes_computablePred
+```
+
+The two search relations and their effectivity facts are:
+
+```text
+FixedOrbitWitnessYes
+fixedOrbitWitnessYes_primrec
+fixedOrbitWitnessYes_computablePred
+DistinctOrbitWitnessYes
+distinctOrbitWitnessYes_primrec
+distinctOrbitWitnessYes_computablePred
+positiveFixedOrbitYes_iff_exists_witness
+distinctOrbitYes_iff_exists_witness
+positiveFixedOrbitYes_re
+distinctOrbitYes_re
+```
+
+Thus checking a supplied positive exponent is primitive recursive, while
+existence of some positive exponent is recursively enumerable. These are
+deliberately different claims: neither `positiveFixedOrbitYes_re` nor
+`distinctOrbitYes_re` supplies a total witness finder or a total decision
+procedure for no-instances.
+
+Checked iteration and semantic code-isomorphism iteration agree through the
+following implemented correspondence chain:
+
+```text
+checkedExactIterate_eq_stepCodeIso_iterate
+checkedExactSteps_iff_stepCodeIso_iterate_eq_some
+checkedPositiveExactSteps_iff_stepCodeIso_positiveIterate
+positiveFixedOrbitYes_iff_stepCodeIso_positiveIterate
+distinctOrbitYes_iff_stepCodeIso_positiveIterate
+positiveIterateAtYes_iff_stepCodeIso_iterate
+encodedCheckedExactSteps_iff_exactSteps
+encodedCheckedPositiveExactSteps_iff_strictlyReachable
+positiveFixedOrbitYes_encodeConfig_iff_returnYes
+distinctOrbitYes_encodeConfig_iff_reachabilityYes
+```
+
+The first six theorems connect a valid descriptor's executable
+`checkedApply` to `(stepCodeIso descriptor valid.reversible.2).toPEquiv` at an
+exact or positive exponent. The next two specialize canonical configuration
+words to exact machine execution and strict reachability. The last two give
+the exact positive-return/fixed-orbit and distinct-reachability/orbit
+equivalences used by the reductions.
+
+The generic endpoint encodings and reductions are:
+
+```text
+encodeReturnInput
+encodeReturnInput_primrec
+encodeReturnInput_computable
+encodeReachabilityInput
+encodeReachabilityInput_primrec
+encodeReachabilityInput_computable
+encodeReachabilityInput_start_ne_target
+returnYes_iff_positiveFixedOrbitYes
+reachabilityYes_iff_distinctOrbitYes
+returnYes_manyOne_positiveFixedOrbitYes
+reachabilityYes_manyOne_distinctOrbitYes
+```
+
+Both maps preserve the raw descriptor verbatim and only apply
+`ConfigCode.encodeConfig` to endpoints. Consequently the iff theorems cover
+invalid descriptors too: the source and target predicates share the same
+validity conjunct, and the checked interpreter rejects invalid tables. The
+maps do not repair malformed descriptors or prove only a certified forward
+direction. Configuration-code injectivity supplies the unequal-word proof for
+the distinct reduction.
+
+Composing these generic arrows with the Stage-6 halting reductions yields:
+
+```lean
+partrecHalts0_manyOne_positiveFixedOrbitYes :
+  ReversibleTwoTape.PartrecHalts0 ≤₀ PositiveFixedOrbitYes
+
+partrecHalts0_manyOne_distinctOrbitYes :
+  ReversibleTwoTape.PartrecHalts0 ≤₀ DistinctOrbitYes
+
+positiveFixedOrbitYes_not_computable :
+  ¬ComputablePred PositiveFixedOrbitYes
+
+distinctOrbitYes_not_computable :
+  ¬ComputablePred DistinctOrbitYes
+```
+
+The noncomputability proofs transfer `ComputablePred.halting_problem 0`
+backward along the explicit composed many-one reductions; no new
+undecidability axiom is introduced.
+
+This makes precise one useful reading of the paper's “recursively unsolvable
+in `n`”: the uniform problem asking whether a positive exponent exists is not
+computable, even though a supplied exponent can be checked. It does not claim
+that recognizing a correct supplied exponent is undecidable. The current
+finite runtime descriptor uniformly presents a generally infinite
+successful-edge code schema. A literal finite local `α`/`ω`/`β` relation
+list, proof that it realizes the same iterates, a two-to-one-tape lowering,
+and a theorem about every independently presented code isomorphism remain
+historical/generalization obligations rather than consequences of Stage 9.
 
 ## Principal Reduction Chain
 
@@ -1094,29 +1228,34 @@ Implemented Stage-8 semantic/effective bridge:
     -> finite validity-guarded Descriptor plus canonical Boolean words
     -> exact semantic CodeIso iterate / positive-orbit correspondence
 
-Stage-9 many-one packaging still required:
+Implemented Stage-9 generic arrows:
   finite reversible two-tape positive return
     -> positive fixed orbit of a partial code isomorphism
   finite reversible two-tape distinct reachability
+    -> distinct orbit of a partial code isomorphism
+
+Implemented direct compositions:
+  Nat.Partrec.Code halting
+    -> positive fixed orbit of a partial code isomorphism
+  Nat.Partrec.Code halting
     -> distinct orbit of a partial code isomorphism
 ```
 
 The three Stage-6 arrows are direct packaged reductions. Internally, their iff
 proofs pass through a fixed universal one-tape source and fixed finite
 two-tape history/turnaround/return tables; the only varying data are
-primitive-recursive configurations. Fixed orbit will be fed by positive
-return, and distinct orbit by start-to-distinct-target reachability. Stage 8
-now supplies the finite descriptor, primitive-recursive interpreter, validity
-guard, and no-spurious-iterate theorem needed by both arrows. Stage 9 still
-must define the exact target input types and predicates and package each arrow
-as an explicit many-one reduction. Each future reduction still requires:
-
-1. a computable function on finite encodings;
-2. a proof that its output passes the target validity predicate;
-3. preservation of yes-instances; and
-4. reflection/no-spurious yes-instances.
+primitive-recursive configurations. Stage 8 supplies the finite descriptor,
+primitive-recursive interpreter, validity guard, and no-spurious-iterate
+theorems. Stage 9 feeds fixed orbit from positive return and distinct orbit
+from start-to-distinct-target reachability through the computable maps
+`encodeReturnInput` and `encodeReachabilityInput`. Preservation and reflection
+are the exact iff theorems `returnYes_iff_positiveFixedOrbitYes` and
+`reachabilityYes_iff_distinctOrbitYes`; the packaged generic arrows are
+`returnYes_manyOne_positiveFixedOrbitYes` and
+`reachabilityYes_manyOne_distinctOrbitYes`.
 
 Simulation, code encoding, and reduction theorems stay in separate layers even
-when later proofs reuse the same construction. A two-to-one-tape lowering and
-the correspondence with Lecerf's historical marker encoding also remain
-separate from the implemented Stage-6/8 branch. Stage 9 has not started.
+though the final compositions reuse all three. A finite local edge presentation,
+the two-to-one-tape lowering, and correspondence with Lecerf's historical
+marker encoding remain separate from the implemented Stage-6/8/9 branch.
+They are not silently folded into the current code-isomorphism claim.

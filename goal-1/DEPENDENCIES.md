@@ -331,9 +331,9 @@ induced by the definitional list equivalence,
 conversions primitive recursive. This is a representation theorem for words,
 not a computable representation of semantic `CodeIso` or `PEquiv` values.
 
-Updated decision: the implemented Stage-8 runtime boundary, and the planned
-Stage-9 target input built from it, use a finite two-tape rule list together
-with one or more `Word Bool` values. Its validity guard is a decidable
+Updated decision: the implemented Stage-8 runtime boundary and Stage-9 target
+inputs use a finite two-tape rule list together with one or more `Word Bool`
+values. Its validity guard is a decidable
 primitive-recursive predicate on the raw table. The table uniformly describes
 the generally infinite successful-edge code schema; no finite generator-image
 list is currently claimed. Do not hide the target in a proof-bearing subtype
@@ -833,5 +833,155 @@ inverse remains proof-side. This stage proves a cleaner whole-configuration
 edge encoding, not Lecerf's finite local `alpha`/`omega`/`beta` relation list.
 A literal historical local encoding and the two-to-one-tape lowering needed
 to connect it to the project's two-tape undecidability source remain open.
-Stage 9 has not started: many-one packaging for the two iterate problems is
-still a separate reduction layer.
+
+Stage-9 realized dependency additions are:
+
+```text
+Transition/ExactEffectivity
+  -> Transition/Exact, Mathlib Computability/Primrec/Basic
+
+Undecidability/CodeIterates/Problems
+  -> Encoding/StepCode/Effectivity, Transition/Exact,
+     Undecidability/ReversibleTwoTape/Problems
+
+Undecidability/CodeIterates/Effectivity
+  -> Transition/ExactEffectivity, CodeIterates/Problems,
+     Mathlib Computability/RE
+
+Undecidability/CodeIterates/Correspondence
+  -> Encoding/StepCode/Correctness, CodeIterates/Problems
+
+Undecidability/CodeIterates/Reduction
+  -> CodeIterates/Correspondence, CodeIterates/Effectivity,
+     Undecidability/ReversibleTwoTape/Reduction
+
+Undecidability/CodeIterates/API
+  -> CodeIterates/Reduction
+
+Undecidability/CodeIterates/Audit
+  -> CodeIterates/Reduction (not publicly re-exported)
+
+Undecidability/API
+  -> EffectiveTransition, CodeIterates/API, ReversibleTwoTape/API
+```
+
+The finite runtime aliases are exact products, with no functions, semantic
+partial equivalences, proofs, or witnesses stored in the input:
+
+```lean
+abbrev CodeDescriptor :=
+  StepCode.Descriptor ReversibleTwoTape.MachineState
+    ReversibleTwoTape.WorkSymbol ReversibleTwoTape.HistorySymbol
+
+abbrev FixedOrbitInput := CodeDescriptor × Word Bool
+abbrev DistinctOrbitInput := CodeDescriptor × Word Bool × Word Bool
+abbrev SuppliedExponentInput :=
+  CodeDescriptor × Nat × Word Bool × Word Bool
+```
+
+Products associate to the right. Thus the distinct input order is descriptor,
+start, target, and the supplied-exponent order is descriptor, exponent, start,
+target. This represents the paper's equation `w₁ = θⁿ(w₂)` with stored start
+`w₂` before stored target `w₁`.
+
+`PositiveFixedOrbitYes` and `DistinctOrbitYes` both require
+`descriptor.Valid` and a predecessor witness `k` whose actual exponent is
+`k + 1`. The distinct predicate additionally requires `start ≠ target`.
+`PositiveIterateAtYes` takes the exponent as data, requires it to be nonzero,
+and checks `ExactSteps descriptor.checkedApply exponent start target`.
+`ExactSteps` is the bind-preserving partial semantics: an undefined
+intermediate application makes the entire iterate undefined. In particular,
+zero-step reflexivity cannot witness either existential target.
+
+The reusable effectivity leaf proves:
+
+```text
+Transition.exactIterate_uniform_primrec
+checkedExactIterate_uniform_primrec
+positiveIterateAtYes_primrec
+positiveIterateAtYes_computablePred
+fixedOrbitWitnessYes_primrec
+fixedOrbitWitnessYes_computablePred
+distinctOrbitWitnessYes_primrec
+distinctOrbitWitnessYes_computablePred
+positiveFixedOrbitYes_iff_exists_witness
+distinctOrbitYes_iff_exists_witness
+positiveFixedOrbitYes_re
+distinctOrbitYes_re
+```
+
+The first theorem uniformly iterates any primitive-recursive
+`D → X → Option X` transition while retaining the `Option` state. The supplied
+positive exponent is therefore a primitive-recursive predicate. The two
+existential problems are only proved recursively enumerable, through the
+primitive-recursive witness relations `FixedOrbitWitnessYes` and
+`DistinctOrbitWitnessYes`; no total existence decider or total witness finder
+is inferred.
+
+The checked-runtime/semantic correspondence is exposed by:
+
+```text
+checkedExactIterate_eq_stepCodeIso_iterate
+checkedExactSteps_iff_stepCodeIso_iterate_eq_some
+checkedPositiveExactSteps_iff_stepCodeIso_positiveIterate
+positiveFixedOrbitYes_iff_stepCodeIso_positiveIterate
+distinctOrbitYes_iff_stepCodeIso_positiveIterate
+positiveIterateAtYes_iff_stepCodeIso_iterate
+encodedCheckedExactSteps_iff_exactSteps
+encodedCheckedPositiveExactSteps_iff_strictlyReachable
+positiveFixedOrbitYes_encodeConfig_iff_returnYes
+distinctOrbitYes_encodeConfig_iff_reachabilityYes
+```
+
+These theorems first identify checked word iteration with the proof-side
+`stepCodeIso` iterate for a valid descriptor, then specialize canonical
+configuration words to exact machine steps and strict reachability. Both
+directions are present, so successful checked iteration cannot introduce a
+malformed or spurious endpoint.
+
+The generic reduction maps preserve the raw descriptor verbatim and encode
+only their configuration endpoints:
+
+```text
+encodeReturnInput
+encodeReturnInput_primrec
+encodeReturnInput_computable
+encodeReachabilityInput
+encodeReachabilityInput_primrec
+encodeReachabilityInput_computable
+encodeReachabilityInput_start_ne_target
+returnYes_iff_positiveFixedOrbitYes
+reachabilityYes_iff_distinctOrbitYes
+returnYes_manyOne_positiveFixedOrbitYes
+reachabilityYes_manyOne_distinctOrbitYes
+```
+
+Leaving the descriptor unchanged is important for malformed inputs. An
+invalid table is invalid on both sides of each iff: the source machine
+predicate and target orbit predicate both contain the same syntactic
+reversibility guard, and `checkedApply` also rejects it. The reduction neither
+repairs an invalid descriptor nor silently drops its guard.
+
+Composing the generic arrows with the Stage-6 fixed-source reductions gives:
+
+```text
+partrecHalts0_manyOne_positiveFixedOrbitYes
+partrecHalts0_manyOne_distinctOrbitYes
+positiveFixedOrbitYes_not_computable
+distinctOrbitYes_not_computable
+```
+
+The direct noncomputability results transfer
+`ComputablePred.halting_problem 0` backward through the displayed many-one
+reductions. `CodeIterates.Audit` remains a non-public leaf and checks the
+positive-exponent, partial-failure, nonempty canonical-word, and axiom
+boundaries.
+
+This completes the finite-descriptor iterate reduction layer, but not the
+paper's exact historical presentation. `Edge machine` is generally an
+infinite successful-edge schema uniformly interpreted from a finite machine
+table; there is still no finite generator-image list for that schema. A
+literal finite local `alpha`/`omega`/`beta` encoding, a connection from it to
+the present whole-configuration encoding, and the two-to-one-tape lowering
+remain separate obligations. Stage 10 has not begun those historical
+reconciliation tasks.

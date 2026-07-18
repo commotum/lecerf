@@ -55,8 +55,8 @@ Status labels in this file are:
 | `L4b-THM1H` | Theorem 1 | Halting is recursively unsolvable for arbitrary reversible Turing machines | For fixed finite two-tape control/alphabet types, `HaltingYes` guards an arbitrary supplied table by primitive-recursive `Certified`; `partrecHalts0_manyOne_haltingYes` is an explicit computable reduction and `haltingYes_not_computable` proves noncomputability. This establishes the finite two-tape version, not a one-tape lowering | source-confirmed |
 | `L4b-THM1R` | Theorem 1 | Return to the initial configuration is recursively unsolvable | `ReturnYes` uses `PositiveReturn`, excluding the zero-step loophole. `partrecHalts0_manyOne_returnYes` and `returnYes_not_computable` establish the validity-guarded finite reversible two-tape result | corrected-target |
 | `L4b-THM1T` | Theorem 1 | Passage through a specified configuration other than the initial one is recursively unsolvable | `ReachabilityYes` explicitly requires unequal endpoints and `StrictlyReachable`. `partrecHalts0_manyOne_reachabilityYes` and `reachabilityYes_not_computable` establish the validity-guarded finite reversible two-tape result with both reduction directions | source-confirmed |
-| `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for arbitrary given `w, θ` | Stage 8 proves the semantic bridge `stepCodeIso_positiveIterate_iff_strictlyReachable`, which also covers positive return when the endpoints coincide. The uniform fixed-orbit predicate, explicit reduction, and undecidability proof remain Stage 9; supplied-exponent evaluation stays separate | corrected-target |
-| `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, with `w₁ ≠ w₂`, is recursively unsolvable in `n` | The same Stage-8 theorem maps positive code orbit reachability exactly to strict machine reachability for supplied endpoints. Packaging unequal words, a computable reduction, and noncomputability remains Stage 9 | corrected-target |
+| `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for arbitrary given `w, θ` | `PositiveFixedOrbitYes` asks, for a raw finite `CodeDescriptor` and Boolean word, whether some exact exponent `k + 1` returns the word. `positiveFixedOrbitYes_iff_stepCodeIso_positiveIterate` identifies the checked partial interpreter with the presented semantic code isomorphism. `returnYes_manyOne_positiveFixedOrbitYes` and the composed `partrecHalts0_manyOne_positiveFixedOrbitYes` are explicit computable reductions; `positiveFixedOrbitYes_re` and `positiveFixedOrbitYes_not_computable` prove semidecidability but not computability. This establishes the theorem already on the finite-machine-presented successful-edge subclass, not for a claimed encoding of every code isomorphism | corrected-target |
+| `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, with `w₁ ≠ w₂`, is recursively unsolvable in `n` | `DistinctOrbitYes` stores the paper's `w₂` as start and `w₁` as target, explicitly requires unequal words, and uses an exact exponent `k + 1`. `distinctOrbitYes_iff_stepCodeIso_positiveIterate` gives the partial semantic equation. `encodeReachabilityInput_start_ne_target` proves endpoint inequality through configuration-code injectivity; the generic and composed direct reductions culminate in `distinctOrbitYes_re` and `distinctOrbitYes_not_computable`. Invalid descriptors are rejected on both the machine and code sides | corrected-target |
 
 ## Fixed Stage-1 Conventions
 
@@ -107,11 +107,27 @@ Status labels in this file are:
   fixed-orbit existence predicate universally true, the formal theorem uses
   `k + 1`. This is a necessary semantic repair, not a claim about Lecerf's
   historical convention.
-- “Recursively unsolvable in `n`” is read uniformly: finite descriptions of
-  `(θ,w)` or `(θ,w₂,w₁)` are input and the question asks whether some positive
-  admissible exponent exists. Checking a supplied finite exponent remains a
-  separate computable/decidable theorem; existential yes-instances are
-  expected to be semidecidable.
+- `PositiveFixedOrbitYes` does not impose an unsupported nonempty-word guard;
+  the monoid identity is therefore an easy fixed-orbit yes-instance for every
+  valid descriptor. The undecidability reduction itself uses canonical
+  configuration frames, and `ConfigCode.encodeConfig_ne_one` proves those
+  generated instances nonempty.
+- “Recursively unsolvable in `n`” is read uniformly: a raw finite descriptor
+  and one word, or a descriptor with start `w₂` and target `w₁`, are input and
+  the question asks whether some positive admissible exponent exists.
+  `PositiveIterateAtYes`
+  separately takes a supplied `n`, requires `n ≠ 0`, and is primitive recursive
+  and computable by `positiveIterateAtYes_primrec` and
+  `positiveIterateAtYes_computablePred`. The existential predicates are
+  recursively enumerable by partial witness search, but
+  `positiveFixedOrbitYes_not_computable` and
+  `distinctOrbitYes_not_computable` rule out total decision procedures.
+- Each Stage-9 raw predicate retains `Descriptor.Valid` as an explicit guard.
+  The checked action and `ExactSteps` propagate `none` through every
+  intermediate application. Under the guard,
+  `checkedExactSteps_iff_stepCodeIso_iterate_eq_some` and its positive wrapper
+  identify that executable behavior with the proof-side partial `CodeIso`;
+  neither an invalid table nor an undefined iterate is repaired or totalized.
 
 ### Source limitations
 
@@ -125,20 +141,24 @@ Status labels in this file are:
   reduction iff. Stage 5 supplies cleaner abstract gadgets and both semantic
   directions; a correspondence with the historical finite tape construction
   remains open.
-- Stage 8 supplies a cleaner complete-configuration encoding and exact
-  machine-step/iterate correspondence over `Bool`, together with a
-  primitive-recursive finite-table interpreter. Its successful-edge index is
-  generally infinite. The paper's finite local one-tape `α`/`ω`/`β`
-  relations, the `τ_min` claim, and a lowering of the project's reversible
-  two-tape target tables remain separate historical obligations.
+- Stages 8–9 supply a cleaner complete-configuration encoding and exact
+  machine-step/iterate correspondence over `Bool`, a primitive-recursive
+  finite-table interpreter, and undecidable uniform positive-orbit problems
+  for those finite descriptors. The semantic successful-edge index can still
+  be infinite: the finite runtime object is the machine table describing its
+  action, not a finite list of the paper's local code relations. The paper's
+  finite local one-tape `α`/`ω`/`β` relations, the `τ_min` claim, a finite
+  presentation theorem for arbitrary code isomorphisms, and a lowering of the
+  project's reversible two-tape target tables remain separate historical
+  obligations.
 - The header records the proceedings session of 28 October 1963; the footnote
   records presentation of the note on 21 October 1963. Both scan readings are
   retained and have no mathematical effect.
 
 ## Declaration Map
 
-Names in completed rows are exact checked declarations. Later rows remain
-proposed API targets.
+Names in completed rows are exact checked declarations. Scope qualifications
+in the stage column are part of the claim mapping.
 
 | Claim family | Declaration family | Planned stage |
 |---|---|---:|
@@ -163,7 +183,10 @@ proposed API targets.
 | Successful-edge code maps | `StepCode.Edge`, `sourceWord`, `targetWord`, `sourceWord_isIndexedCode`, `targetWord_isIndexedCode_iff_backwardUnique`, `stepCodeEpi`, `stepCodeIso`, `stepCodeIso_edge` | 8 (implemented as a generally infinite schema uniformly described by a finite table) |
 | Exact step and orbit correspondence | `exactIterate`, `ExactSteps`, `reachable_iff_exists_exactSteps`, `strictlyReachable_iff_exists_exactSteps_succ`, `stepCodeIso_apply_eq_some_iff_exists`, `stepCodeIso_apply_eq_some_iff`, `stepCodeIso_iterate_eq_some_iff_exists`, `stepCodeIso_iterate_eq_some_iff`, `stepCodeIso_positiveIterate_iff_strictlyReachable` | 8 (implemented with strong preservation/reflection) |
 | Executable step-code interpretation | `StepCode.applyWord`, `liftPEquiv`, `liftPEquiv_machine_eq_stepCodeIso_toPEquiv`, `Descriptor`, `Descriptor.Valid`, `Descriptor.checkedApply`, `Descriptor.applyWord_uniform_primrec`, `Descriptor.valid_primrec`, `Descriptor.checkedApply_uniform_primrec`, `Descriptor.applyWord_eq_stepCodeIso_toPEquiv` | 8 (implemented; raw finite-table runtime boundary) |
-| Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 (unstarted) |
+| Finite code-iterate problems | `CodeDescriptor`, `FixedOrbitInput`, `DistinctOrbitInput`, `SuppliedExponentInput`, `PositiveFixedOrbitYes`, `DistinctOrbitYes`, `PositiveIterateAtYes` | 9 (implemented; raw guarded finite-machine presentation and positive exponents) |
+| Checked/semantic iterate correspondence | `checkedExactIterate_eq_stepCodeIso_iterate`, `checkedExactSteps_iff_stepCodeIso_iterate_eq_some`, `checkedPositiveExactSteps_iff_stepCodeIso_positiveIterate`, `positiveFixedOrbitYes_iff_stepCodeIso_positiveIterate`, `distinctOrbitYes_iff_stepCodeIso_positiveIterate`, `positiveIterateAtYes_iff_stepCodeIso_iterate`, `encodedCheckedExactSteps_iff_exactSteps`, `encodedCheckedPositiveExactSteps_iff_strictlyReachable` | 9 (implemented; bind-preserving partial iteration) |
+| Iterate witness effectivity | `exactIterate_uniform_primrec`, `checkedExactIterate_uniform_primrec`, `positiveIterateAtYes_primrec`, `positiveIterateAtYes_computablePred`, `fixedOrbitWitnessYes_primrec`, `distinctOrbitWitnessYes_primrec`, `positiveFixedOrbitYes_re`, `distinctOrbitYes_re` | 9 (implemented; supplied exponent total, existence search partial) |
+| Iterate reductions and undecidability | `encodeReturnInput`, `encodeReachabilityInput`, `encodeReturnInput_primrec`, `encodeReachabilityInput_primrec`, `returnYes_iff_positiveFixedOrbitYes`, `reachabilityYes_iff_distinctOrbitYes`, `returnYes_manyOne_positiveFixedOrbitYes`, `reachabilityYes_manyOne_distinctOrbitYes`, `partrecHalts0_manyOne_positiveFixedOrbitYes`, `partrecHalts0_manyOne_distinctOrbitYes`, `positiveFixedOrbitYes_not_computable`, `distinctOrbitYes_not_computable` | 9 (implemented for the finite-machine-presented successful-edge subclass) |
 
 Stage 3 supplies the concrete read-write-move semantics and repaired local and
 global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stages
@@ -178,10 +201,15 @@ positive iteration. Its arbitrary generated-submonoid decoding and membership
 are deliberately noncomputable. Stage 8 adds a primitive-recursive
 self-delimiting Boolean codec, the successful-edge `PaperCodeEpi`/`CodeIso`,
 strong one-step and iterate reflection, an all-word executable interpreter,
-and a primitive-recursive validity-guarded raw finite-table descriptor. This
-is the completed cleaner edge-schema route. Identifying it with Lecerf's
-literal finite marker/sweeping table or lowering the reversible target tables
-to one tape remains open. Stage 9 has not started.
+and a primitive-recursive validity-guarded raw finite-table descriptor. Stage
+9 turns that descriptor into guarded positive fixed/distinct-orbit problems,
+proves supplied-exponent recognition primitive recursive, proves existential
+membership recursively enumerable but noncomputable, and supplies generic and
+direct computable reductions with exact preservation and reflection. This is
+the completed cleaner finite-machine-presented edge-schema route. Identifying
+it with Lecerf's literal finite marker/sweeping relation list, presenting every
+code isomorphism this way, or lowering the reversible target tables to one
+tape remains open.
 
 ## Principal Reduction Map
 
@@ -206,11 +234,26 @@ finite reversible two-tape steps/configurations
   -- primitive-recursive Bool framing and finite-table descriptor;
      generally infinite successful-edge CodeIso as proof-side semantics;
      checked one-step/iterate/positive-reachability iff -->
-semantic positive fixed orbit / distinct orbit of the edge code isomorphism
+PositiveFixedOrbitYes (descriptor, encoded configuration)
+DistinctOrbitYes (descriptor, encoded start, encoded target)
+  -- generic primitive-recursive endpoint maps; explicit validity and
+     unequal-word guards; exact preservation and reflection -->
+ReturnYes ≤₀ PositiveFixedOrbitYes
+ReachabilityYes ≤₀ DistinctOrbitYes
+  -- compose the Stage-6 fixed-source reductions -->
+PartrecHalts0 ≤₀ PositiveFixedOrbitYes
+PartrecHalts0 ≤₀ DistinctOrbitYes
+  -- halting_problem 0 -->
+¬ComputablePred PositiveFixedOrbitYes
+¬ComputablePred DistinctOrbitYes
 
-  -- Stage 9 still owes finite target problem inputs, explicit computable
-     reduction maps, endpoint guards, and both undecidability transfers -->
-positiveFixedOrbit_not_computable / distinctOrbit_not_computable
+SuppliedExponentInput (descriptor, n, start, target)
+  -- n ≠ 0 plus exact bind-preserving iteration -->
+PrimrecPred / ComputablePred PositiveIterateAtYes
+
+PositiveFixedOrbitYes / DistinctOrbitYes
+  -- partial search over predecessor witnesses k -->
+REPred
 ```
 
 Every Stage-6 arrow above is checked separately; the fixed tables do not hide a
@@ -218,7 +261,11 @@ varying compiler. Stage 8 checks the displayed machine-to-semantic-orbit arrow
 and separately proves that its Boolean codec, raw finite descriptor, validity
 guard, and forward interpreter are primitive recursive. The generally
 infinite `Edge` family and noncomputable semantic `CodeIso` are not runtime
-input. Stage 9 still must define the two uniform orbit decision problems and
-give explicit computable reductions with both directions. A one-tape lowering
-and correspondence with Lecerf's historical local encoding remain open and
-are not prerequisites silently inferred from the cleaner theorem.
+input. Stage 9 keeps the same boundary: `CodeDescriptor` is the raw table,
+while `CodeIso` is proof-side semantics recovered only from the explicit
+validity guard. The generic reduction iff theorems quantify over arbitrary raw
+inputs, so invalid tables are reflected as no-instances rather than excluded
+by a hidden precondition. A one-tape lowering, a literal finite local
+`α`/`ω`/`β` relation presentation, and a representation theorem for arbitrary
+code isomorphisms remain open and are not prerequisites silently inferred from
+the cleaner undecidability theorem.
