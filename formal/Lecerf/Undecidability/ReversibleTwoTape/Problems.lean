@@ -52,6 +52,9 @@ abbrev ReachabilityInput := TargetMachine × TargetConfig × TargetConfig
 def Certified (machine : TargetMachine) : Prop :=
   machine.SyntacticallyReversible
 
+/-- The fixed target types inherit the one-time noncomputable finite encodings
+selected by `FiniteSource`.  The following theorem, rather than reduction of
+this instance, supplies the uniform effective validity checker. -/
 noncomputable instance (machine : TargetMachine) : Decidable (Certified machine) :=
   by
     unfold Certified
