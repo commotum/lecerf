@@ -111,6 +111,11 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   restoring. A whole table additionally requires forward and backward
   compatibility; for deterministic tables, backward compatibility is exactly
   `BackwardUnique step`.
+- This is presently an atomic semantic phase decomposition, not a compiler to
+  an ordinary finite table with explicit `normal`/`move` microstates.
+  `ReverseTableCompatible` is a checked finite sufficient condition; its
+  converse characterization is still required before Stage-6 validity can be
+  decided syntactically.
 - The checked source for later reductions is the fixed primitive-recursive
   `Source.universalEvalSearchStep`, with a primitive-recursive start map and an
   exact halting iff for `Nat.Partrec.Code.eval`. The pinned mathlib source does

@@ -215,8 +215,10 @@ theorem haltsAt_iff_lookup_eq_none [DecidableEq Q] [DecidableEq Γ]
   rw [HaltsAt, Terminal, step, applyRules_eq_lookupRules_map]
   simp [lookup]
 
-/-- No two table entries may use the same source/read key. This predicate is
-separate from the functionality of the executable first-match step. -/
+/-- Entries with the same source/read key must be equal. Identical duplicate
+values are semantically harmless; conflicting entries are forbidden. This
+predicate is separate from the functionality of the executable first-match
+step. -/
 def TableDeterministic (machine : FiniteMachine Q Γ) : Prop :=
   ∀ ⦃first⦄, first ∈ machine.rules → ∀ ⦃second⦄, second ∈ machine.rules →
     first.source = second.source → first.read = second.read → first = second

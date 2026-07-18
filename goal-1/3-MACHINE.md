@@ -151,6 +151,18 @@ effective halting source for the history simulation.
   `backwardCompatible_iff_backwardUnique` is an exact semantic
   characterization, and `FiniteMachine.toPEquiv` packages a machine satisfying
   `Reversible := TableDeterministic ∧ BackwardUnique step`.
+- The implemented phase compilation is semantic: `Rule.tapeAction` is a
+  composition of tape `PEquiv`s, and `reverseStep` performs move-back/check/
+  restore as one executable macro-step. It is not yet a generated
+  `FiniteMachine` with explicit `normal`/`move` micro-control states. This is
+  the cleaner equivalent theorem permitted by the project objective; a
+  finite-alphabet syntactic phase compiler remains a later connection to
+  Lecerf's presentation and must not be inferred from the current API.
+- `ReverseTableCompatible` is proved sufficient for backward compatibility.
+  The exact theorem currently available is semantic
+  `backwardCompatible_iff_backwardUnique`; the converse characterization by a
+  finite pairwise rule predicate, and hence an executable reversibility
+  validity test, remains a Stage-6 obligation.
 - Added non-public `Lecerf.Machine.Audit`. Executable examples check blank
   normalization, a moving rule's forward and repaired inverse steps, and the
   concrete failure of the paper's printed inverse tuple. A two-rule merge

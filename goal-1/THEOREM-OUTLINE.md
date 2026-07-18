@@ -171,6 +171,13 @@ table. The audit's two-rule merge is table-deterministic and each entry has a
 paper's printed tuple inverse only as diagnostic syntax and proves it fails on
 a concrete moving-rule successor.
 
+The phase decomposition above is semantic, not yet a generated finite table
+of ordinary rules with `normal`/`move` microstates. Likewise,
+`ReverseTableCompatible` currently has a proved sufficient direction, while
+the exact checked characterization uses semantic `BackwardCompatible`. The
+finite syntactic compiler and decidable pairwise converse are explicit later
+obligations, not consequences of `FiniteMachine.toPEquiv`.
+
 The effective replacement halting source is one fixed transition:
 
 ```lean
