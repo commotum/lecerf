@@ -808,10 +808,11 @@ particular, the stable joint results include
 `encodeConfigs_primrec`, `decodeConfigListBits_primrec`, and
 `decodeConfigs_primrec`.
 
-`Transition.Exact` keeps option failure explicit through `exactIterate` and
-`ExactSteps`, and connects exact exponents with reflexive and strict
-reachability and with `Lecerf.PEquiv.iterate`. The successful-edge schema then
-has the following checked layers:
+`Transition.ExactCore` keeps option failure explicit through `exactIterate`
+and `ExactSteps` and connects exact exponents with reflexive and strict
+reachability. `Transition.Exact` adds only the bridge to
+`Lecerf.PEquiv.iterate`. The successful-edge schema then has the following
+checked layers:
 
 - Stage-8 support lemmas `IsIndexedCode.comp`,
   `mem_generated_iff_exists_lift`, and `CodeIso.toPEquiv_lift` respectively
@@ -886,28 +887,6 @@ Undecidability/CodeIterates/Audit
 
 Undecidability/API
   -> EffectiveTransition, CodeIterates/API, ReversibleTwoTape/API
-```
-
-Stage-10 public-boundary additions are:
-
-```text
-Transition/API
-  -> Transition/Reversible, Transition/ExactCore,
-     Transition/ExactEffectivity
-
-Machine/TwoTape/API
-  -> Machine/TwoTape/Validity,
-     Machine/TwoTape/HistoryCompiler/Correctness,
-     Machine/TwoTape/HistoryCompiler/Effectivity
-
-Machine/API
-  -> Machine/History/API, Machine/Coupling/API, Machine/TwoTape/API
-
-Lecerf/PublicAudit
-  -> Lecerf  (diagnostic only)
-
-Lecerf/Audit
-  -> Lecerf/PublicAudit and every feature Audit leaf  (diagnostic only)
 ```
 
 The finite runtime aliases are exact products, with no functions, semantic
@@ -1033,3 +1012,25 @@ the present whole-configuration encoding, and the two-to-one-tape lowering
 remain separate obligations. Stage 10 records them as historical follow-up
 work and does not claim that the cleaner construction is the printed local
 presentation.
+
+Stage-10 public-boundary additions are:
+
+```text
+Transition/API
+  -> Transition/Reversible, Transition/ExactCore,
+     Transition/ExactEffectivity
+
+Machine/TwoTape/API
+  -> Machine/TwoTape/Validity,
+     Machine/TwoTape/HistoryCompiler/Correctness,
+     Machine/TwoTape/HistoryCompiler/Effectivity
+
+Machine/API
+  -> Machine/History/API, Machine/Coupling/API, Machine/TwoTape/API
+
+Lecerf/PublicAudit
+  -> Lecerf  (diagnostic only)
+
+Lecerf/Audit
+  -> Lecerf/PublicAudit and every feature Audit leaf  (diagnostic only)
+```
