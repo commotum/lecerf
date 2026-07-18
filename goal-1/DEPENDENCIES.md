@@ -168,7 +168,24 @@ uses function-bearing/infinite label types plus code-dependent finite support.
 The existing semantic chain therefore does **not** yet provide the computable
 map to a finite project machine required by `≤₀`.
 
-Stage 3 must close this with one of three explicit routes:
+Stage 3 checked this obstruction more precisely:
+
+- `Turing.ToPartrec.Code.exists_code` has conclusion `∃ c : Code, ...`, not a
+  compiler definition on `Nat.Partrec.Code`;
+- `Turing.PartrecToTM2.tr_supports` proves a finite-support theorem for a
+  selected `ToPartrec.Code`, but does not extract the project's finite rule
+  list; and
+- both `TM2to1.trSupp` and `TM1to0.trSupp` are explicitly `noncomputable` in
+  the pinned source.
+
+The implemented replacement source is
+`Lecerf.Machine.Source.universalEvalSearchStep`. It is one fixed transition
+whose program/input are part of the configuration. Its step and start map are
+primitive recursive, and its halting predicate is exactly
+`(Nat.Partrec.Code.eval code input).Dom`. This closes the source-transition
+side of the bridge without pretending to close the finite-machine compiler.
+
+The remaining finite compiler must use one of three explicit routes:
 
 1. compile the `evaln` search transition computably into the finite project
    machine and prove a halting iff;
@@ -232,15 +249,27 @@ predicates on raw descriptions. Do not hide the target in a proof-bearing
 subtype unless its membership predicate has the required primitive-recursive
 encoding theorem.
 
-For tapes, semantics are now fixed as a doubly infinite blank tape with finite
-nonblank support. Stage 3 chooses between:
+For tapes, semantics are fixed as a doubly infinite blank tape with finite
+nonblank support. Stage 3 evaluated two routes:
 
 - `Turing.Tape` plus a proved executable canonical encoding and bridge; or
 - a custom canonical finite-support representation plus a semantic bridge to
   the reference tape.
 
-The exact Stage-3 test is whether the chosen type admits computable equality,
-normalization, and a `Primcodable` encoding usable in reduction inputs.
+Stage 3 selected the custom route. `Lecerf.Machine.Side` stores either the
+all-blank half-tape or a nearest-first finite prefix with a subtype-certified
+nonblank far cell. Trailing blanks therefore have one structural normal form.
+`Lecerf.Machine.Tape` stores the scanned symbol and two sides; it has executable
+read/write/move operations, decidable equality, inverse-move laws, and a
+constructive `Primcodable` instance. The same is true of `Tape.Move`,
+`Config`, `Rule`, and `FiniteMachine` when their parameters are primcodable.
+
+The core deliberately does not import quotient-based `Turing.Tape`. Stage-3
+source inspection and compiling prototypes verified that the chosen side is
+equivalent to `Turing.ListBlank`, but promoting that quotient bridge is not
+needed by the public executable layer and would inherit quotient/classical
+dependencies. A checked project bridge may be added later in a narrow audit
+leaf if a concrete TM translation consumes it.
 
 ## Tentative Module Layout
 
@@ -254,8 +283,11 @@ formal/
       Audit.lean
       API.lean
     Machine/
+      Tape.lean
       Core.lean
-      Inverse.lean
+      Reversible.lean
+      SourceBridge.lean
+      Audit.lean
       HistorySimulation.lean
       Coupling.lean
       API.lean
@@ -289,3 +321,16 @@ internal modules never import the public root.
 Scaffold validation on 2026-07-17 generated `lake-manifest.json`; both
 `lake build Lecerf` and `lake build` completed successfully with 831 jobs.
 Stage-1 validation is recorded in `1-SOURCE-AUDIT.md`.
+
+Stage-3 realized dependency boundary:
+
+```text
+Machine/Tape          -> Mathlib.Computability.Primrec.List
+Machine/Core          -> Machine/Tape, Transition/Core
+Machine/Reversible    -> Machine/Core, Transition/Reversible
+Machine/SourceBridge  -> Transition/Core, Mathlib.Computability.PartrecCode
+Machine/API           -> Machine/Reversible, Machine/SourceBridge
+Machine/Audit         -> Machine/Reversible   (not publicly re-exported)
+```
+
+Full `lake build` passed with 830 jobs after the public API import changed.

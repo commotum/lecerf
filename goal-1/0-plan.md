@@ -84,9 +84,11 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - Stage 2 is complete. `Lecerf.Transition.Core`, `Reversible`, `Audit`, and
   `API` compile, and the public root exports the API without importing the
   diagnostic leaf.
-- Stage 3 is in progress. Its fixed design uses an intrinsically canonical
-  finite-support tape, first-match finite rule tables, repaired phased inverse
-  execution, and an explicit `Nat.Partrec.Code.evaln` budget-search source.
+- Stage 3 is complete. `Lecerf.Machine.Tape`, `Core`, `Reversible`,
+  `SourceBridge`, `Audit`, and `API` compile. The public API exposes canonical
+  finite-support tapes, finite first-match rule tables, repaired phased inverse
+  execution, whole-machine reversibility, and a fixed primitive-recursive
+  `Nat.Partrec.Code.evaln` search source.
 
 ## Current Design Decisions
 
@@ -100,10 +102,23 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - Reversible path theorems exchange endpoints. Forward and reverse terminality
   are not pointwise equal; evaluation reversal records both required endpoint
   terminal hypotheses.
-- Use a custom finite machine description with conventional read-write-move
-  source rules, a doubly infinite finite-support blank tape, and repaired
-  write/move phases for inverse execution. Stage 3 must choose a canonical
-  computable tape encoding and close the finite compiler bridge.
+- Use `FiniteMachine` for finite lists of conventional read-write-move rules.
+  Its canonical tape stores the alphabet's `default` blank and structurally
+  excludes duplicate trailing-blank representations; tape, configuration,
+  rule, and machine types have constructive `Primcodable` instances.
+- A rule's tape action is the composition of a checked-write `PEquiv` and a
+  total move equivalence. Its semantic inverse moves back before checking and
+  restoring. A whole table additionally requires forward and backward
+  compatibility; for deterministic tables, backward compatibility is exactly
+  `BackwardUnique step`.
+- The checked source for later reductions is the fixed primitive-recursive
+  `Source.universalEvalSearchStep`, with a primitive-recursive start map and an
+  exact halting iff for `Nat.Partrec.Code.eval`. The pinned mathlib source does
+  not expose a computable compiler from that code to a finite rule table:
+  `ToPartrec.Code.exists_code` is existential and both downstream support
+  translations are explicitly noncomputable. Stage 6 must close this bridge
+  through an explicit compiler; Stage 3 records the source replacement rather
+  than claiming the missing reduction.
 - The first complete reversible simulation should use an explicit history log.
   A faithful tape-level version of Lecerf's marker construction can be a later
   refinement.
@@ -172,7 +187,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 |---:|---|---|---|
 | 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
 | 2 | `TRANSITION` | Complete | Reversible partial-transition API |
-| 3 | `MACHINE` | In progress | Concrete deterministic Turing-machine semantics |
+| 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
 | 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |

@@ -125,4 +125,64 @@ effective halting source for the history simulation.
 
 ## Stage Results
 
-In progress.
+- Added `Lecerf.Machine.Tape`. `Side Γ` is either all blank or a finite
+  nearest-first prefix ending in a subtype-certified nonblank symbol, so
+  structural equality is canonical modulo trailing blanks. `Tape Γ` stores
+  head/left/right, supports write-then-move execution, and proves exact
+  left/right and reverse-direction laws plus `Tape.undo_act`.
+- Added constructive `Primcodable` instances for nonblank symbols, movements,
+  tapes, configurations, rules, and finite machines. `Option Γ` may be used as
+  an alphabet when `none` should be the distinguished blank.
+- Added `Lecerf.Machine.Core` with `Config`, five-field `Rule`,
+  `FiniteMachine`, deterministic first-match lookup, first-success execution,
+  `HaltsAt`, `TableDeterministic`, and `WellFormed`. The executable step is
+  proved equal to lookup followed by the stated read-write-move update.
+- Added `Lecerf.Machine.Reversible`. `Tape.checkedWrite` and
+  `Tape.moveEquiv` expose the two reversible phases, and `Rule.tapeAction` is
+  their `PEquiv.trans`. `Rule.undo` executes move-back/check-written/
+  restore-read; `Rule.apply_eq_some_iff_undo_eq_some` proves the exact local
+  inverse law and `Rule.toPEquiv` bundles it.
+- Whole-table execution keeps three notions separate:
+  `TableDeterministic`, `ForwardCompatible`, and `BackwardCompatible`.
+  Table determinism implies forward compatibility. Pairwise common-direction/
+  distinct-write incoming rules imply backward compatibility. First-match
+  `step` and `reverseStep` satisfy an exact iff under both compatibility
+  predicates. For a deterministic table,
+  `backwardCompatible_iff_backwardUnique` is an exact semantic
+  characterization, and `FiniteMachine.toPEquiv` packages a machine satisfying
+  `Reversible := TableDeterministic ∧ BackwardUnique step`.
+- Added non-public `Lecerf.Machine.Audit`. Executable examples check blank
+  normalization, a moving rule's forward and repaired inverse steps, and the
+  concrete failure of the paper's printed inverse tuple. A two-rule merge
+  table is proved forward-table-deterministic but not globally reversible,
+  although each rule has its own `PEquiv`.
+- Added `Lecerf.Machine.SourceBridge`. The fixed transition
+  `universalEvalSearchStep` carries a `Nat.Partrec.Code` and input in its state;
+  `universalEvalSearchStep_halts_iff_eval_dom` proves exact halting equivalence.
+  The transition and source-to-start map have checked `Primrec` theorems.
+- The finite compiler requested as the preferred bridge is not claimed.
+  Checked pinned-source obstruction: `Turing.ToPartrec.Code.exists_code`
+  returns only an existential code; `PartrecToTM2.tr_supports` proves finite
+  support but does not extract a project rule table; and TM2-to-TM1 and
+  TM1-to-TM0 `trSupp` definitions are explicitly `noncomputable`. The fixed
+  primitive-recursive search transition is the stage's permitted replacement
+  source. Closing the compiler/reduction arrow remains a Stage-6 obligation.
+- Added thin `Lecerf.Machine.API` and updated `Lecerf.lean`; the audit leaf is
+  not publicly imported.
+- Focused builds passed for Tape (794 jobs), Core (819), Reversible (822),
+  SourceBridge (821), and Audit (823). The API/root adjacent build passed, and
+  full `lake build` passed with 830 jobs.
+- A temporary root-import probe checked the principal public signatures and
+  was deleted. Representative `#print axioms` results were:
+  - `Tape.undo_act` and the local rule inverse iff: `propext`;
+  - global step/reverse-step iff: `propext`;
+  - backward-compatibility characterization: `propext`, `Quot.sound`;
+  - universal search halting iff and its `Primrec` theorem: `propext`,
+    `Classical.choice`, `Quot.sound` inherited from mathlib encodings and
+    `Part`/transition semantics.
+  No project-specific axiom was introduced.
+- Lean scans found no `sorry`, `admit`, `axiom`, `unsafe`, `noncomputable`, or
+  explicit `Classical.choice` in project machine sources. Import and boundary
+  scans found no history simulator, reduction conclusion, word-code layer, or
+  iterate API. Trailing-whitespace checks and `git diff --check` passed.
+- Stage 3 is complete. Stage 4 was not started.

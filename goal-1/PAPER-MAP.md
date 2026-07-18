@@ -37,8 +37,8 @@ Status labels in this file are:
 | `L1d-RIGHT` | §1d | A fresh-marker union with a “right prefix-code” is a code | Formalize the displayed no-proper-right-extension condition; this is modern prefix-freeness | source-confirmed |
 | `L1d-LEFT` | §1d | The left-handed fresh-marker construction is dual | Formalize the displayed no-proper-left-extension condition; this is modern suffix-freeness | source-confirmed |
 | `L1e-EPI` | §1e | A source indexed family is a code and each assigned target word belongs to some target code | Define `PaperCodeEpi` with a source code, a target code, and a possibly repeating/non-surjective selector; expose stronger map properties separately | corrected-target |
-| `L2-RULEINV` | §2 | `(p₁,q₁,p₂,q₂,d)` has printed inverse `(p₂*,q₂,p₁*,q₁,-d)` | Retain only as `SyntacticInverseRule`; it is not a semantic inverse of standard read-write-move execution when `d ≠ 0` | corrected-target |
-| `L2-REV` | §2 | A machine is reversible when the printed inverse family constitutes a machine and starred runs reverse | Replace with explicit forward determinism plus a global partial inverse law; compile moves through reversible phases | corrected-target |
+| `L2-RULEINV` | §2 | `(p₁,q₁,p₂,q₂,d)` has printed inverse `(p₂*,q₂,p₁*,q₁,-d)` | Audit syntax `printedInverse` is non-public; `printedInverse_fails_on_moving_rule` checks the failure. Public `Rule.apply_eq_some_iff_undo_eq_some` proves the repaired semantic inverse | corrected-target |
+| `L2-REV` | §2 | A machine is reversible when the printed inverse family constitutes a machine and starred runs reverse | `Rule.tapeAction` composes checked-write and movement phases. `FiniteMachine.Reversible`, `backwardCompatible_iff_backwardUnique`, and `toPEquiv` separate table determinism from global inverse execution | corrected-target |
 | `L2-COUPLE` | §2 | Forward rules, inverse rules, and halt-to-star switches run forward and then backward | Rebuild with disjoint phase tags and prove the switch and reverse run do not create conflicts | spec-gap |
 | `L3-RELATIONS` | §3 | Three source relations per move rule, plus symbol identities, define an “epimorphism of codes” `τ_max` | Reconstruct every relation family and separately prove source codehood and the induced map's actual properties | spec-gap |
 | `L3-CONFIG` | §3 | `α/ω/β` markers record the next-read and previous-written positions so `uᵢ₊₁ = τ_max(uᵢ)` | Require a well-formed configuration language, encode/decode, and a one-step iff theorem | spec-gap |
@@ -61,17 +61,17 @@ Status labels in this file are:
 
 ### Machine semantics
 
-- A concrete paper-facing machine will use a doubly infinite tape with a
+- The concrete paper-facing machine uses a doubly infinite tape with a
   distinguished blank and finite nonblank support. Configuration equality is
-  exact equality of state, head position, and the extensional tape modulo
-  blanks.
+  exact structural equality of state and an intrinsically canonical tape;
+  trailing blanks have a unique representation.
 - A source quintuple means read the current symbol, write the replacement,
   then move by `-1`, `0`, or `+1`. Absence of an applicable rule means halt.
-- Under that convention the printed inverse quintuple fails for every moving
+- Under that convention the printed inverse quintuple fails for moving rules
   rule in general: after a forward move the head scans a neighboring cell, not
-  the symbol just written. The later library will split write and movement
-  into phases with a fresh intermediate state, or first define an atomic
-  configuration `PEquiv` and compile it to syntax.
+  the symbol just written. `Rule.tapeAction` splits checked write and movement
+  as composed partial equivalences; `Rule.undo` executes those operations in
+  reverse order and its exact inverse iff is checked.
 - Individually invertible operations, syntactic inverse rules, deterministic
   rule lookup, global backward uniqueness, and a whole reversible machine are
   separate notions. Starred states are phase-tagged copies of control states;
@@ -120,8 +120,9 @@ proposed API targets.
 | Claim family | Proposed declaration family | Planned stage |
 |---|---|---:|
 | Generic reversible execution | `Step`, `BackwardUnique`, `ReversibleStep`, `ReversibleStep.next_eq_some_iff_prev_eq_some`, `ReversibleStep.reachable_iff_reverse_reachable`, `ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable` | 2 (implemented) |
-| Concrete machine semantics | `Machine`, `Machine.step`, `Machine.Deterministic`, `Machine.Reversible` | 3 |
-| Repaired inverse compilation | `compileRule`, `compiled_inverse_step_iff` | 3 |
+| Concrete machine semantics | `Tape`, `Config`, `Rule`, `FiniteMachine`, `FiniteMachine.step`, `FiniteMachine.TableDeterministic`, `FiniteMachine.Reversible` | 3 (implemented) |
+| Repaired inverse compilation | `Tape.checkedWrite`, `Tape.moveEquiv`, `Rule.tapeAction`, `Rule.apply_eq_some_iff_undo_eq_some`, `FiniteMachine.step_eq_some_iff_reverseStep_eq_some`, `FiniteMachine.toPEquiv` | 3 (implemented) |
+| Effective source transition | `Source.universalEvalSearchStep`, `Source.universalEvalSearchStep_halts_iff_eval_dom`, `Source.universalEvalSearchStep_primrec`, `Source.evalSearchStart_primrec` | 3 (implemented replacement source; finite compiler open) |
 | History simulation | `historySim`, `checkpoint_step`, `checkpoint_reflect`, `historySim_halts_iff` | 4 |
 | Coupling | `coupled_reaches_star_iff`, `coupled_returns₁_iff` | 5 |
 | Machine undecidability | `reversibleHalting_not_computable`, `reversibleReturn_not_computable`, `reversibleReachability_not_computable` | 6 |
@@ -130,9 +131,10 @@ proposed API targets.
 | Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 |
 | Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 |
 
-Stage 2 supplies the semantic transition infrastructure for `L2-REV`, but it
-does not formalize the paper's concrete Turing-machine claim. That remains in
-Stages 3–5; `L2-REV` is therefore not marked formalized here.
+Stage 3 supplies the concrete read-write-move semantics and repaired local and
+global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`.
+Starred coupling and the paper's halt-to-reverse construction remain in
+Stages 4–5, so no undecidability claim follows from these declarations alone.
 
 ## Principal Reduction Map
 

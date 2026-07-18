@@ -1,8 +1,8 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 declarations are identified as implemented below. All later-layer
-names remain proposed Lean surfaces and may be refined when implementation
-evidence requires it.
+Stage 2 and Stage 3 declarations are identified as implemented below. All
+later-layer names remain proposed Lean surfaces and may be refined when
+implementation evidence requires it.
 
 ## 1. Partial Transition Systems (implemented)
 
@@ -81,77 +81,118 @@ edge, a Boolean positive cycle, a noninjective bottom partial map, and a
 deterministic merge whose individual branches are reversible but whose union
 is not backward-unique.
 
-## 2. Concrete Machine Syntax and Semantics
+## 2. Concrete Machine Syntax and Semantics (implemented)
 
-The mathematical API may be parameterized by finite state and symbol types,
-but reduction inputs must be raw finite descriptions (state/symbol bounds plus
-a list of encoded rules), not structures containing functions or proofs.
+Public modules:
 
-Paper-facing rule shape:
+```text
+Lecerf.Machine.Tape
+Lecerf.Machine.Core
+Lecerf.Machine.Reversible
+Lecerf.Machine.SourceBridge
+Lecerf.Machine.API
+```
+
+`Lecerf.Machine.Audit` is a non-public diagnostic leaf.
+
+The alphabet's `default` value is blank. `Side Γ` is intrinsically canonical:
+it is empty or stores a nearest-first finite prefix ending in a certified
+nonblank far cell. `Tape Γ` stores the scanned symbol plus two sides. Checked
+runtime and encoding declarations include:
 
 ```lean
-inductive Move | left | stay | right
+Side.cells             Side.head             Side.tail
+Side.cons              Side.ofList_cells
+Tape.write             Tape.move             Tape.act
+Tape.move_reverse_move Tape.undo_act
+Primcodable (Tape Γ)
+```
 
-structure Rule (Q Γ : Type) where
+`Tape.act written direction tape` is definitionally move-after-write.
+`Tape.undo_act` states the required opposite order: move back, then restore the
+old scanned symbol.
+
+The exact finite syntax is:
+
+```lean
+structure Config (Q Γ) where
+  state : Q
+  tape  : Tape Γ
+
+structure Rule (Q Γ) where
   source : Q
   read   : Γ
   target : Q
   write  : Γ
-  move   : Move
+  move   : Tape.Move
+
+structure FiniteMachine (Q Γ) where
+  rules : List (Rule Q Γ)
 ```
 
-Chosen convention: read current cell, write, then move; no applicable rule is
-halting. Tapes are doubly infinite with a distinguished blank and finite
-nonblank support. Configurations compare control state, head position, and
-extensional tape contents modulo blanks.
+`Config`, `Rule`, and `FiniteMachine` have constructive `Primcodable`
+instances from their parameter instances. `FiniteMachine.lookup` and
+`FiniteMachine.step` are executable first-match operations, and
+`applyRules_eq_lookupRules_map` proves that first-success execution is exactly
+lookup followed by read-write-move semantics. `HaltsAt` is absence of a
+matching rule.
 
-Keep separate:
-
-```text
-Rule.syntacticInverse     the tuple printed by Lecerf
-Machine.Deterministic     at most one applicable forward rule
-Machine.step              executable Option-valued configuration step
-Machine.BackwardUnique    successful outputs have at most one predecessor
-Machine.Reversible        a specified partial inverse of the global step
-Machine.inverse           an executable reverse-phase machine
-```
-
-The printed moving inverse is retained for paper audit only. Moving rules are
-compiled through a fresh phase state so write and shift are individually
-reversed in the opposite order. The required result has the shape:
+The checked separation between rule and whole-machine reversibility is:
 
 ```lean
-compiled_inverse_step_iff :
-  compiledForward.step c = some c' ↔
-    compiledInverse.step (star c') = some (star c)
+Rule.tapeAction                    -- checked write, then total move
+Rule.undo                          -- move back, check, restore
+Rule.apply_eq_some_iff_undo_eq_some
+Rule.toPEquiv
+
+FiniteMachine.TableDeterministic
+FiniteMachine.ForwardCompatible
+FiniteMachine.BackwardCompatible
+FiniteMachine.ReverseTableCompatible
+FiniteMachine.reverseStep
+FiniteMachine.Reversible :=
+  TableDeterministic ∧ BackwardUnique step
 ```
 
-Its hypotheses must include table determinism, fresh/disjoint phase states,
-and any symbol/state bound validity used by the raw description. Merely
-negating the move is not a proof.
-
-Stage 3 must also choose and prove one effective bridge from
-`Nat.Partrec.Code` halting to this finite syntax. The preferred first source is
-the computable finite-budget evaluator transition:
+`tableDeterministic_forwardCompatible` derives order-independent forward
+semantics from key uniqueness. `reverseTableCompatible_backwardCompatible`
+uses the finite local condition that distinct rules entering one target share
+a movement and write distinct symbols. The headline exact results are:
 
 ```lean
-inductive SearchCfg
-  | run  (code : Nat.Partrec.Code) (budget : Nat)
-  | halt (value : Nat)
-
-def searchStep : SearchCfg → Option SearchCfg
-  | .run c k =>
-      match Nat.Partrec.Code.evaln k c 0 with
-      | some x => some (.halt x)
-      | none   => some (.run c (k + 1))
-  | .halt _ => none
-
-search_halts_iff :
-  HaltsFrom searchStep (.run c 0) ↔ (c.eval 0).Dom
+step_eq_some_iff_reverseStep_eq_some
+backwardCompatible_iff_backwardUnique
+FiniteMachine.toPEquiv
 ```
 
-This theorem alone is a generic transition result. A concrete machine result
-requires a computable compiler and another halting iff.
+Thus individually invertible rules are not conflated with a reversible rule
+table. The audit's two-rule merge is table-deterministic and each entry has a
+`PEquiv`, but the whole machine is not reversible. The same leaf defines the
+paper's printed tuple inverse only as diagnostic syntax and proves it fails on
+a concrete moving-rule successor.
+
+The effective replacement halting source is one fixed transition:
+
+```lean
+abbrev EvalSearchConfig := (Nat.Partrec.Code × Nat) × Nat
+
+universalEvalSearchStep : Step EvalSearchConfig
+evalSearchStart : Nat.Partrec.Code → Nat → EvalSearchConfig
+
+universalEvalSearchStep_halts_iff_eval_dom :
+  HaltsFrom universalEvalSearchStep (evalSearchStart code input) ↔
+    (code.eval input).Dom
+
+universalEvalSearchStep_primrec : Primrec universalEvalSearchStep
+evalSearchStart_primrec : Primrec fun code => evalSearchStart code input
+```
+
+This is a complete effective source-transition theorem, not yet the first
+reduction arrow to `FiniteMachine`. The pinned mathlib TM route exposes an
+existential `ToPartrec.Code` and noncomputable downstream support maps, so the
+project records that obstruction instead of fabricating a compiler. A later
+undecidability stage must still provide an explicit computable finite-machine
+compiler and its own halting iff.
 
 ## 3. History-Recording Reversible Simulation
 
