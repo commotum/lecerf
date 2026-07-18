@@ -1,4 +1,4 @@
-import Lecerf.Transition.API
+import Lecerf.Transition.Reversible
 import Mathlib.Computability.Primrec.List
 
 /-!

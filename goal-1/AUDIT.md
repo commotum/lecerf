@@ -7,8 +7,8 @@ paper, and a planned theorem is never presented as a checked Lean result.
 Status vocabulary:
 
 - `source-confirmed`: directly settled by the scans;
-- `correction-required`: the printed/translated statement is unusable as a
-  formal target and the repair is fixed;
+- `correction-required`: a printed/translated statement or a checked
+  implementation/trust defect required repair, and the repair is recorded;
 - `resolved-design`: the source is incomplete or nonstandard and Stage 1 fixes
   a formal interpretation;
 - `isolated-obligation`: an explicit historical or generalization follow-up
@@ -27,7 +27,7 @@ Status vocabulary:
 | `A-005` | “Inverse-image rules constitute a Turing machine” does not define determinism, backward uniqueness, or coupling conflicts | §2 leaves the machine well-formedness convention implicit. The checked merge audit has a deterministic input-key table and individually reversible rules but two predecessors for one output | `TableDeterministic`, pairwise input/output separation, `BackwardUnique step`, and whole-machine `Reversible` remain separate. Stage 6 proves `TwoTape.FiniteMachine.SyntacticallyReversible` for each generated table; its soundness theorem supplies semantic reversibility rather than inferring it from local rule inverses | resolved-design |
 | `A-006` | The history construction is incomplete | §4 says it gives only the principle and spells out one representative relation, omitting the other rules and invariants | Stage 4 supplies a complete abstract simulator: full predecessor push, checked pop, exact `PEquiv`, generated-history invariant, reflection, and halting iff. Connecting it to the historical marker/tape scheme remains an explicit follow-up | source-confirmed |
 | `A-007` | The source says every history token represents a nonidentity relation while indexing one token per source time step | §4a(4) does not specify whether identity relations are compressed or count as steps | The clean simulator records the complete predecessor for every successful source transition. `history_length_of_forward` proves one new entry per actual step; word-copy identities are not source-machine transitions | resolved-design |
-| `A-008` | “Return to the initial configuration” is trivial under reflexive reachability | Theorem 1 describes a dynamic return | Define return with `StateTransition.Reaches₁` and prove the constructed run has positive length | correction-required |
+| `A-008` | “Return to the initial configuration” is trivial under reflexive reachability | Theorem 1 describes a dynamic return | `PositiveReturn` and `ReturnYes` use `StateTransition.Reaches₁`. `return_positiveReturn_iff_source_halts` proves the constructed positive cycle exactly, and `partrecHalts0_manyOne_returnYes` packages the computable reduction | correction-required |
 | `A-009` | “Epimorphism of codes” is neither a standard categorical epi nor necessarily a surjective monoid map | §1e requires the source indexed family to equal a code but only requires each target word to belong to some code; §3 intentionally repeats target relation words | Stage 7's `PaperCodeEpi` bundles source/target codes, an unrestricted selector, and its generated-submonoid morphism. `PaperCodeEpi.ofCodes` imposes neither selector injectivity nor surjectivity, and the audit checks a selector that both repeats and omits targets | resolved-design |
 | `A-010` | The header and note footnote use different October dates | Both scans show header session 28 October and footnote presentation 21 October | Retain both metadata facts; use 21 October when naming the note's presentation date | minor-source-note |
 | `A-011` | `τ_min` code-isomorphism and machine reversibility are not shown equivalent | French §3 prints only the implication from code isomorphism to reversibility after conditional pruning | The current library proves an exact backward-uniqueness characterization only for its cleaner whole-configuration edge schema. The printed `τ_min` construction and its one-way implication remain an explicit historical formalization obligation; no present declaration is named as that result | isolated-obligation |
@@ -248,9 +248,9 @@ executability or trust.
   `Primrec.List`; partial-recursive code is isolated in `SourceBridge`; and
   `Audit` is not re-exported. Trailing-whitespace and `git diff --check`
   passed.
-- The finite compiler from `Nat.Partrec.Code` to `FiniteMachine` remains
-  explicitly open under `A-018`. The replacement source theorem does not
-  discharge that future reduction arrow.
+- At the close of Stage 3, the finite compiler from `Nat.Partrec.Code` to
+  `FiniteMachine` was still open under `A-018`; Stage 6 later closes the fixed
+  universal-source reduction boundary without claiming a varying compiler.
 
 ### Stage 4 reversible history simulation
 
@@ -271,10 +271,10 @@ executability or trust.
   forward/checked-backward history interpreters and their start encodings are
   primitive recursive. The universal evaluator-search specialization has an
   exact halting iff with `Nat.Partrec.Code.eval`.
-- The abstract state contains an unbounded predecessor list. No conventional
-  finite tape-rule compiler, coupling gadget, many-one reduction, or
-  undecidability theorem is claimed; `A-018`, `A-023`, `A-024`, and `A-025`
-  remain open boundaries.
+- At the close of Stage 4, the abstract state still contained an unbounded
+  predecessor list and `A-018`, `A-023`, `A-024`, and `A-025` were open.
+  Stages 5--6 later supply coupling, a conventional finite two-tape compiler,
+  and the explicit reductions while retaining the one-tape historical gaps.
 - Focused builds passed for Effectivity (820 jobs), History Core (821),
   Correctness (822), Computable (830), and Audit (831). Public API/root builds
   and full `lake build` passed with 835 jobs.

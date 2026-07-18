@@ -67,9 +67,9 @@ The checked library includes:
   proving noncomputability of the equations `w = θⁿ(w)` and
   `w₁ = θⁿ(w₂)` for the finite-machine-presented code-isomorphism subclass.
 
-The iterate problems use strictly positive exponents. Code-isomorphism
-iteration remains partial: an undefined intermediate application stays
-undefined.
+The iterate problems use strictly positive exponents. Iteration of a code
+isomorphism's ambient partial action remains partial: an undefined
+intermediate application stays undefined.
 
 ## Scope and historical fidelity
 

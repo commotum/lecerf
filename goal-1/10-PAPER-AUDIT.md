@@ -149,6 +149,21 @@ build and consolidated no-cheating/axiom audit.
 - All authoritative documents agree on exact status, theorem names, scope,
   trust assumptions, and explicit maintenance/historical follow-ups.
 
+## Requirement-to-Evidence Matrix
+
+| Success metric | Disposition | Direct evidence and scope |
+|---:|---|---|
+| 1 | Met | `Transition.{Core,Reversible,ExactCore,ExactEffectivity}` exports deterministic option execution, successful-predecessor uniqueness, exact/positive reachability, halting, return, reversible path inversion, partial exact iteration, and uniform primitive-recursive iteration. |
+| 2 | Met semantically | `Machine.{Tape,Core,Reversible}` fixes canonical blank-tape and read-write-move semantics. `Rule.apply_eq_some_iff_undo_eq_some`, `step_eq_some_iff_reverseStep_eq_some`, and `backwardCompatible_iff_backwardUnique` prove repaired local and whole-table inverse behavior. `SyntacticallyReversible` remains correctly documented as a decidable sufficient certificate, not an iff characterization. |
+| 3 | Met by the permitted cleaner construction | The abstract `History` simulator is an exact `PEquiv`; `reachable_iff_valid`, projection/reflection, growth, and `haltsFrom_forward_iff` prove correctness, while `finiteForward_uniform_primrec`/`finiteBackward_uniform_primrec` give a uniform effective interpreter. For every finite deterministic one-tape source, `HistoryCompiler.historyMachine` is a conventional finite reversible two-tape realization with `historyMachine_haltsFrom_iff_source`. Its generic table generator has no claimed `Primrec` theorem because of finite-enumeration choice; the fixed tables used in reductions avoid that boundary. |
+| 4 | Met for certified finite two-tape machines | `compileHalting`, `compileReturn`, and `compileReachability` each have `Primrec`/`Computable`, exact iff, `ManyOneReducible`, and transferred noncomputability theorems. The one-tape historical lowering remains follow-up. |
+| 5 | Met | `Word.{Code,Prefix,CodeMorphism}` supplies the exact indexed/set-code bridge, prefix/suffix marker lemmas, generated submonoids, and distinct `MonoidHom`, `InjectiveMorphism`, `PaperCodeEpi`, `CodeIso`, and partial ambient `CodeIso.toPEquiv` boundaries. |
+| 6 | Met by a cleaner finite-descriptor presentation | `ConfigCode` gives exact primitive-recursive Boolean framing. `StepCode` gives successful-edge codes, exact backward-uniqueness/codehood, `PaperCodeEpi`/`CodeIso`, strong step/iterate reflection, and a finite validity-guarded primitive-recursive interpreter. The semantic edge family is generally infinite and is not named as Lecerf's finite local relation list. |
+| 7 | Met for that corrected presentation | `PositiveFixedOrbitYes` and `DistinctOrbitYes` use exponent `k + 1`; supplied nonzero exponent recognition is computable, existence is RE, and the two explicit many-one reductions establish noncomputability. `ExactSteps` preserves partial failure and the distinct problem carries endpoint inequality. |
+| 8 | Met | All 32 material source claim IDs in `PAPER-MAP.md` have a checked declaration or an explicit non-formal disposition: source-confirmed, corrected target, cited background, conjecture, out-of-scope follow-up, or `spec-gap`/historical obligation. |
+| 9 | Met after trust repair | `AUDIT.md` records corrections `A-001`--`A-036`, noncomputable boundaries, validation history, and headline axioms. `PublicAudit` imports only `Lecerf`; aggregate `Lecerf.Audit` adds every diagnostic leaf. Stage 10 removed 21 `native_decide` uses whose generated axioms evaded source-token scans. |
+| 10 | Pending final clean verification | Focused public/audit builds have passed. Completion still requires the final clean-state root build, post-clean aggregate audit build, complete scans, Markdown checks, and `git diff --check`. |
+
 ## Stage Results
 
 - In progress. This contract records the initial contradictions and direct

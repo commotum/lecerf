@@ -245,8 +245,9 @@ The original goal is complete only when all of the following are checked:
    semantics are formalized, with a proved characterization of reversibility.
 3. Every ordinary source computation has an effectively constructed reversible
    simulation with a proved history invariant and halting equivalence.
-4. Forward/reverse coupling yields explicit computable reductions from an
-   established halting problem to reversible halting, return, and reachability.
+4. History simulation and forward/reverse coupling yield explicit computable
+   reductions from an established halting problem to reversible halting,
+   return, and reachability.
 5. Free monoids, uniquely decodable codes, prefix/suffix code lemmas, generated
    submonoids, code morphisms, and code isomorphisms are formalized without
    conflating total and partial maps.
