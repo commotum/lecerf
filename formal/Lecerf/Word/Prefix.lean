@@ -244,17 +244,17 @@ private def firstRight : List (I ⊕ J) → Option (J × List (I ⊕ J))
 
 private theorem leadingLeft_firstRight_reconstruct (indices : List (I ⊕ J)) :
     (leadingLeft indices).map (Sum.inl : I → I ⊕ J) ++
-        match firstRight indices with
+        (match firstRight indices with
         | none => []
-        | some (j, rest) => Sum.inr j :: rest =
+        | some (j, rest) => Sum.inr j :: rest) =
       indices := by
   induction indices with
   | nil => rfl
   | cons index indices ih =>
       cases index with
       | inl i =>
-          simp only [leadingLeft, firstRight, List.map_cons, List.cons_append]
-          rw [ih]
+          simp only [leadingLeft, firstRight, List.map_cons]
+          exact congrArg (Sum.inl i :: ·) ih
       | inr j => rfl
 
 private theorem firstRight_tail_length_lt {indices : List (I ⊕ J)}
@@ -266,7 +266,7 @@ private theorem firstRight_tail_length_lt {indices : List (I ⊕ J)}
       cases index with
       | inl i =>
           simp only [firstRight] at h
-          exact Nat.lt.step (ih h)
+          exact Nat.lt_succ_of_lt (ih h)
       | inr j' =>
           simp only [firstRight, Option.some.injEq, Prod.mk.injEq] at h
           rcases h with ⟨_, rfl⟩
@@ -297,10 +297,9 @@ private theorem flattenCode_prependMarkerExtension
   | cons index indices ih =>
       cases index with
       | inl i =>
-          simp only [flattenCode, prependMarkerExtension, leadingLeft,
-            firstRight, List.map_cons, List.flatten_cons]
-          rw [ih]
-          simp only [List.append_assoc]
+          simpa only [flattenCode, prependMarkerExtension, leadingLeft,
+            firstRight, List.map_cons, List.flatten_cons,
+            List.append_assoc] using congrArg ((c i).toList ++ ·) ih
       | inr j =>
           simp [flattenCode, prependMarkerExtension, leadingLeft, firstRight]
 
@@ -326,10 +325,113 @@ private theorem append_marker_unique
       | cons b left' =>
           simp only [List.cons_append, List.cons.injEq] at h
           have hfreshTail : marker ∉ left := by
-            simpa only [List.mem_cons, not_or] using hfresh |>.2
+            have hparts : marker ≠ a ∧ marker ∉ left := by
+              simpa only [List.mem_cons, not_or] using hfresh
+            exact hparts.2
           have hfreshTail' : marker ∉ left' := by
-            simpa only [List.mem_cons, not_or] using hfresh' |>.2
+            have hparts : marker ≠ b ∧ marker ∉ left' := by
+              simpa only [List.mem_cons, not_or] using hfresh'
+            exact hparts.2
           rcases ih hfreshTail hfreshTail' h.2 with ⟨hle, hre⟩
           exact ⟨by simp [h.1, hle], hre⟩
+
+private theorem prefixFree_index_eq_of_append_eq {k : J → Word A}
+    (hk : IsPrefixFree k) {i j : J} {left right : List A}
+    (h : (k i).toList ++ left = (k j).toList ++ right) : i = j := by
+  by_cases hlength : (k i).toList.length ≤ (k j).toList.length
+  · apply hk
+    apply (List.isPrefix_append_of_length hlength).mp
+    rw [← h]
+    exact List.prefix_append _ _
+  · have hlength' : (k j).toList.length ≤ (k i).toList.length :=
+      Nat.le_of_lt (Nat.lt_of_not_ge hlength)
+    symm
+    apply hk
+    apply (List.isPrefix_append_of_length hlength').mp
+    rw [h]
+    exact List.prefix_append _ _
+
+/-- Sharp left-marker extension theorem.  Freshness is required only for the
+already-coded family: a common leading marker preserves prefix-freeness of the
+auxiliary family even when that marker occurs inside one of its words. -/
+theorem isIndexedCode_prependMarkerExtension_of_freshFor_left
+    (marker : A) (c : I → Word A) (k : J → Word A)
+    (hc : IsIndexedCode c) (hk : IsPrefixFree k)
+    (hfreshC : FreshFor marker c) :
+    IsIndexedCode (prependMarkerExtension marker c k) := by
+  rw [isIndexedCode_iff_flattenCode_injective]
+  have hcFlatten : Function.Injective (flattenCode c) :=
+    isIndexedCode_iff_flattenCode_injective.mp hc
+  let P : Nat → Prop := fun n ↦
+    ∀ (xs : List (I ⊕ J)), xs.length = n →
+      ∀ ys : List (I ⊕ J),
+        flattenCode (prependMarkerExtension marker c k) xs =
+          flattenCode (prependMarkerExtension marker c k) ys →
+        xs = ys
+  have hP : ∀ n, P n := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | h n ih =>
+        intro xs hlength ys hxy
+        rw [flattenCode_prependMarkerExtension,
+          flattenCode_prependMarkerExtension] at hxy
+        cases hx : firstRight xs with
+        | none =>
+            cases hy : firstRight ys with
+            | none =>
+                rw [hx, hy] at hxy
+                simp only [List.append_nil] at hxy
+                have hp : leadingLeft xs = leadingLeft ys := hcFlatten hxy
+                have hrx := leadingLeft_firstRight_reconstruct xs
+                have hry := leadingLeft_firstRight_reconstruct ys
+                rw [hx] at hrx
+                rw [hy] at hry
+                simp only [List.append_nil] at hrx hry
+                exact hrx.symm.trans <| (congrArg (List.map Sum.inl) hp).trans hry
+            | some data =>
+                rcases data with ⟨j, rest⟩
+                rw [hx, hy] at hxy
+                simp only [List.append_nil] at hxy
+                exfalso
+                apply marker_not_mem_flattenCode hfreshC (leadingLeft xs)
+                rw [hxy]
+                simp
+        | some data =>
+            rcases data with ⟨i, rest⟩
+            cases hy : firstRight ys with
+            | none =>
+                rw [hx, hy] at hxy
+                simp only [List.append_nil] at hxy
+                exfalso
+                apply marker_not_mem_flattenCode hfreshC (leadingLeft ys)
+                rw [← hxy]
+                simp
+            | some data' =>
+                rcases data' with ⟨j, rest'⟩
+                rw [hx, hy] at hxy
+                rcases append_marker_unique
+                    (marker_not_mem_flattenCode hfreshC (leadingLeft xs))
+                    (marker_not_mem_flattenCode hfreshC (leadingLeft ys)) hxy with
+                  ⟨hprefix, hrest⟩
+                have hp : leadingLeft xs = leadingLeft ys := hcFlatten hprefix
+                have hij : i = j :=
+                  prefixFree_index_eq_of_append_eq hk hrest
+                subst j
+                have htails :
+                    flattenCode (prependMarkerExtension marker c k) rest =
+                      flattenCode (prependMarkerExtension marker c k) rest' :=
+                  List.append_cancel_left hrest
+                have hrestLength : rest.length < n := by
+                  rw [← hlength]
+                  exact firstRight_tail_length_lt hx
+                have ht : rest = rest' :=
+                  ih rest.length hrestLength rest rfl rest' htails
+                have hrx := leadingLeft_firstRight_reconstruct xs
+                have hry := leadingLeft_firstRight_reconstruct ys
+                rw [hx] at hrx
+                rw [hy] at hry
+                exact hrx.symm.trans <| by simpa only [hp, ht] using hry
+  intro xs ys hxy
+  exact hP xs.length xs rfl ys hxy
 
 end Lecerf.Word
