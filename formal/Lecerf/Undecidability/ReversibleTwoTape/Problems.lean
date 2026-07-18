@@ -19,20 +19,17 @@ namespace Lecerf.Undecidability.ReversibleTwoTape
 open Lecerf.Transition
 open Lecerf.Machine
 
-namespace HC = Lecerf.Machine.TwoTape.HistoryCompiler
-namespace FS = Lecerf.Machine.Compiler.FiniteSource
-
 /-- Fixed work-machine state type selected by the universal source bridge. -/
-abbrev SourceState := FS.State
+abbrev SourceState := Compiler.FiniteSource.State
 
 /-- Fixed work-tape alphabet selected by the universal source bridge. -/
-abbrev WorkSymbol := FS.Symbol
+abbrev WorkSymbol := Compiler.FiniteSource.Symbol
 
 /-- Fixed control type of the compiled reversible two-tape machines. -/
-abbrev MachineState := HC.Control SourceState WorkSymbol
+abbrev MachineState := TwoTape.HistoryCompiler.Control SourceState WorkSymbol
 
 /-- Fixed history-tape alphabet containing source-rule tokens. -/
-abbrev HistorySymbol := HC.Mark SourceState WorkSymbol
+abbrev HistorySymbol := TwoTape.HistoryCompiler.Mark SourceState WorkSymbol
 
 /-- Raw target-machine descriptions all have these fixed finite types. -/
 abbrev TargetMachine :=
@@ -55,8 +52,10 @@ abbrev ReachabilityInput := TargetMachine × TargetConfig × TargetConfig
 def Certified (machine : TargetMachine) : Prop :=
   machine.SyntacticallyReversible
 
-instance (machine : TargetMachine) : Decidable (Certified machine) :=
-  inferInstance
+noncomputable instance (machine : TargetMachine) : Decidable (Certified machine) :=
+  by
+    unfold Certified
+    infer_instance
 
 /-- The raw certificate predicate is primitive recursive in the finite table
 description. -/
