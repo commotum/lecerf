@@ -95,6 +95,11 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   exact `PEquiv` on all history states, proves generated history exactly
   equivalent to reachability, preserves and reflects halting, and is primitive
   recursive jointly in an existing finite-machine description.
+- Stage 5 is in progress. Its boundary is a generic reversible terminal-switch
+  coupling plus a closed return gadget, specialized to the history lift for
+  exact source-halting iff distinct reverse-initial reachability and positive
+  return. No decision predicate or undecidability reduction belongs to this
+  stage.
 
 ## Current Design Decisions
 
@@ -216,7 +221,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 2 | `TRANSITION` | Complete | Reversible partial-transition API |
 | 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Complete | Constructive reversible history simulation |
-| 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
+| 5 | `COUPLING` | In progress | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |
 | 7 | `WORD-CODES` | Not started | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Not started | Machine-step representation by code maps |
