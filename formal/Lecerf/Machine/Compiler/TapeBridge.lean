@@ -124,13 +124,19 @@ theorem sideToBlank_head (side : Side Γ) :
 theorem sideToBlank_cons (head : Γ) (side : Side Γ) :
     sideToBlank (Side.cons head side) = (sideToBlank side).cons head := by
   apply sideEquiv.injective
-  simp
+  change blankToSide (sideToBlank (Side.cons head side)) =
+    blankToSide ((sideToBlank side).cons head)
+  rw [blankToSide_sideToBlank, blankToSide_cons,
+    blankToSide_sideToBlank]
 
 @[simp]
 theorem sideToBlank_tail (side : Side Γ) :
     sideToBlank (Side.tail side) = (sideToBlank side).tail := by
   apply sideEquiv.injective
-  simp
+  change blankToSide (sideToBlank (Side.tail side)) =
+    blankToSide (sideToBlank side).tail
+  rw [blankToSide_sideToBlank, ← blankToSide_tail,
+    blankToSide_sideToBlank]
 
 /-- Canonicalize both sides of a mathlib tape. -/
 def tapeToLocal (tape : Turing.Tape Γ) : Tape Γ :=
@@ -139,6 +145,11 @@ def tapeToLocal (tape : Turing.Tape Γ) : Tape Γ :=
 /-- Embed a canonical project tape into mathlib's quotient representation. -/
 def tapeToMathlib (tape : Tape Γ) : Turing.Tape Γ :=
   ⟨tape.head, sideToBlank tape.left, sideToBlank tape.right⟩
+
+@[simp]
+theorem tapeToMathlib_head (tape : Tape Γ) :
+    (tapeToMathlib tape).head = tape.head :=
+  rfl
 
 /-- Equivalence between complete mathlib and project tapes. -/
 def tapeEquiv : Turing.Tape Γ ≃ Tape Γ where

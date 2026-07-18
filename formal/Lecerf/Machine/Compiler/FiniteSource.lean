@@ -143,6 +143,22 @@ support certificate and canonical tape representation. -/
 theorem step_erases (config : Config State Symbol) :
     Option.map eraseConfig (machine.step config) =
       Turing.TM0.step ambientMachine (eraseConfig config) := by
-  sorry
+  rw [machine, Table.step_compile_eq delta Finset.univ.toList Finset.univ.toList
+    config (by simp) (by simp)]
+  change Option.map eraseConfig
+      ((delta config.state config.tape.head).map fun output =>
+        (⟨output.1,
+          config.tape.act output.2.1 output.2.2⟩ : Config State Symbol)) = _
+  unfold delta
+  split
+  next h =>
+    simp [Turing.TM0.step, eraseConfig, h]
+  next target statement h =>
+    cases statement with
+    | move direction =>
+        cases direction <;>
+          simp [Turing.TM0.step, eraseConfig, action, Tape.act, h]
+    | write written =>
+        simp [Turing.TM0.step, eraseConfig, action, Tape.act, h]
 
 end Lecerf.Machine.Compiler.FiniteSource
