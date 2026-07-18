@@ -86,6 +86,7 @@ theorem lookup_ne_none_of_mem_of_key
   subst symbol
   exact Lecerf.Machine.FiniteMachine.lookupRules_ne_none_of_mem ruleMem
 
+omit [Fintype Q] [Fintype Γ] in
 private theorem generated_forward_key_unique
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     (sourceDeterministic : machine.TableDeterministic)
@@ -102,7 +103,7 @@ private theorem generated_forward_key_unique
   case forward.forward first firstMem second secondMem =>
     have ruleEq := sourceDeterministic firstMem secondMem sourceEq read₁Eq
     subst second
-    simp [forwardRule]
+    simp
   case forward.boundary rule ruleMem state symbol terminal =>
     exact False.elim
       ((lookup_ne_none_of_mem_of_key ruleMem sourceEq read₁Eq) terminal)
@@ -110,6 +111,7 @@ private theorem generated_forward_key_unique
     exact False.elim
       ((lookup_ne_none_of_mem_of_key ruleMem rfl rfl) terminal)
 
+omit [Fintype Q] [Fintype Γ] in
 private theorem generated_incoming_separated
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     (sourceDeterministic : machine.TableDeterministic)
@@ -227,6 +229,7 @@ theorem historyMachine_syntacticallyReversible
 
 /-- The closed compiler is semantically deterministic and reversible. -/
 theorem returnMachine_reversible
+    [Inhabited Γ]
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     (sourceDeterministic : machine.TableDeterministic) :
     (returnMachine machine).Reversible :=
@@ -235,6 +238,7 @@ theorem returnMachine_reversible
 /-- The open turnaround compiler is semantically deterministic and
 reversible. -/
 theorem turnaroundMachine_reversible
+    [Inhabited Γ]
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     (sourceDeterministic : machine.TableDeterministic) :
     (turnaroundMachine machine).Reversible :=
@@ -243,13 +247,15 @@ theorem turnaroundMachine_reversible
 /-- The forward-only history compiler is semantically deterministic and
 reversible. -/
 theorem historyMachine_reversible
+    [Inhabited Γ]
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     (sourceDeterministic : machine.TableDeterministic) :
     (historyMachine machine).Reversible :=
   (historyMachine_syntacticallyReversible sourceDeterministic).reversible
 
 /-- Exact partial-equivalence semantics of the closed return compiler. -/
-def returnReversibleStep
+noncomputable def returnReversibleStep
+    [Inhabited Γ]
     (machine : Lecerf.Machine.FiniteMachine Q Γ)
     (sourceDeterministic : machine.TableDeterministic) :
     ReversibleStep (TwoTape.Config (Control Q Γ) Γ (Mark Q Γ)) :=

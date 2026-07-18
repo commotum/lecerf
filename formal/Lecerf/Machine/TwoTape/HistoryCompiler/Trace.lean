@@ -137,15 +137,15 @@ def advance (rule : SourceRule Q Γ) (config : SourceConfig Q Γ) :
     SourceConfig Q Γ :=
   ⟨rule.target, config.tape.act rule.write rule.move⟩
 
-@[simp]
 omit [DecidableEq Q] in
+@[simp]
 theorem advance_state (rule : SourceRule Q Γ)
     (config : SourceConfig Q Γ) :
     (advance rule config).state = rule.target :=
   rfl
 
-@[simp]
 omit [DecidableEq Q] in
+@[simp]
 theorem advance_tape (rule : SourceRule Q Γ)
     (config : SourceConfig Q Γ) :
     (advance rule config).tape = config.tape.act rule.write rule.move :=
@@ -238,9 +238,9 @@ theorem reverseConfiguration_nil (config : SourceConfig Q Γ) :
     reverseConfiguration config [] = reverseCheckpoint config :=
   rfl
 
+omit [DecidableEq Q] in
 /-- Moving opposite the recorded source move from its successor tape exposes
 the just-written cell. -/
-omit [DecidableEq Q] in
 theorem move_back_advance (rule : SourceRule Q Γ)
     (config : SourceConfig Q Γ) :
     Tape.move rule.move.reverse (advance rule config).tape =
