@@ -42,6 +42,7 @@ namespace Edge
 
 variable {machine : FiniteMachine Q Γ₁ Γ₂}
 
+omit [Primcodable Q] [Primcodable Γ₁] [Primcodable Γ₂] in
 /-- A successful source determines its displayed edge. -/
 theorem source_injective :
     Function.Injective (source : Edge machine → Config Q Γ₁ Γ₂) := by
@@ -54,6 +55,7 @@ theorem source_injective :
   subst secondTarget
   rfl
 
+omit [Primcodable Q] [Primcodable Γ₁] [Primcodable Γ₂] in
 /-- Successful-predecessor uniqueness makes the target projection injective. -/
 theorem target_injective (backward : BackwardUnique machine.step) :
     Function.Injective (target : Edge machine → Config Q Γ₁ Γ₂) := by

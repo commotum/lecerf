@@ -90,9 +90,9 @@ variable {C : Type x} [Primcodable C]
 
 /-- Decode a Boolean word as configuration frames, apply a partial map to
 every frame, and re-encode the resulting frame sequence. -/
-def applyWord (next : C → Option C) (word : Word Bool) : Option (Word Bool) := do
-  let configs ← ConfigCode.decodeConfigs (C := C) word
-  (traverse next configs).map (ConfigCode.encodeConfigs (C := C))
+def applyWord (next : C → Option C) (word : Word Bool) : Option (Word Bool) :=
+  (ConfigCode.decodeConfigs (C := C) word).bind fun configs : List C =>
+    (traverse next configs).map (ConfigCode.encodeConfigs (C := C))
 
 /-- Exact successful-result characterization of the executable word
 interpreter. -/
@@ -112,7 +112,7 @@ theorem applyWord_eq_some_iff (next : C → Option C)
       ⟨targets, traversed, encoded⟩
     exact ⟨sources, targets,
       (ConfigCode.decodeConfigs_eq_some_iff.mp decoded), traversed,
-      (Option.some.inj encoded).symm⟩
+      encoded.symm⟩
   · rintro ⟨sources, targets, rfl, traversed, rfl⟩
     simp [applyWord, traversed]
 
@@ -163,7 +163,7 @@ private theorem lift_generator_coe {A : Type x} {I : Type y}
   induction indices using FreeMonoid.inductionOn' with
   | one => simp
   | mul_of index indices ih =>
-      simp only [map_mul, FreeMonoid.lift_eval_of, generator_coe]
+      simp only [map_mul, FreeMonoid.lift_eval_of]
       exact congrArg (fun word : Word A => codewords index * word) ih
 
 /-- A code isomorphism acts generatorwise on every finite word of indices. -/
@@ -208,11 +208,8 @@ private theorem encodeEdgeSources {machine : FiniteMachine Q Γ₁ Γ₂}
   rw [ConfigCode.encodeConfigs_eq_lift]
   apply FreeMonoid.toList.injective
   rw [Lecerf.Word.toList_lift_ofList, Lecerf.Word.toList_lift_ofList]
-  change
-    (List.map (fun edge : Edge machine =>
-      (ConfigCode.encodeConfig edge.source).toList) edges).flatten =
-    (List.map (fun edge : Edge machine =>
-      (ConfigCode.encodeConfig edge.source).toList) edges).flatten
+  congr 1
+  rw [List.map_map]
   rfl
 
 private theorem encodeEdgeTargets {machine : FiniteMachine Q Γ₁ Γ₂}
@@ -223,13 +220,11 @@ private theorem encodeEdgeTargets {machine : FiniteMachine Q Γ₁ Γ₂}
   rw [ConfigCode.encodeConfigs_eq_lift]
   apply FreeMonoid.toList.injective
   rw [Lecerf.Word.toList_lift_ofList, Lecerf.Word.toList_lift_ofList]
-  change
-    (List.map (fun edge : Edge machine =>
-      (ConfigCode.encodeConfig edge.target).toList) edges).flatten =
-    (List.map (fun edge : Edge machine =>
-      (ConfigCode.encodeConfig edge.target).toList) edges).flatten
+  congr 1
+  rw [List.map_map]
   rfl
 
+omit [Primcodable Q] [Primcodable Γ₁] [Primcodable Γ₂] in
 private theorem traverse_machineStep_edges
     {machine : FiniteMachine Q Γ₁ Γ₂} (edges : List (Edge machine)) :
     traverse machine.step (edges.map Edge.source) =
@@ -239,6 +234,7 @@ private theorem traverse_machineStep_edges
   | cons edge edges ih =>
       exact traverse_cons_eq_some_iff _ _ _ _ _ |>.2 ⟨edge.step_eq, ih⟩
 
+omit [Primcodable Q] [Primcodable Γ₁] [Primcodable Γ₂] in
 private theorem traverse_machineStep_eq_some_iff_exists_edges
     (machine : FiniteMachine Q Γ₁ Γ₂)
     (sources targets : List (Config Q Γ₁ Γ₂)) :
