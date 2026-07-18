@@ -15,6 +15,8 @@ namespace Lecerf.Machine.Source
 
 open Lecerf.Transition
 
+/-- Structural equality for source programs, needed by checked reverse history
+execution of the fixed universal source. -/
 deriving instance DecidableEq for Nat.Partrec.Code
 
 /-- One bounded evaluator attempt per transition. The state is the next bound
