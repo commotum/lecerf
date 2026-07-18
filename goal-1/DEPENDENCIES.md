@@ -155,18 +155,19 @@ Checked facts:
 - `Turing.PartrecToTM2.tr_eval` and `tr_supports` exist for
   `Turing.ToPartrec.Code`.
 
-Decision: define a finite project-local machine syntax with conventional
-read-write-move source rules and repaired phase compilation. TM0 remains a
-useful reference/possible bridge because its moves and writes are already
-split.
+Decision: define a finite project-local one-tape source syntax with
+conventional read-write-move rules, and a separate conventional finite
+two-tape target syntax for the reversible history construction. TM0 remains
+the checked bridge into the fixed one-tape source. A future theorem lowering
+the simultaneous two-tape target rules back to the project's one-tape syntax
+is a separate obligation.
 
-Critical bridge mismatch: `ComputablePred.halting_problem` uses
-`Nat.Partrec.Code`, while `Turing.PartrecToTM2.tr_eval` uses
-`Turing.ToPartrec.Code`. `Turing.ToPartrec.Code.exists_code` is existential
-rather than an exposed computable syntax compiler, and the universal TM construction
-uses function-bearing/infinite label types plus code-dependent finite support.
-The existing semantic chain therefore does **not** yet provide the computable
-map to a finite project machine required by `≤₀`.
+Stages 3--5 exposed a critical bridge mismatch:
+`ComputablePred.halting_problem` uses `Nat.Partrec.Code`, while
+`Turing.PartrecToTM2.tr_eval` uses `Turing.ToPartrec.Code`.
+`Turing.ToPartrec.Code.exists_code` is existential rather than an exposed
+computable syntax compiler, and the universal TM construction uses
+function-bearing/infinite label types plus code-dependent finite support.
 
 Stage 3 checked this obstruction more precisely:
 
@@ -178,23 +179,31 @@ Stage 3 checked this obstruction more precisely:
 - both `TM2to1.trSupp` and `TM1to0.trSupp` are explicitly `noncomputable` in
   the pinned source.
 
-The implemented replacement source is
+The first implemented replacement source was
 `Lecerf.Machine.Source.universalEvalSearchStep`. It is one fixed transition
 whose program/input are part of the configuration. Its step and joint
 program/input start map are primitive recursive, and its halting predicate is
-exactly `(Nat.Partrec.Code.eval code input).Dom`. This closes the source-transition
-side of the bridge without pretending to close the finite-machine compiler.
+exactly `(Nat.Partrec.Code.eval code input).Dom`. Stage 6 then closed the
+finite source bridge without a Church–Turing-equivalence shortcut:
 
-The remaining finite compiler must use one of three explicit routes:
+- `Compiler.UniversalSource.universalCode` classically chooses one closed
+  `Turing.ToPartrec.Code` computing the universal evaluator, while
+  `encodedInput` places the varying `Nat.Partrec.Code` and input in its data;
+- `Compiler.FiniteSource.machine` lowers that single program through the
+  checked TM2-to-TM1-to-TM0 simulations, restricts control to the proved
+  finite support, and compiles an actual fixed one-tape `FiniteMachine`;
+- `Compiler.FiniteSource.halts_iff_eval_dom` proves exact halting preservation
+  and reflection; and
+- `Compiler.FiniteSource.initial_joint_primrec` and `initial_primrec` prove
+  that the varying canonical input configuration is primitive recursive.
 
-1. compile the `evaln` search transition computably into the finite project
-   machine and prove a halting iff;
-2. implement a computable `Nat.Partrec.Code` syntax compiler with a semantic
-   iff; or
-3. establish an undecidable predicate directly over a suitably encodable
-   finite `Turing.ToPartrec.Code` fragment.
-
-No Church–Turing-equivalence shortcut is permitted.
+The use of choice and noncomputable support/enumeration operations is confined
+to closed constants: the selected universal program, its finite state and
+alphabet encodings, and the three resulting target tables. No source code
+selects a different machine. Although the final `compileHalting`,
+`compileReturn`, and `compileReachability` definitions require a
+`noncomputable section` to mention those constants, each complete varying map
+has an explicit `Primrec` theorem and hence an explicit `Computable` theorem.
 
 ### Words, generated submonoids, and codes
 
@@ -356,10 +365,76 @@ specializations. `Coupling/Audit` is a non-public diagnostic and axiom-audit
 leaf.
 
 The finite coupling theorems consume an existing `FiniteMachine` description
-and an abstract phase-tagged full-history state. They do **not** produce a new
-finite rule table. The finite source compiler (`A-018`), ordinary phase-rule
-compiler (`A-023`), finite validity criterion (`A-024`), and history-list tape
-compiler (`A-025`) therefore remain Stage-6 dependencies.
+and an abstract phase-tagged full-history state. They do **not** themselves
+produce a finite rule table. Stage 6 closes that gap for a conventional finite
+two-tape target in `Machine.TwoTape.HistoryCompiler`; it does not retroactively
+turn the Stage-5 abstract gadget into a one-tape compiler.
+
+### Stage 6 realized finite two-tape boundary
+
+The previously grouped obligations now have different statuses:
+
+- `A-018` is closed by the fixed universal one-tape source and its
+  primitive-recursive varying start map.
+- `A-024` is closed for the two-tape target by the decidable,
+  primitive-recursive sufficient certificate
+  `TwoTape.FiniteMachine.SyntacticallyReversible`; its theorem
+  `SyntacticallyReversible.reversible` gives semantic whole-machine
+  reversibility without asserting a converse.
+- `A-025` is closed for the two-tape target by the finite history-token tape
+  and microstate compiler, including generated-run reflection and exact
+  halting, return, and reachability iff theorems.
+- `A-023` is avoided, not silently solved: simultaneous read-write-move is an
+  atomic rule of the new two-tape target. Lowering those rules to the existing
+  one-tape `FiniteMachine` still requires a phase-control/tape encoding proof.
+
+The realized dependency graph is:
+
+```text
+Mathlib ToPartrec + Reduce
+  -> Machine/Compiler/UniversalSource
+  -> Machine/Compiler/FiniteSource
+  -> Machine/Compiler/FiniteSourceComputable
+
+Machine/Tape + Transition/Core
+  -> Machine/TwoTape/Core
+  -> Machine/TwoTape/Effectivity
+  -> Machine/TwoTape/Validity
+
+Machine/TwoTape/Core + Machine/Reversible
+  -> Machine/TwoTape/Reversible
+  -> Machine/TwoTape/Validity
+
+Machine/Core + Machine/TwoTape/Reversible
+  -> Machine/TwoTape/HistoryCompiler/Core
+  -> HistoryCompiler/Basic + HistoryCompiler/Trace
+  -> HistoryCompiler/Reversible
+  -> HistoryCompiler/Runtime
+  -> HistoryCompiler/Correctness
+
+HistoryCompiler/Core + Machine/TwoTape/Validity
+  -> HistoryCompiler/Effectivity
+
+FiniteSourceComputable + HistoryCompiler/Correctness +
+HistoryCompiler/Effectivity
+  -> Machine/Compiler/ReversibleUniversal
+
+ReversibleUniversal + ReversibleTwoTape/Problems + Reduce
+  -> ReversibleTwoTape/Reduction
+  -> ReversibleTwoTape/API
+  -> Undecidability/API
+  -> Lecerf
+
+ReversibleTwoTape/Reduction
+  -> ReversibleTwoTape/Audit  (not publicly re-exported)
+```
+
+`ReversibleUniversal.historyTable`, `turnaroundTable`, and `returnTable` are
+fixed finite tables. Only `sourceStart`, `startCheckpoint`, and `bottomTarget`
+vary with the source code, and all three relevant endpoint maps are primitive
+recursive. The historical correspondence to Lecerf's compact one-tape marker
+scheme, including a two-to-one-tape lowering, remains future work and must not
+be inferred from these two-tape declarations.
 
 ## Tentative Module Layout
 
@@ -375,10 +450,32 @@ formal/
     Machine/
       Tape.lean
       Core.lean
+      Lookup.lean
       Reversible.lean
+      Validity.lean
       Effectivity.lean
       SourceBridge.lean
       Audit.lean
+      Compiler/
+        Table.lean
+        TapeBridge.lean
+        UniversalSource.lean
+        FiniteSource.lean
+        FiniteSourceComputable.lean
+        ReversibleUniversal.lean
+      TwoTape/
+        Core.lean
+        Reversible.lean
+        Effectivity.lean
+        Validity.lean
+        HistoryCompiler/
+          Core.lean
+          Basic.lean
+          Trace.lean
+          Reversible.lean
+          Runtime.lean
+          Correctness.lean
+          Effectivity.lean
       History/
         Core.lean
         Correctness.lean
@@ -401,7 +498,13 @@ formal/
       MachineStep.lean
       Audit.lean
     Undecidability/
-      ReversibleMachine.lean
+      EffectiveTransition.lean
+      API.lean
+      ReversibleTwoTape/
+        Problems.lean
+        Reduction.lean
+        Audit.lean
+        API.lean
       CodeIterates.lean
     Paper/
       Claims.lean
@@ -468,3 +571,34 @@ Stage-5 focused builds passed through `Coupling.Audit` (834 jobs), and the
 public `Machine.API`/root adjacent build passed after adding `Coupling.API`.
 The final full `lake build` passed with 839 jobs; detailed validation and axiom
 results are recorded in `5-COUPLING.md` and `AUDIT.md`.
+
+Stage-6 realized dependency additions:
+
+```text
+Machine/Compiler/UniversalSource       -> Mathlib ToPartrec
+Machine/Compiler/Table                 -> Machine/Core
+Machine/Compiler/TapeBridge            -> Machine/Tape, mathlib Tape
+Machine/Compiler/FiniteSource          -> compiler leaves, PostTuringMachine
+Machine/Compiler/FiniteSourceComputable -> FiniteSource, Machine/Effectivity
+Machine/TwoTape/Core                   -> Machine/Tape, Transition/Core
+Machine/TwoTape/Reversible             -> TwoTape/Core, Transition/Reversible
+Machine/TwoTape/Effectivity            -> Machine/Effectivity, TwoTape/Core
+Machine/TwoTape/Validity               -> TwoTape/Effectivity, TwoTape/Reversible
+Machine/TwoTape/HistoryCompiler/*      -> TwoTape layers, Machine/Core/Lookup
+Machine/Compiler/ReversibleUniversal   -> FiniteSourceComputable,
+                                           HistoryCompiler correctness/effectivity
+Undecidability/ReversibleTwoTape/Problems -> FiniteSource,
+                                             HistoryCompiler/Effectivity
+Undecidability/ReversibleTwoTape/Reduction -> ReversibleUniversal, Problems,
+                                              Mathlib Reduce
+Undecidability/ReversibleTwoTape/API   -> Reduction
+Undecidability/ReversibleTwoTape/Audit -> Reduction (not re-exported)
+Undecidability/API                     -> EffectiveTransition,
+                                          ReversibleTwoTape/API
+```
+
+On 2026-07-17, the focused
+`lake build Lecerf.Undecidability.ReversibleTwoTape.Audit` passed with 877
+jobs. Its representative axiom output contains only `propext`,
+`Classical.choice`, and `Quot.sound`. A subsequent full `lake build` passed
+with 893 jobs.

@@ -100,8 +100,15 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   gadget are exact `PEquiv`s; the history specialization proves source halting
   iff strict reachability of a structurally distinct reverse-initial target and
   iff positive return. Generic, finite-description, and universal interpreters
-  and endpoint maps are primitive recursive. No decision predicate or
-  undecidability reduction is claimed.
+  and endpoint maps are primitive recursive.
+- Stage 6 is complete. A fixed universal source is lowered through mathlib's
+  checked TM2-to-TM1-to-TM0 simulations to a finite one-tape table. A separate
+  finite two-tape history compiler supplies forward-only, open-turnaround, and
+  closed-return tables with decidable primitive-recursive validity certificates
+  implying semantic reversibility. The public undecidability API exposes three
+  computable many-one reductions and noncomputability of guarded halting,
+  positive return, and distinct-target strict reachability. These are explicitly
+  two-tape results; a conventional one-tape lowering remains future work.
 
 ## Current Design Decisions
 
@@ -124,19 +131,20 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   restoring. A whole table additionally requires forward and backward
   compatibility; for deterministic tables, backward compatibility is exactly
   `BackwardUnique step`.
-- This is presently an atomic semantic phase decomposition, not a compiler to
-  an ordinary finite table with explicit `normal`/`move` microstates.
-  `ReverseTableCompatible` is a checked finite sufficient condition; its
-  converse characterization is still required before Stage-6 validity can be
-  decided syntactically.
-- The checked source for later reductions is the fixed primitive-recursive
-  `Source.universalEvalSearchStep`, with a primitive-recursive start map and an
-  exact halting iff for `Nat.Partrec.Code.eval`. The pinned mathlib source does
-  not expose a computable compiler from that code to a finite rule table:
-  `ToPartrec.Code.exists_code` is existential and both downstream support
-  translations are explicitly noncomputable. Stage 6 must close this bridge
-  through an explicit compiler; Stage 3 records the source replacement rather
-  than claiming the missing reduction.
+- The original one-tape `FiniteMachine` retains its atomic semantic phase
+  decomposition and checked sufficient reversibility condition. Stage 6 does
+  not claim a converse characterization for every semantically reversible
+  table. Instead, `Machine.TwoTape` supplies a conventional finite local-rule
+  model with a decidable primitive-recursive syntactic certificate that implies
+  whole-machine reversibility and is satisfied by every compiled target.
+- `Source.universalEvalSearchStep` remains the abstract computability source.
+  For the concrete reductions, `Compiler.UniversalSource` selects one closed
+  universal `Turing.ToPartrec.Code`; `Compiler.FiniteSource` lowers that fixed
+  program through mathlib's checked TM simulations and finite support to an
+  actual finite one-tape table. Only the encoded program/input tape varies, and
+  `FiniteSourceComputable.initial_primrec` proves that map primitive recursive.
+  The one-time universal-program and finite-encoding choices are isolated and
+  visible in the axiom audit.
 - The first complete reversible simulation uses an explicit history log. A
   faithful tape-level version of Lecerf's marker construction can be a later
   refinement.
@@ -150,9 +158,10 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   `History.finiteForward_uniform_primrec`, and
   `History.finiteBackward_uniform_primrec` establish effective interpretation
   jointly in a finite source description without enumerating its alphabet.
-  The simulator state nevertheless contains an unbounded abstract list; no
-  generated ordinary `FiniteMachine` implementing that log is claimed. That
-  tape/microstate compiler remains a later reduction bridge.
+  That abstract simulator still contains an unbounded list and is not itself a
+  finite local machine. Stage 6 therefore adds a separate finite two-tape
+  compiler whose second tape stores rule tokens and whose checked microsteps
+  implement logging, scanning, restoration, and bottom closure.
 - `Coupling.turnaround` runs a `ReversibleStep` forward, switches phase exactly
   at a forward-terminal state, retraces through its checked inverse, and leaves
   an inverse-terminal state terminal. `Coupling.returnGadget` instead closes
@@ -164,10 +173,11 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   reflection uses a generated-state invariant, and positive return uses the
   exact predecessor of the forward start. `history_length_lt_of_strictlyReachable`
   separately certifies that the history-forward phase has no positive cycle.
-- Stage-5 finite theorems still interpret a coupled abstract history state
-  jointly with an existing `FiniteMachine` description. They do not produce a
-  finite tape-rule table. Stage 6 must close that compiler/validity boundary
-  before stating reversible finite-machine many-one reductions.
+- Stage-5 finite theorems remain abstract interpreters and are not relabelled as
+  local-machine results. Stage 6 closes the concrete boundary independently:
+  three fixed finite two-tape tables have checked syntactic and semantic
+  reversibility, exact halting/return/reachability iff theorems, and
+  primitive-recursive varying endpoints.
 - Use `FreeMonoid α` for words and define indexed codehood by injectivity of
   `FreeMonoid.lift`. Relate this to mathlib's set-based uniquely-decodable API
   only together with generator injectivity.
@@ -239,7 +249,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Complete | Constructive reversible history simulation |
 | 5 | `COUPLING` | Complete | Forward/reverse coupling and return gadgets |
-| 6 | `MACHINE-UNDEC` | In progress | Three reversible-machine undecidability reductions |
+| 6 | `MACHINE-UNDEC` | Complete | Three finite reversible two-tape undecidability reductions |
 | 7 | `WORD-CODES` | Not started | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Not started | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Not started | Iterate-equation reductions |
@@ -401,16 +411,23 @@ for nontrivial return and specified-target reachability.
 
 ### Big Picture Objective
 
-Derive undecidability of reversible-machine halting, positive return, and
-specified-target reachability through explicit computable reductions.
+Derive undecidability of finite reversible two-tape-machine halting, positive
+return, and specified-target reachability through explicit computable
+reductions.
 
 ### Detailed Implementation Plan
 
-- Package finite machines/configurations in `Primcodable` input types.
-- Define the three decision predicates with exact quantifiers.
-- Reduce mathlib's established halting predicate through the source-machine
-  bridge, history simulation, and coupling construction.
-- Use `ManyOneReducible` and prove each reduction function computable.
+- Lower one fixed universal partial-recursive program through mathlib's checked
+  TM simulations to a finite one-tape source, with a primitive-recursive
+  varying input tape.
+- Compile that source into fixed finite two-tape forward-history,
+  open-turnaround, and closed-return tables with a checked syntactic validity
+  certificate implying semantic reversibility.
+- Package raw tables/configurations in `Primcodable` input types and define
+  guarded halting, positive-return, and distinct-target strict-reachability
+  predicates.
+- Prove exact preservation/reflection, primitive recursiveness of each reduction
+  map, three `ManyOneReducible` theorems, and their noncomputability corollaries.
 
 ### Completion Requirements
 
@@ -421,6 +438,9 @@ specified-target reachability through explicit computable reductions.
 - Noncomputability conclusions follow from the pinned mathlib halting theorem,
   not from an assumed project theorem.
 - Focused/full relevant builds, scans, `#print axioms`, and diff checks pass.
+- The result is scoped to the checked two-tape target model. A two-to-one-tape
+  lowering and a literal reconstruction of Lecerf's marker syntax are recorded
+  as follow-up work rather than silently assumed.
 
 ## 7-WORD-CODES
 
@@ -542,17 +562,17 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`5-COUPLING.md` is complete, and `6-MACHINE-UNDEC.md` is now in progress. The
-public machine layer exports a generic
-open forward/terminal-switch/reverse `PEquiv`, a uniformly closed return
-`PEquiv`, exact history-specialized distinct-target and positive-return iff
-theorems, and primitive-recursive generic, finite-description, and universal
-interpreters and endpoint maps. The closed gadget is total and is therefore a
-return/reachability construction, not a halting construction; Stage 4's
-partial history step remains the halting target. The abstract unbounded log
-has not been compiled to a conventional finite tape machine, and no many-one
-reduction or finite-machine undecidability result is yet claimed. Stage 6 first
-packages the checked fixed-transition semantics as honest intermediate
-many-one reductions, then must close the finite validity, source compiler, and
-history/coupling compiler gaps before its final claims. Stage 7 has not been
+`6-MACHINE-UNDEC.md` is complete. The public API now contains fixed finite
+two-tape forward-history, open-turnaround, and closed-return tables; checked
+syntactic certificates implying semantic reversibility; exact source-halting
+iff target-halting/positive-return/distinct-target-strict-reachability theorems;
+primitive-recursive reduction maps; three `ManyOneReducible` witnesses; and
+three noncomputability results derived from mathlib's pinned halting theorem.
+The abstract Stage-4/5 construction remains available but is not confused with
+the concrete compiler. The selected universal program and finite encodings are
+one-time classical choices; all varying maps are proved primitive recursive,
+and representative headline results audit to only `propext`,
+`Classical.choice`, and `Quot.sound`. The theorem is currently for a finite
+two-tape target model. A one-tape lowering and a closer connection to Lecerf's
+historical marker encoding remain explicit follow-up work. Stage 7 has not been
 started.
