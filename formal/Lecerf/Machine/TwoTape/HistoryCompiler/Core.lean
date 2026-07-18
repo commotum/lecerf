@@ -1,5 +1,8 @@
 import Lecerf.Machine.Core
 import Lecerf.Machine.TwoTape.Reversible
+import Mathlib.Data.Fintype.Option
+import Mathlib.Data.Fintype.Prod
+import Mathlib.Data.Fintype.Sum
 
 /-!
 # Finite two-tape history compiler
@@ -45,10 +48,10 @@ def equivRep : Mark Q Γ ≃ Option (Option (Lecerf.Machine.Rule Q Γ)) where
 instance [DecidableEq Q] [DecidableEq Γ] : DecidableEq (Mark Q Γ) :=
   equivRep.decidableEq
 
-instance [Inhabited Q] [Inhabited Γ] : Inhabited (Mark Q Γ) :=
-  ⟨.blank⟩
-
 instance : Inhabited (Mark Q Γ) := ⟨.blank⟩
+
+instance : Fintype Tape.Move :=
+  Fintype.ofEquiv (Option Bool) Tape.Move.equivOptionBool.symm
 
 instance [Fintype Q] [Fintype Γ] : Fintype (Lecerf.Machine.Rule Q Γ) :=
   Fintype.ofEquiv
@@ -63,9 +66,6 @@ instance [Primcodable Q] [Primcodable Γ] : Primcodable (Mark Q Γ) :=
     (Option (Option (Lecerf.Machine.Rule Q Γ))) equivRep
 
 end Mark
-
-instance {Q : Type u} {Γ : Type v} : Default (Mark Q Γ) where
-  default := .blank
 
 @[simp]
 theorem default_mark {Q : Type u} {Γ : Type v} :
@@ -200,7 +200,7 @@ def forwardRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
   machine.rules.map forwardRule
 
 /-- Terminal switches, enumerated exactly at absent source lookup keys. -/
-def boundaryRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
+noncomputable def boundaryRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
     List (TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)) :=
   (Finset.univ : Finset Q).toList.flatMap fun state =>
     (Finset.univ : Finset Γ).toList.filterMap fun symbol =>
@@ -210,13 +210,13 @@ def boundaryRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
         none
 
 /-- Scan rules for every finite state/symbol pair. -/
-def scanRules : List (TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)) :=
+noncomputable def scanRules : List (TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)) :=
   (Finset.univ : Finset Q).toList.flatMap fun state =>
     (Finset.univ : Finset Γ).toList.map fun symbol => scanRule state symbol
 
 /-- Token-inspection rules for every source entry and possible scanned work
 symbol. -/
-def inspectRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
+noncomputable def inspectRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
     List (TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)) :=
   machine.rules.flatMap fun rule =>
     (Finset.univ : Finset Γ).toList.map fun symbol => inspectRule rule symbol
@@ -227,7 +227,7 @@ def restoreRules (machine : Lecerf.Machine.FiniteMachine Q Γ) :
   machine.rules.map restoreRule
 
 /-- Bottom-marker closure rules for every finite state/symbol pair. -/
-def bottomRules : List (TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)) :=
+noncomputable def bottomRules : List (TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)) :=
   (Finset.univ : Finset Q).toList.flatMap fun state =>
     (Finset.univ : Finset Γ).toList.map fun symbol => bottomRule state symbol
 
@@ -238,13 +238,13 @@ def historyMachine (machine : Lecerf.Machine.FiniteMachine Q Γ) :
 
 /-- The open forward/turnaround/reverse machine.  It stops when the bottom
 marker is exposed. -/
-def turnaroundMachine (machine : Lecerf.Machine.FiniteMachine Q Γ) :
+noncomputable def turnaroundMachine (machine : Lecerf.Machine.FiniteMachine Q Γ) :
     TwoTape.FiniteMachine (Control Q Γ) Γ (Mark Q Γ) :=
   ⟨forwardRules machine ++ boundaryRules machine ++ scanRules ++
     inspectRules machine ++ restoreRules machine⟩
 
 /-- The closed return machine, obtained by adding the bottom-marker rules. -/
-def returnMachine (machine : Lecerf.Machine.FiniteMachine Q Γ) :
+noncomputable def returnMachine (machine : Lecerf.Machine.FiniteMachine Q Γ) :
     TwoTape.FiniteMachine (Control Q Γ) Γ (Mark Q Γ) :=
   ⟨(turnaroundMachine machine).rules ++ bottomRules⟩
 
@@ -257,7 +257,7 @@ def initialHistory [DecidableEq Q] [DecidableEq Γ] : Tape (Mark Q Γ) where
   right := none
 
 /-- Fresh forward checkpoint for a source configuration. -/
-def checkpoint [DecidableEq Q] [DecidableEq Γ]
+def checkpoint [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     TwoTape.Config (Control Q Γ) Γ (Mark Q Γ) where
   state := .forward config.state
@@ -265,7 +265,7 @@ def checkpoint [DecidableEq Q] [DecidableEq Γ]
   tape₂ := initialHistory
 
 /-- Reverse checkpoint reached after all recorded source rules are undone. -/
-def reverseCheckpoint [DecidableEq Q] [DecidableEq Γ]
+def reverseCheckpoint [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     TwoTape.Config (Control Q Γ) Γ (Mark Q Γ) where
   state := .reverse config.state
@@ -274,7 +274,7 @@ def reverseCheckpoint [DecidableEq Q] [DecidableEq Γ]
 
 /-- Open-machine target obtained by scanning left from the reverse checkpoint
 onto the bottom marker. -/
-def bottomTarget [DecidableEq Q] [DecidableEq Γ]
+def bottomTarget [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     TwoTape.Config (Control Q Γ) Γ (Mark Q Γ) where
   state := .inspect config.state
@@ -284,23 +284,26 @@ def bottomTarget [DecidableEq Q] [DecidableEq Γ]
 @[simp] theorem initialHistory_head [DecidableEq Q] [DecidableEq Γ] :
     (initialHistory : Tape (Mark Q Γ)).head = .blank := rfl
 
-@[simp] theorem checkpoint_state [DecidableEq Q] [DecidableEq Γ]
+@[simp] theorem checkpoint_state [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     (checkpoint config).state = .forward config.state := rfl
 
-@[simp] theorem checkpoint_tape₁ [DecidableEq Q] [DecidableEq Γ]
+@[simp] theorem checkpoint_tape₁ [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     (checkpoint config).tape₁ = config.tape := rfl
 
-@[simp] theorem reverseCheckpoint_state [DecidableEq Q] [DecidableEq Γ]
+@[simp] theorem reverseCheckpoint_state [Inhabited Γ]
+    [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     (reverseCheckpoint config).state = .reverse config.state := rfl
 
-@[simp] theorem bottomTarget_state [DecidableEq Q] [DecidableEq Γ]
+@[simp] theorem bottomTarget_state [Inhabited Γ]
+    [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     (bottomTarget config).state = .inspect config.state := rfl
 
-@[simp] theorem bottomTarget_history_head [DecidableEq Q] [DecidableEq Γ]
+@[simp] theorem bottomTarget_history_head [Inhabited Γ]
+    [DecidableEq Q] [DecidableEq Γ]
     (config : Lecerf.Machine.Config Q Γ) :
     (bottomTarget config).tape₂.head = .bottom := by
   simp [bottomTarget, initialHistory, Tape.move]
