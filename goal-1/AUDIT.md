@@ -51,12 +51,14 @@ Status vocabulary:
 | `A-030` | Moving the history head right while erasing a restored token breaks multi-token retracing | After `scanRule` moves left onto the newest token, a right-moving restore would revisit the freshly erased blank; the next scan would then encounter blank rather than the preceding token | The checked finite compiler uses `restoreRule.move₂ = .stay`. Each reverse macro is scan-left, inspect/move-work-back, then restore/erase in place; only `bottomRule` moves right when closing the return cycle | correction-required |
 | `A-031` | Generic finite enumeration and selected encodings are noncomputable even though a reduction witness must be computable | `Finset.univ.toList`, the existential universal program, and fixed `Primcodable` choices occur in compiler constants; treating a varying compilation as computable would be unjustified | Stage 6 fixes the universal program, finite source table, and three target tables once. Only `sourceStart`, `startCheckpoint`, `bottomTarget`, and `compileHalting`/`compileReturn`/`compileReachability` vary, and each has a checked primitive-recursive theorem. The noncomputable boundary is therefore closed data, not a varying oracle | resolved-design |
 | `A-032` | The paper requires the fresh marker to be absent from both the existing code `C` and the auxiliary prefix/suffix family `K` | In the marker construction every auxiliary word receives a new boundary marker, so occurrences of that marker inside an auxiliary word do not compromise boundary recognition | Stage 7 proves the sharper `isIndexedCode_prependMarkerExtension_of_freshFor_left` and `isIndexedCode_appendMarkerExtension_of_freshFor_left` using freshness only for `C`. The paper-shaped wrapper theorems retain the stated, redundant `FreshFor marker k` hypothesis for source fidelity | resolved-design |
-| `A-033` | A semantic code equivalence does not by itself provide executable decoding or generated-submonoid membership | Inverting an arbitrary injective free-monoid lift and deciding membership in an arbitrary `Submonoid.closure` have no uniform decision procedure in the Stage-7 representation | `encodingEquiv`, `CodeIso.ofCodes`, `CodeIso.toPEquiv`, and `PaperCodeEpi.ofCodes` are deliberately `noncomputable`. Stage 7 is a semantic API; a later finite syntax must supply effective decoding and membership before these objects can occur in a computable reduction | isolated-obligation |
+| `A-033` | A semantic code equivalence does not by itself provide executable decoding or generated-submonoid membership | Inverting an arbitrary injective free-monoid lift and deciding membership in an arbitrary `Submonoid.closure` have no uniform decision procedure in the Stage-7 representation | `encodingEquiv`, `CodeIso.ofCodes`, `CodeIso.toPEquiv`, and `PaperCodeEpi.ofCodes` remain deliberately `noncomputable`. Stage 8 does not claim a general algorithm for them: it supplies a specialized primitive-recursive Boolean codec and a raw finite-table `Descriptor` whose checked executable interpreter agrees with the semantic edge-code action whenever the table is valid. Thus no semantic choice or proof object is stored in later runtime input | resolved-design |
+| `A-034` | A complete-configuration edge schema is not Lecerf's finite local `alpha`/`omega`/`beta` relation list | §3 prints finitely many local one-tape relation families per rule. The project's undecidability source is instead a conventional finite reversible two-tape table, and no two-tape-to-one-tape lowering for those target tables has been proved | Stage 8 uses self-delimiting words over the finite alphabet `Bool` and indexes source/target words by all successful configuration edges. This family is generally infinite but uniformly described and interpreted by the supplied finite table. It proves the required step and iterate semantics as a cleaner construction, but no declaration identifies it with `tau_max`, `tau_min`, the historical marker words, or a one-tape lowering | isolated-obligation |
 
 Stage 7 closes `A-001`, `A-003`, `A-009`, and `A-019` at the semantic API
-level. Their source corrections and representation distinctions remain part of
-the trust record; `A-033` states the separate executable-syntax obligation
-that was not discharged by those semantic results.
+level. Stage 8 closes the specialized executable boundary in `A-033` for its
+successful-configuration-edge schema while leaving arbitrary semantic code
+inversion noncomputable. `A-034` records the still-open comparison with the
+paper's genuinely finite local one-tape construction.
 
 ## Source Corrections Versus Design Choices
 
@@ -85,7 +87,12 @@ simulator, phase-tagged coupling, a finite-support tape model, and the Stage-6
 finite two-tape rule-token compiler. Stage 7 additionally chooses generated
 submonoids for intrinsic code maps and a semantic ambient `PEquiv`; its
 noncomputable membership/decoding boundary is recorded under `A-033` rather
-than being mistaken for an executable finite representation.
+than being mistaken for an executable finite representation. Stage 8 chooses
+unary self-delimiting encodings of complete configurations over `Bool` and a
+generally infinite successful-edge index. The raw runtime descriptor is only
+the finite two-tape table; the edge family and semantic `CodeIso` remain
+proof-side objects. This is a cleaner replacement theorem, not a transcription
+of Lecerf's local `alpha`/`omega`/`beta` syntax.
 
 ## No-Cheating Audit Categories
 
@@ -105,10 +112,10 @@ Every completed stage must classify findings under these headings:
 
 ## Axiom Audit Table
 
-Stages 2 through 7 introduce the checked transition, one- and two-tape
+Stages 2 through 8 introduce the checked transition, one- and two-tape
 finite-machine surfaces, abstract and finite history simulations,
 forward/reverse coupling, validity-guarded undecidability reductions, and the
-semantic free-monoid code/isomorphism layer.
+semantic and executable machine/code bridge.
 
 | Lean declaration | Role | `#print axioms` result | Disposition |
 |---|---|---|---|
@@ -151,6 +158,16 @@ semantic free-monoid code/isomorphism layer.
 | `Lecerf.PEquiv.iterate_symm` | Inversion commutes with partial iteration | `propext`, `Quot.sound` | Pure partial-equivalence algebra; no project axiom |
 | `Lecerf.PEquiv.positiveIterate` | Positive-exponent wrapper `k + 1` | `propext`, `Quot.sound` | Pure definition over partial composition; excludes the zero-exponent loophole |
 | `Lecerf.PEquiv.positiveIterate_symm` | Inversion commutes with positive iteration | `propext`, `Quot.sound` | Pure partial-equivalence algebra; undefined intermediate results remain undefined |
+| `Lecerf.Encoding.ConfigCode.decodeConfigs_eq_some_iff` | Exact accepted-language characterization for concatenated Boolean frames | `propext`, `Quot.sound` | Malformed, unterminated, and noncanonical inputs are rejected; no arbitrary inverse is used |
+| `Lecerf.Encoding.ConfigCode.decodeConfigs_primrec` | Primitive-recursive complete frame-sequence decoder | `propext`, `Classical.choice`, `Quot.sound` | Standard encoded-computability and free-monoid dependencies; the runtime decoder is explicit |
+| `Lecerf.Encoding.StepCode.targetWord_isIndexedCode_iff_backwardUnique` | Target edge codehood iff successful-predecessor uniqueness | `propext`, `Classical.choice`, `Quot.sound` | The hypothesis is whole-step `BackwardUnique`, not individual-rule inversion or forward determinism |
+| `Lecerf.Encoding.StepCode.stepCodeIso_apply_eq_some_iff_exists` | Strong one-step preservation/reflection with arbitrary ambient output | `propext`, `Classical.choice`, `Quot.sound` | Starting from a canonical frame, every successful output is exactly an encoded machine successor |
+| `Lecerf.Encoding.StepCode.stepCodeIso_iterate_eq_some_iff` | Exact supplied-exponent machine/code iteration iff | `propext`, `Classical.choice`, `Quot.sound` | Iteration uses literal `Option.bind`; failed intermediate steps remain undefined |
+| `Lecerf.Encoding.StepCode.stepCodeIso_positiveIterate_iff_strictlyReachable` | Positive code orbit iff strict machine reachability | `propext`, `Classical.choice`, `Quot.sound` | The witness is `k + 1`; no zero-exponent shortcut is available |
+| `Lecerf.Encoding.StepCode.liftPEquiv_machine_eq_stepCodeIso_toPEquiv` | Executable interpreter equals the semantic edge-code action on every Boolean word | `propext`, `Classical.choice`, `Quot.sound` | Choice occurs only on the semantic comparison side; the decode/traverse/encode interpreter itself is explicit |
+| `Lecerf.Encoding.StepCode.Descriptor.checkedApply_uniform_primrec` | Primitive-recursive validity-guarded interpreter for raw finite tables | `propext`, `Classical.choice`, `Quot.sound` | Runtime input stores a finite table and word, not `Edge`, `CodeIso`, `PEquiv`, a function, or a proof |
+| `Lecerf.Encoding.StepCode.Descriptor.applyWord_eq_stepCodeIso_toPEquiv` | Valid raw descriptor agrees pointwise with semantic code isomorphism | `propext`, `Classical.choice`, `Quot.sound` | The primitive-recursive validity guard supplies semantic reversibility only in the proof; it is not stored as data |
+| `Lecerf.Transition.pequiv_positiveIterate_iff_strictlyReachable` | Generic positive partial iteration iff `StateTransition.Reaches₁` | `propext`, `Quot.sound` | Pure exact-length/closure bridge, independent of the code construction |
 
 For every later headline theorem, record the exact command, Lean output,
 mathlib or logical axioms present, and whether those axioms affect
@@ -364,3 +381,56 @@ executability or trust.
   proof-bypassing `unsafe`. Noncomputable declarations are confined to the
   documented semantic code-decoding/membership boundary. Whitespace and
   `git diff --check` passed.
+
+### Stage 8 machine steps as code actions
+
+- Added `Transition.Exact`, executable
+  `Encoding.{ConfigCode,ConfigCodeEffectivity}`, and
+  `Encoding.StepCode.{Core,Correctness,Interpreter,Effectivity,Audit}`. The
+  audit is a diagnostic leaf and is not a runtime dependency.
+- `ConfigCode` frames the canonical `Primcodable` number of a complete
+  two-tape configuration as `true^n false` over the finite alphabet `Bool`.
+  Single and concatenated decoders have exact accepted-language theorems;
+  their encoders and decoders have checked `Primrec` and `Computable`
+  declarations.
+- `Edge machine` records a successful whole-configuration transition.
+  `sourceWord_isIndexedCode` follows from option-valued forward functionality;
+  `targetWord_isIndexedCode_iff_backwardUnique` proves that target codehood is
+  exactly whole-step successful-predecessor uniqueness. `stepCodeEpi` gives
+  the paper-specific weaker map for every table, while `stepCodeIso` is a
+  genuine `CodeIso` under `BackwardUnique`.
+- `stepCodeIso_apply_eq_some_iff_exists` reflects an arbitrary successful
+  ambient output to a canonical machine successor. The supplied-endpoint,
+  terminal-undefinedness, exact-iterate, definedness, machine-`PEquiv`, and
+  positive-reachability iff theorems prove both directions without admitting
+  malformed intermediate words or exponent zero.
+- `applyWord` explicitly decodes every complete frame sequence, traverses the
+  machine step pointwise, and re-encodes.
+  `liftPEquiv_machine_eq_stepCodeIso_toPEquiv` proves equality with the
+  semantic ambient action on every Boolean word for a reversible table,
+  including simultaneous rejection of malformed words.
+- `Descriptor` is definitionally just a raw finite two-tape table.
+  `Descriptor.Valid` is the existing primitive-recursive syntactic
+  reversibility guard; `applyWord_uniform_primrec`, `valid_primrec`, and
+  `checkedApply_uniform_primrec` establish the varying runtime boundary.
+  Neither the infinite `Edge` type, a proof, a function, nor the noncomputable
+  semantic `CodeIso` is stored in descriptor input.
+- The non-public audit checks unterminated and trailing frames, a terminated
+  but noncanonical natural code, canonical round trips, concrete `.left`,
+  `.stay`, and `.right` one-rule two-tape machines, normalized blank extension,
+  terminal undefinedness, and a forward-deterministic merge whose repeated
+  target makes `targetWord` fail codehood. Small executable checks use kernel
+  `decide`, not generated native-evaluation axioms.
+- Available focused evidence includes `Transition.Exact` (729 jobs),
+  `ConfigCodeEffectivity` (805), `StepCode.Interpreter` (844),
+  `StepCode.Correctness` (845), `StepCode.Audit` (850), and
+  `StepCode.Effectivity` (852). The audit replays the representative axiom
+  results above; they contain only `propext`, `Classical.choice`, and
+  `Quot.sound`, with the pure exact-transition bridge omitting choice.
+  Focused forbidden-construct and whitespace/diff checks passed. Final
+  API/root/full-build counts are left for the main Stage-8 integration pass.
+- This completed stage is a cleaner, generally infinite configuration-edge
+  schema uniformly described by a finite two-tape table. It is **not**
+  Lecerf's finite local `alpha`/`omega`/`beta` list, a proof about `tau_min`, or
+  a lowering of the reversible two-tape tables to a one-tape machine. Stage 9
+  remains unstarted.

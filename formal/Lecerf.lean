@@ -2,6 +2,7 @@ import Lecerf.Transition.API
 import Lecerf.Machine.API
 import Lecerf.Undecidability.API
 import Lecerf.Word.API
+import Lecerf.Encoding.StepCode.API
 
 /-!
 # Lecerf
@@ -16,4 +17,8 @@ undecidability reductions for finite reversible two-tape machines. It also
 exports the independent free-monoid layer for indexed codes, prefix/suffix
 criteria, code map classes, generated-submonoid isomorphisms, ambient partial
 actions, and positive partial iteration.
+It additionally exports self-delimiting Boolean configuration codes, the
+successful-edge machine-step code isomorphism and exact iteration theorems,
+and a primitive-recursive finite-table word interpreter with a checked
+syntactic reversibility guard.
 -/

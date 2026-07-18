@@ -291,10 +291,15 @@ them:
 `CodeIso.toPEquiv` are deliberately noncomputable semantic constructions:
 arbitrary generated-submonoid membership and decoding from a bare code proof
 need classical choice. Their domain, inverse-domain, generator, identity, and
-multiplication laws are nevertheless proved. Stage 8 must introduce an
-executable finite code-isomorphism description, validation procedure,
-membership/decoding algorithm, and semantic interpretation; this semantic
-`PEquiv` must not be used as raw reduction data.
+multiplication laws are nevertheless proved. Stage 8 does not make this
+arbitrary semantic constructor computable. Instead, it gives the particular
+machine-edge schema an executable interpretation: the semantic `CodeIso` is
+indexed by the generally infinite family of successful machine edges, while
+the runtime `StepCode.Descriptor` is exactly the finite raw two-tape rule
+table. Canonical configuration-frame decoding decides the relevant generated
+language for this schema, and the validity-checked interpreter is proved
+pointwise equal to the semantic ambient action. The semantic `CodeIso` and
+its proof index are not stored as runtime reduction data.
 
 The project-local iteration surface is `Lecerf.PEquiv`:
 
@@ -318,6 +323,13 @@ products, `Fin`, lists, finite function spaces, denumerable types, and
 primitive-recursive subtypes. No ready instances were found for semantic
 `PEquiv`, `MonoidHom`, raw function-bearing TM machines, `Turing.Tape`, or
 `ListBlank`; `deriving DecidableEq` is insufficient.
+
+The pinned checkout also has no inferred `Primcodable (FreeMonoid A)` instance.
+`Lecerf.Encoding.ConfigCodeEffectivity` therefore installs the representation
+induced by the definitional list equivalence,
+`Primcodable.ofEquiv (List A) FreeMonoid.toList`, and proves both word/list
+conversions primitive recursive. This is a representation theorem for words,
+not a computable representation of semantic `CodeIso` or `PEquiv` values.
 
 Decision: reduction codomains will be finite rule lists, alphabet codes, and
 finite generator-image lists. Validity/reversibility/codehood are decidable
@@ -706,6 +718,113 @@ output is:
   `positiveIterate_symm`: `[propext, Quot.sound]`.
 
 These are Lean/mathlib foundational dependencies, not project-specific
-axioms. Stage 8 remains unstarted and must supply executable finite syntax
-before any computability or many-one reduction claim is made for code
-isomorphisms.
+axioms.
+
+Stage-8 realized dependency additions are:
+
+```text
+Encoding/ConfigCode
+  -> Word/Prefix, Mathlib Computability/Primrec/Basic
+
+Encoding/ConfigCodeEffectivity
+  -> Encoding/ConfigCode, Mathlib Computability/Partrec
+
+Transition/Exact
+  -> Transition/Core, Word/CodeMorphism
+
+Encoding/StepCode/Core
+  -> Encoding/ConfigCode, Machine/TwoTape/Reversible,
+     Word/CodeMorphism
+
+Encoding/StepCode/Correctness
+  -> Encoding/StepCode/Core, Transition/Exact
+
+Encoding/StepCode/Interpreter
+  -> Encoding/StepCode/Core
+
+Encoding/StepCode/Effectivity
+  -> Encoding/ConfigCodeEffectivity, Encoding/StepCode/Interpreter,
+     Machine/TwoTape/Effectivity, Machine/TwoTape/Validity
+
+Encoding/StepCode/API
+  -> Encoding/StepCode/Correctness, Encoding/StepCode/Effectivity
+
+Encoding/StepCode/Audit
+  -> Encoding/StepCode/Correctness, Encoding/StepCode/Effectivity
+     (not publicly re-exported)
+
+Lecerf
+  -> Encoding/StepCode/API
+```
+
+The codec uses the genuinely finite alphabet `Bool`. For every
+`[Primcodable C]`, a value is the whole-configuration frame
+`true^(Encodable.encode value) false`. `Encodable.decode₂` rejects natural
+codes outside the canonical range. The exact single- and multiple-frame
+results are:
+
+```text
+decodeUnaryFrame_eq_some_iff
+decodeConfigBits_eq_some_iff
+decodeConfig_eq_some_iff
+decodeConfigListBits_eq_some_iff
+decodeConfigs_eq_some_iff
+encodeConfig_isPrefixCode
+encodeConfig_isIndexedCode
+encodeConfigs_eq_lift
+```
+
+Thus malformed, unterminated, trailing, and noncanonical frames cannot enter
+the executable domain. `ConfigCodeEffectivity` proves `Primrec` and
+`Computable` versions of unary framing, single-frame encoding/decoding,
+concatenated-frame encoding/decoding, and their word-valued forms. In
+particular, the stable joint results include
+`encodeConfigs_primrec`, `decodeConfigListBits_primrec`, and
+`decodeConfigs_primrec`.
+
+`Transition.Exact` keeps option failure explicit through `exactIterate` and
+`ExactSteps`, and connects exact exponents with reflexive and strict
+reachability and with `Lecerf.PEquiv.iterate`. The successful-edge schema then
+has the following checked layers:
+
+- `Edge machine` displays `machine.step source = some target`;
+- `sourceWord_isIndexedCode` follows from deterministic option-valued
+  execution, whereas `targetWord_isIndexedCode_iff_backwardUnique` makes
+  successful-predecessor uniqueness an exact boundary;
+- `stepCodeEpi` realizes the paper's weaker selector map for every table, and
+  `stepCodeIso` is a genuine `CodeIso` under `BackwardUnique machine.step`;
+- `stepCodeIso_apply_eq_some_iff_exists` reflects every successful ambient
+  result from a canonical source to an encoded machine successor;
+- `stepCodeIso_apply_eq_some_iff`,
+  `stepCodeIso_iterate_eq_some_iff`, `stepCodeIso_definedAt_iff`, and
+  `stepCodeIso_positiveIterate_iff_strictlyReachable` give exact one-step,
+  supplied-iterate, definedness, and positive-reachability correspondence; and
+- `liftPEquiv_machine_eq_stepCodeIso_toPEquiv` identifies the constructive
+  framewise interpreter with the semantic ambient action on every Boolean
+  word for a semantically reversible table.
+
+The runtime boundary remains finite even though `Edge machine` is generally
+infinite. `StepCode.Descriptor Q Γ₁ Γ₂` is an abbreviation for the raw
+finite `TwoTape.FiniteMachine`; `Descriptor.Valid` is the existing
+primitive-recursive `SyntacticallyReversible` guard. `Descriptor.applyWord`
+executes the decoded table pointwise, and `Descriptor.checkedApply` returns
+`none` before interpretation when validity fails. The checked effectivity
+surface is:
+
+```text
+Descriptor.applyWord_uniform_primrec
+Descriptor.applyWord_uniform_computable
+Descriptor.valid_primrec
+Descriptor.checkedApply_uniform_primrec
+Descriptor.checkedApply_uniform_computable
+Descriptor.applyWord_eq_stepCodeIso_toPEquiv
+Descriptor.checkedApply_eq_stepCodeIso_toPEquiv
+```
+
+Only the forward interpreter is claimed primitive recursive; the semantic
+inverse remains proof-side. This stage proves a cleaner whole-configuration
+edge encoding, not Lecerf's finite local `alpha`/`omega`/`beta` relation list.
+A literal historical local encoding and the two-to-one-tape lowering needed
+to connect it to the project's two-tape undecidability source remain open.
+Stage 9 has not started: many-one packaging for the two iterate problems is
+still a separate reduction layer.

@@ -1,8 +1,8 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 through Stage 7 declarations are identified as implemented below.
-The machine-step code encoding and iterate-problem layers remain proposed
-Lean surfaces and may be refined when implementation evidence requires it.
+Stage 2 through Stage 8 declarations are identified as implemented below.
+The iterate-problem undecidability layer remains a proposed Lean surface and
+may be refined when Stage-9 reduction evidence requires it.
 
 ## 1. Partial Transition Systems (implemented)
 
@@ -797,9 +797,12 @@ The file also proves the exact in-domain/out-of-domain equations, inverse
 equations, identity equation, and multiplication law. `encodingEquiv`, both
 `ofCodes` constructors, and `CodeIso.toPEquiv` are intentionally
 noncomputable: a bare semantic code proof does not provide an executable
-decoder or generated-submonoid membership test. Stage 8 must supply finite
-syntax, executable validation, membership, decoding, and interpretation
-before this layer can appear in computability data.
+decoder or generated-submonoid membership test. Stage 8 preserves that general
+boundary. For the particular successful-edge schema, it separately supplies
+canonical whole-configuration decoding and an executable finite-table
+interpreter, then proves that interpreter equal to the semantic ambient
+action. The generally infinite edge index and semantic `CodeIso` never become
+stored computability data.
 
 Partial iteration is project-local under `Lecerf.PEquiv`:
 
@@ -842,51 +845,219 @@ pure iteration declarations, and additionally `Classical.choice` for the two
 paper-shaped marker theorems and semantic ambient generator equation. No
 project-specific axiom is used.
 
-## 7. Machine-Step Encoding by Codes (Stage 8, unstarted)
+## 7. Machine-Step Encoding by Codes (Stage 8, implemented)
 
-Construct a finite alphabet containing tape symbols, control/head markers,
-boundaries, phase/history symbols, and fresh separators. Proposed public
-surface:
+Public modules:
 
-```lean
-encodeConfig : Config → Word Alphabet
-decodeConfig : Word Alphabet → Option Config
-stepCodeIso  : CodeIso Alphabet RuleIndex
-
-decode_encode : decodeConfig (encodeConfig c) = some c
-
-stepCodeIso_apply_iff :
-  machine.step c = some c' ↔
-    stepCodeIso.toPEquiv (encodeConfig c) = some (encodeConfig c')
-
-iterate_encode_iff_reaches :
-  Lecerf.PEquiv.iterate stepCodeIso.toPEquiv n (encodeConfig c) =
-      some (encodeConfig c') ↔
-    exactSteps machine.step n c c'
+```text
+Lecerf.Encoding.ConfigCode
+Lecerf.Encoding.ConfigCodeEffectivity
+Lecerf.Transition.Exact
+Lecerf.Encoding.StepCode.Core
+Lecerf.Encoding.StepCode.Correctness
+Lecerf.Encoding.StepCode.Interpreter
+Lecerf.Encoding.StepCode.Effectivity
+Lecerf.Encoding.StepCode.API
 ```
 
-No declaration in this section is implemented yet. The reverse implication is
-essential: no malformed ambient word may
-masquerade as an encoded checkpoint. Every rule family, boundary case,
-stationary move, and tape-extension case must be covered. A later comparison
-theorem may relate this cleaner encoding to Lecerf's `α/ω/β` relations.
+`Lecerf.Encoding.StepCode.Audit` is non-public. `StepCode.API` is a thin
+re-export of the correctness and effectivity leaves.
+
+### Executable whole-configuration frames
+
+For any `[Primcodable C]`, the codec uses the finite alphabet `Bool` and the
+canonical self-delimiting frame
+
+```lean
+def unaryFrame : Nat → List Bool
+  | 0 => [false]
+  | n + 1 => true :: unaryFrame n
+
+def encodeConfigBits (config : C) : List Bool :=
+  unaryFrame (Encodable.encode config)
+
+def encodeConfig (config : C) : Word Bool :=
+  FreeMonoid.ofList (encodeConfigBits config)
+```
+
+The exact decoders use `Encodable.decode₂`, not the weaker raw decoder, and
+therefore reject natural codes outside the canonical range. The checked
+single- and concatenated-frame surface includes:
+
+```text
+decodeUnaryFrame_eq_some_iff
+decodeConfigBits_encodeConfigBits
+decodeConfigBits_eq_some_iff
+decodeConfig_encodeConfig
+decodeConfig_eq_some_iff
+decodeConfigListBits_encodeConfigListBits
+decodeConfigListBits_eq_some_iff
+decodeConfigs_encodeConfigs
+decodeConfigs_eq_some_iff
+encodeConfigs_eq_lift
+encodeConfig_isPrefixFree
+encodeConfig_isPrefixCode
+encodeConfig_isIndexedCode
+```
+
+Thus decoder success reconstructs the complete accepted word; unterminated,
+trailing, malformed, and noncanonical frames cannot masquerade as encoded
+configurations. `ConfigCodeEffectivity` supplies a list-induced
+`Primcodable (Word A)` representation and proves `Primrec` and `Computable`
+versions of unary framing, single-configuration encoding/decoding, and
+concatenated encoding/decoding. In particular:
+
+```lean
+encodeConfigs_primrec :
+  Primrec (encodeConfigs : List C → Word Bool)
+
+decodeConfigListBits_primrec :
+  Primrec (decodeConfigListBits : List Bool → Option (List C))
+
+decodeConfigs_primrec :
+  Primrec (decodeConfigs : Word Bool → Option (List C))
+```
+
+### Exact transition and semantic code schema
+
+`Lecerf.Transition.Exact` defines bind-preserving `exactIterate` and
+`ExactSteps`, proves their addition laws, and gives exact bridges to
+reflexive reachability, strict reachability, and `Lecerf.PEquiv.iterate`.
+Failure at any intermediate step remains `none`.
+
+For a finite two-tape table, the semantic relation index is the generally
+infinite successful-edge type:
+
+```lean
+structure Edge (machine : FiniteMachine Q Γ₁ Γ₂) where
+  source : Config Q Γ₁ Γ₂
+  target : Config Q Γ₁ Γ₂
+  step_eq : machine.step source = some target
+```
+
+`sourceWord` and `targetWord` encode the two endpoints. Forward functionality
+makes the source projection injective. The target boundary is exact:
+
+```lean
+targetWord_isIndexedCode_iff_backwardUnique :
+  IsIndexedCode (targetWord (machine := machine)) ↔
+    BackwardUnique machine.step
+```
+
+Consequently `stepCodeEpi` gives the paper's weaker `PaperCodeEpi` for any
+table, while `stepCodeIso machine backward` is a genuine `CodeIso Bool
+(Edge machine)` under whole-step predecessor uniqueness. These are semantic,
+noncomputable constructors over an infinite successful-edge schema; they are
+not the runtime descriptor and are not claimed to be Lecerf's finite local
+relation table.
+
+One-step preservation and reflection are both implemented:
+
+```lean
+stepCodeIso_apply_eq_some_iff_exists :
+  stepCodeIso.toPEquiv (encodeConfig source) = some word ↔
+    ∃ target, machine.step source = some target ∧
+      word = encodeConfig target
+
+stepCodeIso_apply_eq_some_iff :
+  stepCodeIso.toPEquiv (encodeConfig source) =
+      some (encodeConfig target) ↔
+    machine.step source = some target
+
+stepCodeIso_apply_eq_none_iff :
+  stepCodeIso.toPEquiv (encodeConfig source) = none ↔
+    machine.step source = none
+```
+
+The strong existential form rules out malformed successful targets. The
+generic theorem covers left, stay, right, blank extension, and every table
+rule through the already checked `machine.step`, rather than enumerating only
+representative directions.
+
+Supplied iteration and positive reachability are exact as well:
+
+```text
+stepCodeIso_iterate_encodeConfig
+stepCodeIso_iterate_eq_some_iff_exists
+stepCodeIso_iterate_eq_some_iff
+stepCodeIso_definedAt_iff
+stepCodeIso_iterate_iff_machinePEquiv
+stepCodeIso_positiveIterate_iff_strictlyReachable
+```
+
+In particular, a successful ambient iterate from a canonical source always
+ends at a canonical configuration word, and `PositiveIterate` corresponds to
+strict machine reachability with exponent `k + 1`, never exponent zero.
+
+### Constructive all-word interpreter and finite descriptor
+
+`StepCode.traverse`, `applyWord`, and `liftPEquiv` decode a whole canonical
+frame sequence, apply a partial configuration map pointwise, and re-encode it.
+For every semantically reversible finite table:
+
+```lean
+liftPEquiv_machine_eq_stepCodeIso_toPEquiv :
+  liftPEquiv (machine.toPEquiv reversible) =
+    (stepCodeIso machine reversible.2).toPEquiv
+```
+
+This is equality on all Boolean words, not merely the single-configuration
+generators.
+
+The runtime boundary is finite despite the infinite semantic edge index:
+
+```lean
+abbrev Descriptor Q Γ₁ Γ₂ := FiniteMachine Q Γ₁ Γ₂
+
+def Descriptor.Valid (descriptor) : Prop :=
+  descriptor.SyntacticallyReversible
+
+def Descriptor.checkedApply (descriptor) (word : Word Bool) :=
+  if descriptor.Valid then descriptor.applyWord word else none
+```
+
+`Descriptor.Valid` is decidable and primitive recursive. The uniform
+effectivity and semantic-agreement declarations are:
+
+```text
+Descriptor.applyWord_uniform_primrec
+Descriptor.applyWord_uniform_computable
+Descriptor.valid_primrec
+Descriptor.checkedApply_uniform_primrec
+Descriptor.checkedApply_uniform_computable
+Descriptor.applyWord_eq_stepCodeIso_toPEquiv
+Descriptor.checkedApply_eq_stepCodeIso_toPEquiv
+```
+
+Invalid tables are rejected before word interpretation. Only the forward
+interpreter is claimed primitive recursive; no executable inverse is inferred
+from the semantic `PEquiv`.
+
+This implemented theorem is deliberately cleaner than the historical note:
+it frames whole canonical two-tape configurations and uses an infinite
+successful-edge schema uniformly described by a finite raw machine. A literal
+finite local `α/ω/β` construction, and the two-to-one-tape lowering needed
+to connect the project's two-tape source to that syntax, remain unresolved.
 
 ## 8. Iterate Decision Problems (Stage 9, unstarted)
 
-Actual inputs are finite code-isomorphism descriptions with executable
-validation and interpretation, not raw `PEquiv` functions. The semantic
-predicates are:
+The provisional concrete input route is the Stage-8 finite raw `Descriptor`
+together with one or two Boolean words. Inputs must not contain the infinite
+`Edge` type, a semantic `CodeIso`, a proof object, or a raw `PEquiv` function.
+The executable predicates can be stated using exact positive iteration of
+`Descriptor.checkedApply`; Stage-8 agreement then relates every valid input to
+the corresponding semantic `stepCodeIso.toPEquiv`. A proposed shape is:
 
 ```lean
 def PositiveFixedOrbitYes (x : FixedOrbitInput) : Prop :=
-  x.iso.Valid ∧
+  x.descriptor.Valid ∧
     ∃ k : Nat,
-      Lecerf.PEquiv.positiveIterate x.iso.toPEquiv k x.word = some x.word
+      exactIterate x.descriptor.checkedApply (k + 1) x.word = some x.word
 
 def DistinctOrbitYes (x : DistinctOrbitInput) : Prop :=
-  x.iso.Valid ∧ x.start ≠ x.target ∧
+  x.descriptor.Valid ∧ x.start ≠ x.target ∧
     ∃ k : Nat,
-      Lecerf.PEquiv.positiveIterate x.iso.toPEquiv k x.start = some x.target
+      exactIterate x.descriptor.checkedApply (k + 1) x.start = some x.target
 ```
 
 This fixes the paper's orientation: in `w₁ = θⁿ(w₂)`, `w₂` is the start and
@@ -903,10 +1074,11 @@ positiveFixedOrbit_not_computable
 distinctOrbit_not_computable
 ```
 
-No declaration in this section is implemented yet. Semidecidability requires
-an executable finite description and decidable word
-equality. It does not imply a total witness finder or a decision procedure for
-no-instances.
+No declaration in this section is implemented yet, and Stage 9 must finalize
+the input structures and prove equivalence between the checked executable
+predicate and the semantic code-isomorphism equation. Semidecidability uses
+the now-implemented finite descriptor and decidable word equality. It does not
+imply a total witness finder or a decision procedure for no-instances.
 
 ## Principal Reduction Chain
 
@@ -917,7 +1089,12 @@ Nat.Partrec.Code halting
   `-- ≤₀ certified distinct-target strict reachability of a finite
           reversible two-tape table
 
-Planned next machine/code arrows:
+Implemented Stage-8 semantic/effective bridge:
+  finite reversible two-tape table plus configurations
+    -> finite validity-guarded Descriptor plus canonical Boolean words
+    -> exact semantic CodeIso iterate / positive-orbit correspondence
+
+Stage-9 many-one packaging still required:
   finite reversible two-tape positive return
     -> positive fixed orbit of a partial code isomorphism
   finite reversible two-tape distinct reachability
@@ -928,8 +1105,11 @@ The three Stage-6 arrows are direct packaged reductions. Internally, their iff
 proofs pass through a fixed universal one-tape source and fixed finite
 two-tape history/turnaround/return tables; the only varying data are
 primitive-recursive configurations. Fixed orbit will be fed by positive
-return, and distinct orbit by start-to-distinct-target reachability. Each
-future arrow still requires:
+return, and distinct orbit by start-to-distinct-target reachability. Stage 8
+now supplies the finite descriptor, primitive-recursive interpreter, validity
+guard, and no-spurious-iterate theorem needed by both arrows. Stage 9 still
+must define the exact target input types and predicates and package each arrow
+as an explicit many-one reduction. Each future reduction still requires:
 
 1. a computable function on finite encodings;
 2. a proof that its output passes the target validity predicate;
@@ -939,4 +1119,4 @@ future arrow still requires:
 Simulation, code encoding, and reduction theorems stay in separate layers even
 when later proofs reuse the same construction. A two-to-one-tape lowering and
 the correspondence with Lecerf's historical marker encoding also remain
-separate from the implemented Stage-6 reduction branch.
+separate from the implemented Stage-6/8 branch. Stage 9 has not started.

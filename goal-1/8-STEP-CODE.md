@@ -2,7 +2,7 @@
 
 ## Current Facts
 
-- Stages 1--7 are complete. Stage 6 supplies fixed finite reversible two-tape
+- Stages 1--8 are complete. Stage 6 supplies fixed finite reversible two-tape
   machines with checked halting, positive-return, and distinct-target
   reachability reductions; Stage 7 supplies genuine indexed codes, intrinsic
   generated-submonoid `CodeIso`s, exact ambient partial domains, and positive
@@ -73,43 +73,50 @@ iterate, while recording the remaining comparison with Lecerf's finite local
 
 ## Detailed Implementation Plan
 
-1. Add a low-dependency configuration-code leaf with canonical Boolean frames,
+1. Added a low-dependency configuration-code leaf with canonical Boolean frames,
    single and concatenated decoders, round trips, injectivity, and indexed
    codehood.
-2. Add an edge/code-isomorphism core. Prove source- and target-edge projection
+2. Added an edge/code-isomorphism core. Proved source- and target-edge projection
    injectivity, both code-family theorems, and construct `stepCodeIso` without
    confusing semantic construction with executable interpretation.
-3. Add correctness results giving a strong one-step equation (including that
+3. Added correctness results giving a strong one-step equation (including that
    every successful output is an encoded configuration), exact supplied-step
    iteration, definedness, positive reachability, and terminal failure.
-4. Add an executable interpreter over canonical frame sequences and the
+4. Added an executable interpreter over canonical frame sequences and the
    computability facts needed for the Stage-9 finite descriptor boundary. State
    precisely how far it agrees with the semantic ambient code action.
-5. Add a non-public audit with left/right/stay and blank-extension examples,
+5. Added a non-public audit with left/right/stay and blank-extension examples,
    malformed/noncanonical word rejection, a nonreversible negative boundary,
    and representative `#print axioms` output. Add a thin public API only after
    focused builds pass.
-6. Fold exact declarations, the infinite-schema versus finite-local correction,
+6. Folded exact declarations, the infinite-schema versus finite-local correction,
    effectivity boundaries, builds, scans, and axiom evidence into all goal
    documents. Do not start Stage 9.
 
 ## Build Structure
 
-- `formal/Lecerf/Encoding/ConfigCode.lean`: Boolean framing, decoding, and
-  indexed codehood; imports only the two-tape configuration representation and
-  `Word.Code` plus narrow computability/list support.
+- `formal/Lecerf/Encoding/ConfigCode.lean`: generic Boolean framing, decoding,
+  and indexed codehood over any `Primcodable` carrier.
+- `formal/Lecerf/Encoding/ConfigCodeEffectivity.lean`: primitive-recursive and
+  computable codec results, including a fold realization of the concatenated
+  parser.
+- `formal/Lecerf/Transition/Exact.lean`: exact bind-preserving finite-step
+  iteration and its reachability/partial-iteration bridges.
 - `formal/Lecerf/Encoding/StepCode/Core.lean`: successful edges and semantic
   relation families/`CodeIso`; imports the codec and two-tape reversibility.
 - `formal/Lecerf/Encoding/StepCode/Correctness.lean`: one-step and iterate
   preservation/reflection; imports the core and a narrow exact-step leaf.
+- `formal/Lecerf/Encoding/StepCode/Interpreter.lean`: constructive
+  decode--traverse--encode action and equality with the semantic ambient action
+  on every Boolean word.
 - `formal/Lecerf/Encoding/StepCode/Effectivity.lean`: executable descriptor and
   interpreter theorems; imports primitive-recursive two-tape semantics only
   where required.
 - `formal/Lecerf/Encoding/StepCode/API.lean`: thin stable re-export.
 - `formal/Lecerf/Encoding/StepCode/Audit.lean`: diagnostic examples and axiom
   output; never publicly re-exported.
-- Focused builds start with each new leaf. Because `Lecerf.lean` will gain a
-  public API import, adjacent root and final full builds are required.
+- Focused builds passed for every new leaf. `Lecerf.lean` now imports the thin
+  public API; adjacent root and final full builds also passed.
 
 ## No-Cheating Checks
 
@@ -165,8 +172,9 @@ iterate, while recording the remaining comparison with Lecerf's finite local
   iteration is equivalent to strict machine reachability.
 - The executable descriptor/interpreter boundary is sufficient for Stage 9:
   no semantic choice is stored as input, and required encoding/interpreter
-  maps have checked computability evidence or an explicitly isolated remaining
-  obligation that prevents Stage 8 from being marked complete.
+  maps have checked primitive-recursive and computable evidence. Only the
+  forward interpreter is claimed effective; no executable inverse theorem is
+  inferred from the semantic `PEquiv`.
 - Audits cover every move constructor, blank extension, malformed frames,
   terminal undefinedness, and the nonreversible target-injectivity boundary.
 - Focused leaf/API/audit/root/full builds, proof-hole and boundary scans,
@@ -176,4 +184,50 @@ iterate, while recording the remaining comparison with Lecerf's finite local
 
 ## Stage Results
 
-- In progress.
+- Complete on 2026-07-18. Stage 9 was not started.
+- `ConfigCode` represents a value by
+  `true ^ Encodable.encode value ++ [false]` over the finite alphabet `Bool`.
+  Exact single and concatenated parsers reject unterminated, trailing, and
+  noncanonical inputs; their encoding and decoding operations are proved
+  `Primrec` and `Computable`.
+- `Edge machine` indexes successful whole-configuration steps.
+  `sourceWord_isIndexedCode` holds for every deterministic option-valued step,
+  while `targetWord_isIndexedCode_iff_backwardUnique` proves that target
+  codehood is exactly whole-step successful-predecessor uniqueness.
+- Every machine yields the paper's weaker `stepCodeEpi`; a backward-unique
+  machine yields the genuine semantic `stepCodeIso`. These two declarations
+  are intentionally noncomputable proof-side objects and are not stored in
+  runtime inputs.
+- `stepCodeIso_apply_eq_some_iff_exists` reflects every successful ambient
+  result from a canonical source to a unique real machine successor and a
+  canonical target. Exact supplied iteration, definedness, terminal failure,
+  and positive reachability are preserved and reflected by the corresponding
+  iterate theorems.
+- The constructive `applyWord` parses arbitrary concatenations and applies the
+  machine step pointwise. `liftPEquiv_machine_eq_stepCodeIso_toPEquiv` proves
+  equality with the semantic code action on all Boolean words, not merely on
+  generators.
+- `Descriptor` is definitionally only a raw finite two-tape machine table.
+  `Descriptor.Valid` is the decidable syntactic reversibility certificate;
+  `checkedApply` rejects invalid tables. The forward raw and checked
+  interpreters are uniformly primitive recursive and computable, and agree
+  pointwise with `stepCodeIso.toPEquiv` under validity. No `Edge`, proof,
+  function, `PEquiv`, or `CodeIso` is stored in the descriptor.
+- `StepCode.Audit` checks all three movement constructors, normalized blank
+  extension, canonical/malformed/noncanonical frames, terminal undefinedness,
+  and a deterministic merge whose target family is not a code because the
+  step is not backward-unique.
+- Focused builds passed, including `ConfigCodeEffectivity` (805 jobs),
+  `StepCode.Effectivity` (852 jobs), and `StepCode.Audit` (855 jobs). The public
+  API/root build and final `lake build` both passed with 921 jobs.
+- The forbidden-construct, public-audit-import, runtime-boundary, whitespace,
+  and `git diff --check` scans passed. The only Stage-8 `noncomputable`
+  declarations are semantic `stepCodeEpi` and `stepCodeIso`.
+- Representative exactness and pure-iteration theorems audit to
+  `[propext, Quot.sound]`; codehood, semantic code action, codec/interpreter
+  effectivity, and agreement theorems additionally use `Classical.choice`.
+  No project-specific axiom appears.
+- This completes the permitted cleaner bridge. It does not reconstruct the
+  paper's finite local one-tape `alpha`/`omega`/`beta` relation list or lower
+  the existing two-tape compiler to one tape; those comparisons remain
+  explicit future work.

@@ -115,11 +115,13 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   extensions, intrinsic generated-submonoid code isomorphisms, the weaker paper
   epimorphism, exact ambient partial domains, and bind-based positive iteration
   now form the public `Lecerf.Word` API.
-- Stage 8 is in progress. Checked evidence favors a cleaner whole-configuration
-  encoding over the finite alphabet `Bool`: successful edges of a reversible
-  two-tape machine index genuine source and target codes. This is a uniformly
-  finite-machine-described but generally infinite code schema, not yet the
-  paper's finite local `alpha`/`omega`/`beta` relation list.
+- Stage 8 is complete. Canonical whole-configuration frames over the finite
+  alphabet `Bool` have exact executable single/concatenated decoders and
+  primitive-recursive effectivity proofs. Successful edges of a reversible
+  two-tape machine index genuine source and target codes, with exact
+  one-step/iterate reflection and an all-word executable interpreter. This is
+  a uniformly finite-machine-described but generally infinite code schema,
+  not the paper's finite local `alpha`/`omega`/`beta` relation list.
 
 ## Current Design Decisions
 
@@ -201,9 +203,10 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - The paper-shaped prefix/suffix marker theorems retain freshness hypotheses for
   both families. Sharper proved variants show that freshness for the already
   prefix/suffix-free family is redundant.
-- Arbitrary semantic decoding and ambient code action are explicitly
-  `noncomputable`; no computability theorem is inferred from them. Stage 8 must
-  introduce independently executable finite syntax.
+- Arbitrary semantic generated-submonoid decoding and ambient code action are
+  explicitly `noncomputable`; no algorithm is inferred from them. Stage 8
+  independently supplies exact executable frame decoding and a uniformly
+  primitive-recursive finite-table word interpreter.
 - Project-local `Lecerf.PEquiv.iterate` uses `Option.bind`, and
   `positiveIterate θ k` means exactly `k + 1` iterations, with checked inverse
   and definedness laws.
@@ -212,10 +215,10 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   relation families are indexed by successful configuration edges; whole-step
   backward uniqueness, not local rule inversion, proves target codehood.
 - Treat this whole-configuration construction as a cleaner uniform schema for
-  a genuine code isomorphism. Its finite machine descriptor and executable
-  interpreter must be separated from the semantic infinite edge family and
-  noncomputable `CodeIso` constructor. A comparison with Lecerf's finite local
-  `alpha`/`omega`/`beta` relations remains an explicit later obligation.
+  a genuine code isomorphism. Its raw finite machine descriptor and checked
+  executable interpreter are separated from the semantic infinite edge family
+  and noncomputable `CodeIso` constructor. A comparison with Lecerf's finite
+  local `alpha`/`omega`/`beta` relations remains an explicit later obligation.
 - Interpret “recursively unsolvable in `n`” as a uniform existential problem
   over finite descriptions. Keep supplied-exponent evaluation,
   semidecidability of existence, and noncomputability of existence distinct.
@@ -283,7 +286,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 5 | `COUPLING` | Complete | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Complete | Three finite reversible two-tape undecidability reductions |
 | 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
-| 8 | `STEP-CODE` | In progress | Machine-step representation by code maps |
+| 8 | `STEP-CODE` | Complete | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Not started | Iterate-equation reductions |
 | 10 | `PAPER-AUDIT` | Not started | Claim map, public API, corrections, axiom audit |
 
@@ -414,6 +417,28 @@ by recording sufficient history, with full correctness and halting reflection.
 - No theorem assumes the history invariant without proving initialization and
   preservation.
 - Focused and adjacent builds, scans, and diff checks pass.
+
+### Stage Results
+
+- `ConfigCode` and `ConfigCodeEffectivity` provide exact self-delimiting
+  Boolean codecs, indexed codehood, and primitive-recursive/computable single
+  and concatenated encoders/decoders.
+- `StepCode.Core` separates the always-available `PaperCodeEpi` from the
+  genuine `CodeIso`; target codehood is equivalent to `BackwardUnique` for the
+  whole executable step.
+- `StepCode.Correctness` and `Transition.Exact` prove strong one-step, exact
+  iterate, definedness, terminal-failure, and positive-reachability
+  preservation and reflection.
+- `StepCode.Interpreter` agrees with the semantic ambient code action on every
+  Boolean word. `StepCode.Effectivity` stores only a raw finite table, uses the
+  primitive-recursive syntactic validity guard, and proves its forward raw and
+  checked word interpreters uniformly primitive recursive and computable.
+- Audits cover all moves, blank extension, malformed/noncanonical frames,
+  terminal failure, and the non-backward-unique target-code boundary. Focused,
+  API/root, and full builds plus forbidden-construct and axiom scans passed.
+- The construction remains a cleaner generally infinite edge schema. No
+  theorem claims the historical finite local relation list or a two-to-one-tape
+  lowering. Stage 9 has not started.
 
 ## 5-COUPLING
 
@@ -600,8 +625,7 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`6-MACHINE-UNDEC.md` and `7-WORD-CODES.md` are complete, and
-`8-STEP-CODE.md` is in progress. The public machine API
+Stages 1--8, including `8-STEP-CODE.md`, are complete. The public machine API
 contains fixed finite
 two-tape forward-history, open-turnaround, and closed-return tables; checked
 syntactic certificates implying semantic reversibility; exact source-halting
@@ -616,12 +640,13 @@ and representative headline results audit to only `propext`,
 two-tape target model. The independent Stage-7 word surface now includes the
 exact indexed/set-code bridge, tagged prefix/suffix marker constructions,
 distinct map classes, intrinsic generated-submonoid isomorphisms, exactly
-scoped ambient partial action, and positive partial iteration. Its arbitrary
-semantic decoding is explicitly noncomputable; Stage 8 must supply executable
-finite syntax before any reduction data is claimed. A one-tape lowering and a
-closer connection to Lecerf's historical marker encoding remain explicit
-follow-up work. Stage 8 is building a self-delimiting Boolean encoding of
-complete two-tape configurations and a successful-edge code isomorphism with
-exact step/iterate semantics. The construction is intentionally recorded as a
-uniform infinite code schema described by a finite machine, not as the paper's
-still-unreconstructed finite local relation table. Stage 9 has not started.
+scoped ambient partial action, and positive partial iteration. Stage 8 adds an
+exact self-delimiting Boolean codec for complete two-tape configurations, a
+successful-edge `PaperCodeEpi`/`CodeIso` with strong step and iterate
+reflection, a constructive all-word interpreter, and a proof-free raw finite
+table descriptor whose validity guard and forward interpreter are uniformly
+primitive recursive. The semantic edge family remains generally infinite and
+the semantic `CodeIso` constructor remains noncomputable; neither is stored as
+runtime input. A one-tape lowering and the paper's finite local
+`alpha`/`omega`/`beta` encoding remain explicit follow-up work. Stage 9 has not
+started.
