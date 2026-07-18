@@ -1,3 +1,4 @@
+import Lecerf.Machine.Lookup
 import Lecerf.Machine.TwoTape.HistoryCompiler.Core
 
 /-!
@@ -18,6 +19,7 @@ universe u v
 variable {Q : Type u} {Γ : Type v}
   [Fintype Q] [Fintype Γ] [DecidableEq Q] [DecidableEq Γ]
 
+omit [Fintype Q] [Fintype Γ] [DecidableEq Q] [DecidableEq Γ] in
 theorem mem_forwardRules_iff
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     {entry : TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)} :
@@ -33,6 +35,7 @@ theorem mem_boundaryRules_iff
         boundaryRule state symbol = entry := by
   simp [boundaryRules]
 
+omit [DecidableEq Q] [DecidableEq Γ] in
 theorem mem_scanRules_iff
     {entry : TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)} :
     entry ∈ (scanRules :
@@ -40,6 +43,7 @@ theorem mem_scanRules_iff
       ∃ state symbol, scanRule state symbol = entry := by
   simp [scanRules]
 
+omit [Fintype Q] [DecidableEq Q] [DecidableEq Γ] in
 theorem mem_inspectRules_iff
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     {entry : TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)} :
@@ -47,6 +51,7 @@ theorem mem_inspectRules_iff
       ∃ rule ∈ machine.rules, ∃ symbol, inspectRule rule symbol = entry := by
   simp [inspectRules]
 
+omit [Fintype Q] [Fintype Γ] [DecidableEq Q] [DecidableEq Γ] in
 theorem mem_restoreRules_iff
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
     {entry : TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)} :
@@ -54,6 +59,7 @@ theorem mem_restoreRules_iff
       ∃ rule ∈ machine.rules, restoreRule rule = entry := by
   simp [restoreRules]
 
+omit [DecidableEq Q] [DecidableEq Γ] in
 theorem mem_bottomRules_iff
     {entry : TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)} :
     entry ∈ (bottomRules :
@@ -68,7 +74,7 @@ theorem mem_turnaroundMachine_iff
       entry ∈ forwardRules machine ∨ entry ∈ boundaryRules machine ∨
         entry ∈ scanRules ∨ entry ∈ inspectRules machine ∨
           entry ∈ restoreRules machine := by
-  simp [turnaroundMachine, or_assoc]
+  simp [turnaroundMachine]
 
 theorem mem_returnMachine_iff
     {machine : Lecerf.Machine.FiniteMachine Q Γ}
