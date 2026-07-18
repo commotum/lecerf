@@ -15,6 +15,8 @@ namespace Lecerf.Machine.Source
 
 open Lecerf.Transition
 
+deriving instance DecidableEq for Nat.Partrec.Code
+
 /-- One bounded evaluator attempt per transition. The state is the next bound
 to try; a successful attempt makes that bound terminal. -/
 def evalSearchStep (code : Nat.Partrec.Code) (input : Nat) : Step Nat :=
