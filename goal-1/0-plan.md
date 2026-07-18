@@ -239,7 +239,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Complete | Constructive reversible history simulation |
 | 5 | `COUPLING` | Complete | Forward/reverse coupling and return gadgets |
-| 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |
+| 6 | `MACHINE-UNDEC` | In progress | Three reversible-machine undecidability reductions |
 | 7 | `WORD-CODES` | Not started | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Not started | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Not started | Iterate-equation reductions |
@@ -542,7 +542,8 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`5-COUPLING.md` is complete. The public machine layer now exports a generic
+`5-COUPLING.md` is complete, and `6-MACHINE-UNDEC.md` is now in progress. The
+public machine layer exports a generic
 open forward/terminal-switch/reverse `PEquiv`, a uniformly closed return
 `PEquiv`, exact history-specialized distinct-target and positive-return iff
 theorems, and primitive-recursive generic, finite-description, and universal
@@ -550,5 +551,8 @@ interpreters and endpoint maps. The closed gadget is total and is therefore a
 return/reachability construction, not a halting construction; Stage 4's
 partial history step remains the halting target. The abstract unbounded log
 has not been compiled to a conventional finite tape machine, and no many-one
-reduction or undecidability result is yet claimed. Focused/public/full builds,
-scans, and axiom audit passed. Stage 6 is the next incomplete stage.
+reduction or finite-machine undecidability result is yet claimed. Stage 6 first
+packages the checked fixed-transition semantics as honest intermediate
+many-one reductions, then must close the finite validity, source compiler, and
+history/coupling compiler gaps before its final claims. Stage 7 has not been
+started.
