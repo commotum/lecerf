@@ -149,8 +149,17 @@ theorem trList_primrec : Primrec Turing.PartrecToTM2.trList := by
       induction input with
       | nil => rfl
       | cons head tail ih =>
-          simp only [List.foldr_cons, Turing.PartrecToTM2.trList]
+          change List.foldr (fun number encoded =>
+            Turing.PartrecToTM2.trNat number ++
+              Turing.PartrecToTM2.Γ'.cons :: encoded) [] tail =
+                Turing.PartrecToTM2.trList tail at ih
+          change Turing.PartrecToTM2.trNat head ++
+            Turing.PartrecToTM2.Γ'.cons ::
+              List.foldr (fun number encoded =>
+                Turing.PartrecToTM2.trNat number ++
+                  Turing.PartrecToTM2.Γ'.cons :: encoded) [] tail = _
           rw [ih]
+          rfl
 
 /-- One source alphabet cell embedded in the fixed four-stack tape track. -/
 private def stackCell (symbol : Turing.PartrecToTM2.Γ') : Symbol :=
@@ -204,17 +213,21 @@ private theorem sideOfList_primrec :
       induction symbols with
       | nil => rfl
       | cons head tail ih =>
-          simp only [List.foldr_cons, Side.ofList]
+          change List.foldr (fun symbol side => Side.cons symbol side)
+            none tail = Side.ofList tail at ih
+          change Side.cons head
+            (List.foldr (fun symbol side => Side.cons symbol side) none tail) = _
           rw [ih]
+          rfl
 
 /-- Building the canonical right-extending tape is primitive recursive. -/
 theorem tapeFromList_primrec : Primrec tapeFromList := by
   have head : Primrec fun symbols : List Symbol => symbols.headI :=
     Primrec.list_headI
-  have right : Primrec fun symbols : List Symbol => Side.ofList symbols.tail :=
+  have rightSide : Primrec fun symbols : List Symbol => Side.ofList symbols.tail :=
     sideOfList_primrec.comp Primrec.list_tail
   exact (Tape.equivRep_symm_primrec.comp
-    (head.pair ((Primrec.const none).pair right))).of_eq fun _ => rfl
+    (head.pair ((Primrec.const none).pair rightSide))).of_eq fun _ => rfl
 
 /-- The executable canonical tape constructor agrees with the semantic tape
 bridge used in `FiniteSource.initial`. -/
