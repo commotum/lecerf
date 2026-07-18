@@ -87,11 +87,11 @@ theorem encode_decode (config : Config σ) :
 
 /-- Enter the forward copy of a state. -/
 def forward (state : σ) : Config σ :=
-  encode .forward state
+  ⟨.forward, state⟩
 
 /-- Enter the reverse copy of a state. -/
 def reverse (state : σ) : Config σ :=
-  encode .reverse state
+  ⟨.reverse, state⟩
 
 @[simp]
 theorem forward_direction (state : σ) : (forward state).direction = .forward :=
@@ -173,8 +173,7 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
               simpa [turnaroundNext, Config.forward, Config.reverse,
                 ReversibleStep.next, forwardStep] using executed.symm
             subst target
-            simp [turnaroundPrev, Config.forward, Config.reverse,
-              ReversibleStep.next, forwardStep]
+            simp [turnaroundPrev, Config.forward, Config.reverse, forwardStep]
         | some nextState =>
             have targetEq : target = Config.forward nextState := by
               simpa [turnaroundNext, Config.forward, ReversibleStep.next,
@@ -182,12 +181,11 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
             subst target
             have inverseStep : step.symm nextState = some state :=
               step.eq_some_iff.mpr forwardStep
-            simp [turnaroundPrev, Config.forward, ReversibleStep.prev,
-              inverseStep]
+            simp [turnaroundPrev, Config.forward, inverseStep]
     | reverse =>
         cases inverseStep : step.symm state with
         | none =>
-            simp [turnaroundNext, Config.reverse, inverseStep] at executed
+            simp [turnaroundNext, inverseStep] at executed
         | some previous =>
             have targetEq : target = Config.reverse previous := by
               simpa [turnaroundNext, Config.reverse, ReversibleStep.prev,
@@ -195,15 +193,14 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
             subst target
             have forwardStep : step previous = some state :=
               step.eq_some_iff.mp inverseStep
-            simp [turnaroundPrev, Config.reverse, ReversibleStep.next,
-              forwardStep]
+            simp [turnaroundPrev, Config.reverse, forwardStep]
   · intro reversed
     rcases target with ⟨direction, state⟩
     cases direction with
     | forward =>
         cases inverseStep : step.symm state with
         | none =>
-            simp [turnaroundPrev, Config.forward, inverseStep] at reversed
+            simp [turnaroundPrev, inverseStep] at reversed
         | some previous =>
             have sourceEq : source = Config.forward previous := by
               simpa [turnaroundPrev, Config.forward, ReversibleStep.prev,
@@ -211,8 +208,7 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
             subst source
             have forwardStep : step previous = some state :=
               step.eq_some_iff.mp inverseStep
-            simp [turnaroundNext, Config.forward, ReversibleStep.next,
-              forwardStep]
+            simp [turnaroundNext, Config.forward, forwardStep]
     | reverse =>
         cases forwardStep : step state with
         | none =>
@@ -220,8 +216,7 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
               simpa [turnaroundPrev, Config.forward, Config.reverse,
                 ReversibleStep.next, forwardStep] using reversed.symm
             subst source
-            simp [turnaroundNext, Config.forward, Config.reverse,
-              ReversibleStep.next, forwardStep]
+            simp [turnaroundNext, Config.forward, Config.reverse, forwardStep]
         | some nextState =>
             have sourceEq : source = Config.reverse nextState := by
               simpa [turnaroundPrev, Config.reverse, ReversibleStep.next,
@@ -229,8 +224,7 @@ theorem turnaroundNext_eq_some_iff_turnaroundPrev_eq_some {σ : Type u}
             subst source
             have inverseStep : step.symm nextState = some state :=
               step.eq_some_iff.mpr forwardStep
-            simp [turnaroundNext, Config.reverse, ReversibleStep.prev,
-              inverseStep]
+            simp [turnaroundNext, Config.reverse, inverseStep]
 
 /-- The open coupling bundled as a reversible partial step. -/
 def turnaround {σ : Type u} (step : ReversibleStep σ) :
@@ -290,8 +284,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
               simpa [returnNext, Config.forward, Config.reverse,
                 ReversibleStep.next, forwardStep] using executed.symm
             subst target
-            simp [returnPrev, Config.forward, Config.reverse,
-              ReversibleStep.next, forwardStep]
+            simp [returnPrev, Config.forward, Config.reverse, forwardStep]
         | some nextState =>
             have targetEq : target = Config.forward nextState := by
               simpa [returnNext, Config.forward, ReversibleStep.next,
@@ -299,8 +292,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
             subst target
             have inverseStep : step.symm nextState = some state :=
               step.eq_some_iff.mpr forwardStep
-            simp [returnPrev, Config.forward, ReversibleStep.prev,
-              inverseStep]
+            simp [returnPrev, Config.forward, inverseStep]
     | reverse =>
         cases inverseStep : step.symm state with
         | none =>
@@ -308,8 +300,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
               simpa [returnNext, Config.forward, Config.reverse,
                 ReversibleStep.prev, inverseStep] using executed.symm
             subst target
-            simp [returnPrev, Config.forward, Config.reverse,
-              ReversibleStep.prev, inverseStep]
+            simp [returnPrev, Config.forward, Config.reverse, inverseStep]
         | some previous =>
             have targetEq : target = Config.reverse previous := by
               simpa [returnNext, Config.reverse, ReversibleStep.prev,
@@ -317,8 +308,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
             subst target
             have forwardStep : step previous = some state :=
               step.eq_some_iff.mp inverseStep
-            simp [returnPrev, Config.reverse, ReversibleStep.next,
-              forwardStep]
+            simp [returnPrev, Config.reverse, forwardStep]
   · intro reversed
     rcases target with ⟨direction, state⟩
     cases direction with
@@ -329,8 +319,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
               simpa [returnPrev, Config.forward, Config.reverse,
                 ReversibleStep.prev, inverseStep] using reversed.symm
             subst source
-            simp [returnNext, Config.forward, Config.reverse,
-              ReversibleStep.prev, inverseStep]
+            simp [returnNext, Config.forward, Config.reverse, inverseStep]
         | some previous =>
             have sourceEq : source = Config.forward previous := by
               simpa [returnPrev, Config.forward, ReversibleStep.prev,
@@ -338,8 +327,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
             subst source
             have forwardStep : step previous = some state :=
               step.eq_some_iff.mp inverseStep
-            simp [returnNext, Config.forward, ReversibleStep.next,
-              forwardStep]
+            simp [returnNext, Config.forward, forwardStep]
     | reverse =>
         cases forwardStep : step state with
         | none =>
@@ -347,8 +335,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
               simpa [returnPrev, Config.forward, Config.reverse,
                 ReversibleStep.next, forwardStep] using reversed.symm
             subst source
-            simp [returnNext, Config.forward, Config.reverse,
-              ReversibleStep.next, forwardStep]
+            simp [returnNext, Config.forward, Config.reverse, forwardStep]
         | some nextState =>
             have sourceEq : source = Config.reverse nextState := by
               simpa [returnPrev, Config.reverse, ReversibleStep.next,
@@ -356,8 +343,7 @@ theorem returnNext_eq_some_iff_returnPrev_eq_some {σ : Type u}
             subst source
             have inverseStep : step.symm nextState = some state :=
               step.eq_some_iff.mpr forwardStep
-            simp [returnNext, Config.reverse, ReversibleStep.prev,
-              inverseStep]
+            simp [returnNext, Config.reverse, inverseStep]
 
 /-- The uniformly closed return transition bundled as a reversible step. -/
 def returnGadget {σ : Type u} (step : ReversibleStep σ) :
@@ -403,14 +389,14 @@ theorem turnaroundNext_reverse_of_inverse_step
     turnaroundNext step (Config.reverse state) =
       some (Config.reverse previous) := by
   change step.symm state = some previous at h
-  simp [turnaroundNext, Config.reverse, ReversibleStep.prev, h]
+  simp [turnaroundNext, Config.reverse, h]
 
 @[simp]
 theorem turnaroundNext_reverse_of_inverse_terminal
     (h : Terminal step.prev state) :
     turnaroundNext step (Config.reverse state) = none := by
   change step.symm state = none at h
-  simp [turnaroundNext, Config.reverse, ReversibleStep.prev, h]
+  simp [turnaroundNext, Config.reverse, h]
 
 @[simp]
 theorem returnNext_forward_of_step
@@ -434,7 +420,7 @@ theorem returnNext_reverse_of_inverse_step
     returnNext step (Config.reverse state) =
       some (Config.reverse previous) := by
   change step.symm state = some previous at h
-  simp [returnNext, Config.reverse, ReversibleStep.prev, h]
+  simp [returnNext, Config.reverse, h]
 
 @[simp]
 theorem returnNext_reverse_of_inverse_terminal
@@ -442,7 +428,7 @@ theorem returnNext_reverse_of_inverse_terminal
     returnNext step (Config.reverse state) =
       some (Config.forward state) := by
   change step.symm state = none at h
-  simp [returnNext, Config.forward, Config.reverse, ReversibleStep.prev, h]
+  simp [returnNext, Config.forward, Config.reverse, h]
 
 end BoundaryEquations
 
