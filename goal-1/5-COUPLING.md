@@ -19,7 +19,7 @@
   but does not supply the complete gadget or both directions.
 - Stage 4 proves a primitive-recursive abstract history interpreter jointly in
   an existing finite source description. It does not generate an ordinary
-  finite tape machine; Stage 5 must preserve that boundary.
+  finite tape machine; Stage 5 preserves that boundary.
 
 ## Updated Assumptions
 
@@ -43,11 +43,11 @@
   checked log growth rules out a forward-only cycle, while the implemented
   headline reflection uses the stronger exact-predecessor fact at the closed
   return boundary.
-- No-spurious reflection will classify every positive run from a forward-tagged
-  initial history: until a forward-terminal switch occurs it corresponds to a
-  positive history-forward path; once a switch occurs, history/source halting
-  is already witnessed. This avoids assuming that a phase transition occurred.
-- Effectivity will be stated for jointly primitive-recursive forward and
+- No-spurious reflection classifies generated runs from a forward-tagged
+  initial history: forward-tagged states satisfy the history invariant, while
+  reaching any reverse-tagged generated state witnesses source halting. This
+  avoids assuming that a phase transition occurred.
+- Effectivity is stated for jointly primitive-recursive forward and
   inverse interpreters, then specialized to history simulators, existing
   finite source-machine descriptions, and the universal evaluator-search
   source. This remains interpreter effectivity, not a finite output compiler.

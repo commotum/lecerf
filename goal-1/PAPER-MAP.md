@@ -39,7 +39,7 @@ Status labels in this file are:
 | `L1e-EPI` | §1e | A source indexed family is a code and each assigned target word belongs to some target code | Define `PaperCodeEpi` with a source code, a target code, and a possibly repeating/non-surjective selector; expose stronger map properties separately | corrected-target |
 | `L2-RULEINV` | §2 | `(p₁,q₁,p₂,q₂,d)` has printed inverse `(p₂*,q₂,p₁*,q₁,-d)` | Audit syntax `printedInverse` is non-public; `printedInverse_fails_on_moving_rule` checks the failure. Public `Rule.apply_eq_some_iff_undo_eq_some` proves the repaired semantic inverse | corrected-target |
 | `L2-REV` | §2 | A machine is reversible when the printed inverse family constitutes a machine and starred runs reverse | `Rule.tapeAction` composes checked-write and movement phases. `FiniteMachine.Reversible`, `backwardCompatible_iff_backwardUnique`, and `toPEquiv` separate table determinism from global inverse execution | corrected-target |
-| `L2-COUPLE` | §2 | Forward rules, inverse rules, and halt-to-star switches run forward and then backward | Rebuild with disjoint phase tags and prove the switch and reverse run do not create conflicts | spec-gap |
+| `L2-COUPLE` | §2 | Forward rules, inverse rules, and halt-to-star switches run forward and then backward | `Coupling.turnaround` and `returnGadget` use disjoint phase tags and exact ambient inverse laws. The open gadget switches only at forward terminality and retraces through the supplied inverse; the closed gadget uniformly closes inverse-terminal boundaries. Correspondence with the paper's omitted finite rule table remains open | spec-gap |
 | `L3-RELATIONS` | §3 | Three source relations per move rule, plus symbol identities, define an “epimorphism of codes” `τ_max` | Reconstruct every relation family and separately prove source codehood and the induced map's actual properties | spec-gap |
 | `L3-CONFIG` | §3 | `α/ω/β` markers record the next-read and previous-written positions so `uᵢ₊₁ = τ_max(uᵢ)` | Require a well-formed configuration language, encode/decode, and a one-step iff theorem | spec-gap |
 | `L3-MIN` | §3 | After conditional pruning to `τ_min`, code isomorphism implies machine reversibility | Formalize only this printed direction until reachable-language necessity is proved | source-confirmed |
@@ -48,8 +48,8 @@ Status labels in this file are:
 | `L4a-SIM3` | §4a(3) | A checkpoint `λ vᵢ μ wᵢ ν` recovers the source configuration and history | `History.Config.encode/decode/project` and `History.reachable_iff_valid` implement a cleaner full-predecessor checkpoint with exact recovery and no-spurious-checkpoint reflection; correspondence with the printed marker word remains open | spec-gap |
 | `L4a-SIM4` | §4a(4) | `wᵢ = b² rₖ₁ … rₖᵢ b` records one distinguished nonidentity relation per source step | Stage 4 uses an explicit empty initial list and pushes the complete predecessor on every actual source step. `history_length_of_forward` proves one-entry growth. This is intentionally more redundant than the printed token scheme | corrected-target |
 | `L4a-SIM5` | §4a(5) | Simulator halting checkpoints are exactly source-halting checkpoints | `terminal_forward_iff`, `haltsFrom_forward_iff`, and `universalHistory_halts_iff_eval_dom` prove preservation and reflection for the clean simulator | source-confirmed |
-| `L4a-SIM6` | §4a(6) | The coupled machine reaches the starred initial configuration iff the source halts | Implement as a computable distinct-target reachability reduction | source-confirmed |
-| `L4a-SIM7` | §4a(7) | Return or passage through a framed target can be conditioned on source halting | Build a complete gadget and prove an iff; the prose only sketches the construction and directly supports one implication for the extra target | spec-gap |
+| `L4a-SIM6` | §4a(6) | The coupled machine reaches the starred initial configuration iff the source halts | `Coupling.History.start_ne_target` and `target_strictlyReachable_iff_halts` give the exact abstract semantic statement. Endpoint and step interpreters are primitive recursive, and `universalTarget_strictlyReachable_iff_eval_dom` specializes it to the universal source. This is not yet a generated finite-machine reduction | source-confirmed |
+| `L4a-SIM7` | §4a(7) | Return or passage through a framed target can be conditioned on source halting | `Coupling.History.positiveReturn_iff_halts` supplies a complete cleaner abstract gadget and both directions. Uniformly closing every inverse-terminal component is a formal strengthening of the sketch needed for a global executable `PEquiv`; finite tape compilation remains open | spec-gap |
 | `L4a-SKETCH` | §4a proof | One representative relation is simulated by sweeping, editing, appending history, shifting delimiters, and returning control | The clean abstract simulator is now complete. Its unbounded list has not been compiled into the paper's sweeping tape/marker rules, so a historical correspondence theorem remains a separate obligation | spec-gap |
 | `L4b-THM1H` | Theorem 1 | Halting is recursively unsolvable for arbitrary reversible Turing machines | Uniform noncomputability of a validity-checked finite reversible-machine halting predicate | source-confirmed |
 | `L4b-THM1R` | Theorem 1 | Return to the initial configuration is recursively unsolvable | Use `StateTransition.Reaches₁`; reflexive reachability would trivialize the claim | corrected-target |
@@ -108,7 +108,9 @@ Status labels in this file are:
   layout remains open and is not inferred from that result.
 - §3 prints only `τ_min` code-isomorphism implies reversibility, not an iff.
 - §4a(7) motivates return/reachability gadgets but does not prove their full
-  reduction iff. The later formalization must supply it.
+  reduction iff. Stage 5 supplies cleaner abstract gadgets and both semantic
+  directions; a correspondence with the historical finite tape construction
+  remains open.
 - The header records the proceedings session of 28 October 1963; the footnote
   records presentation of the note on 21 October 1963. Both scan readings are
   retained and have no mathematical effect.
@@ -126,7 +128,7 @@ proposed API targets.
 | Effective source transition | `Source.universalEvalSearchStep`, `Source.universalEvalSearchStep_halts_iff_eval_dom`, `Source.universalEvalSearchStep_primrec`, `Source.evalSearchStart_joint_primrec` | 3 (implemented replacement source; finite compiler open) |
 | History simulation | `History.forward`, `History.backward`, `History.reversible`, `History.reachable_iff_valid`, `History.source_reachable_iff_exists_reachable_checkpoint`, `History.haltsFrom_forward_iff` | 4 (implemented abstractly; historical tape compiler open) |
 | Effective history interpretation | `FiniteMachine.step_uniform_primrec`, `History.forwardInterpreter_primrec`, `History.backwardInterpreter_primrec`, `History.finiteForward_uniform_primrec`, `History.finiteBackward_uniform_primrec`, `History.universalHistory_halts_iff_eval_dom` | 4 (implemented; generated conventional history machine open) |
-| Coupling | `coupled_reaches_star_iff`, `coupled_returns₁_iff` | 5 |
+| Coupling | `Coupling.turnaround`, `Coupling.returnGadget`, `Coupling.History.target_strictlyReachable_iff_halts`, `Coupling.History.positiveReturn_iff_halts`, `Coupling.History.universalTarget_strictlyReachable_iff_eval_dom`, `Coupling.History.universalPositiveReturn_iff_eval_dom` | 5 (implemented abstractly; finite compiler open) |
 | Machine undecidability | `reversibleHalting_not_computable`, `reversibleReturn_not_computable`, `reversibleReachability_not_computable` | 6 |
 | Indexed codes | `IsIndexedCode`, `IsPrefixCode`, `IsSuffixCode` | 7 |
 | Code maps | `CodeIso`, `PaperCodeEpi`, `iteratePEquiv` | 7 |
@@ -135,12 +137,13 @@ proposed API targets.
 
 Stage 3 supplies the concrete read-write-move semantics and repaired local and
 global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stage 4
-supplies clean abstract analogues of the machine-simulation content in
-`L4a-SIM1` through `L4a-SIM5`, including effectivity and halting reflection;
-the printed marker words, finite macro-machine, and code-map layer remain open.
-Starred coupling and the paper's halt-to-reverse construction remain in Stage
-5, and a conventional finite tape compiler remains open, so no undecidability
-claim follows from these declarations alone.
+supplies clean abstract analogues of `L4a-SIM1` through `L4a-SIM5`, including
+effectivity and halting reflection. Stage 5 supplies the phase-tagged
+halt-to-reverse coupling, distinct-target reachability iff, positive-return
+iff, and primitive-recursive abstract interpreters/endpoints. The printed
+marker words, finite history/coupling compiler, finite validity predicate, and
+code-map layer remain open, so no finite-machine undecidability claim follows
+from these declarations alone.
 
 ## Principal Reduction Map
 
@@ -150,10 +153,10 @@ established encoded halting predicate
 ordinary finite-machine halting
   -- effective abstract history interpreter + halting iff (Stage 4 checked) -->
 abstract reversible-transition halting
-  -- pending history-list-to-finite-tape compiler -->
-finite reversible-machine halting
-  -- phase-tagged coupling gadgets + iff -->
-positive return / distinct-target reachability
+  -- phase-tagged coupling gadgets + semantic iff/effectivity (Stage 5 checked) -->
+abstract positive return / distinct-target reachability
+  -- pending source/history/coupling finite-tape compiler and validity proof -->
+finite reversible-machine halting / return / reachability
   -- configuration code + step/iterate iff -->
 positive fixed orbit / distinct orbit of a partial code isomorphism
 ```

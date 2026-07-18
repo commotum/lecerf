@@ -1,6 +1,6 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 through Stage 4 declarations are identified as implemented below. All
+Stage 2 through Stage 5 declarations are identified as implemented below. All
 later-layer names remain proposed Lean surfaces and may be refined when
 implementation evidence requires it.
 
@@ -319,39 +319,108 @@ one-tape `FiniteMachine` implementing that log. The latter tape/microstate
 compiler remains a distinct bridge before a finite reversible-machine
 undecidability target can be claimed.
 
-## 4. Forward–Reverse Coupling
+## 4. Forward–Reverse Coupling (implemented)
 
-Use disjoint phase tags:
+Public modules:
 
 ```text
-forward history simulation
-  -> switch only at a terminal checkpoint
-  -> inverse history simulation
-  -> starred initial checkpoint
-  -> optional reversible return/target gadget
+Lecerf.Machine.Coupling.Core
+Lecerf.Machine.Coupling.Correctness
+Lecerf.Machine.Coupling.Computable
+Lecerf.Machine.Coupling.API
 ```
 
-Required exact specifications:
+The non-public `Coupling.Audit` leaf contains executable examples and axiom
+checks. The runtime uses disjoint phase tags and provides two exact partial
+equivalences:
 
 ```lean
-coupled_reaches_star_iff :
-  HaltsFrom sourceStep sourceStart ↔
-  Reachable coupledStep coupledStart starredInitial
+inductive Coupling.Direction | forward | reverse
+structure Coupling.Config (σ : Type u)
 
-coupled_returns₁_iff :
-  HaltsFrom sourceStep sourceStart ↔
-  PositiveReturn returnGadgetStep returnGadgetStart
+Coupling.turnaroundNext_eq_some_iff_turnaroundPrev_eq_some
+Coupling.turnaround : ReversibleStep (Coupling.Config σ)
 
-coupled_reaches_target_iff :
-  HaltsFrom sourceStep sourceStart ↔
-  StrictlyReachable targetGadgetStep targetGadgetStart target
+Coupling.returnNext_eq_some_iff_returnPrev_eq_some
+Coupling.returnGadget : ReversibleStep (Coupling.Config σ)
 
-target_ne_start : target ≠ targetGadgetStart
+Coupling.exists_returnNext
+Coupling.exists_returnPrev
+Coupling.returnGadget_not_terminal
 ```
 
-The switch is permitted only after simulated halting. Phase disjointness must
-show the union remains deterministic and backward-unique. The paper motivates
-these gadgets but does not supply the second and third iff proofs.
+`turnaround` executes the given reversible step forward, switches phase at a
+forward-terminal state, retraces with its exact inverse, and stops at an
+inverse-terminal state. `returnGadget` closes every inverse-terminal boundary
+back to the corresponding forward-tagged state. The closure is uniform: it
+does not compare against a privileged initial state or inspect a halting
+witness.
+
+For the reversible full-history simulator, the exact headline declarations
+are:
+
+```lean
+Coupling.History.start_ne_target (initial : σ) :
+  Coupling.History.start initial ≠ Coupling.History.target initial
+
+Coupling.History.target_strictlyReachable_iff_halts
+    [DecidableEq σ] (source : Step σ) (initial : σ) :
+  StrictlyReachable (Coupling.History.turnaroundStep source).next
+      (Coupling.History.start initial) (Coupling.History.target initial) ↔
+    HaltsFrom source initial
+
+Coupling.History.terminal_target
+    [DecidableEq σ] (source : Step σ) (initial : σ) :
+  Terminal (Coupling.History.turnaroundStep source).next
+    (Coupling.History.target initial)
+
+Coupling.History.positiveReturn_iff_halts
+    [DecidableEq σ] (source : Step σ) (initial : σ) :
+  PositiveReturn (Coupling.History.returnStep source).next
+      (Coupling.History.start initial) ↔
+    HaltsFrom source initial
+```
+
+Generic forward/reverse path lifts supply the constructive directions. The
+history `Generated` invariant reflects any reachable reverse phase to source
+halting. The positive-return reflection uses the exact unique predecessor of
+the forward start (`return_prev_start` and `predecessor_of_start`). Separately,
+`history_length_lt_of_strictlyReachable` and `not_positiveReturn_forward`
+certify that the forward history phase has no positive cycle.
+
+Effectivity is checked at three levels:
+
+```lean
+Coupling.turnaroundNextInterpreter_primrec
+Coupling.turnaroundPrevInterpreter_primrec
+Coupling.returnNextInterpreter_primrec
+Coupling.returnPrevInterpreter_primrec
+
+Coupling.History.turnaroundStep_next_primrec
+Coupling.History.turnaroundStep_prev_primrec
+Coupling.History.returnStep_next_primrec
+Coupling.History.returnStep_prev_primrec
+
+Coupling.History.finiteTurnaroundNext_uniform_primrec
+Coupling.History.finiteTurnaroundPrev_uniform_primrec
+Coupling.History.finiteReturnNext_uniform_primrec
+Coupling.History.finiteReturnPrev_uniform_primrec
+Coupling.History.finiteDescribedStartTarget_primrec
+
+Coupling.History.universalStartTarget_joint_primrec
+Coupling.History.universalTurnaroundNext_primrec
+Coupling.History.universalTurnaroundPrev_primrec
+Coupling.History.universalReturnNext_primrec
+Coupling.History.universalReturnPrev_primrec
+
+Coupling.History.universalTarget_strictlyReachable_iff_eval_dom
+Coupling.History.universalPositiveReturn_iff_eval_dom
+```
+
+The finite theorems interpret an existing `FiniteMachine` description on an
+abstract phase-tagged full-history state. They do not compile that state into
+a conventional finite tape machine and therefore are not yet Stage-6 raw
+finite-machine reductions.
 
 ## 5. Finite Decision Problems and Machine Reductions
 

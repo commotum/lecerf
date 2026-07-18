@@ -23,7 +23,7 @@ Status vocabulary:
 | `A-002` | If `n = 0`, `w = θⁿ(w)` is true for every `w` | The paper says `n ∈ N` but never defines `N`; its empty-word observation concerns all iterates and does not settle whether zero is included | State fixed orbit as `∃ k, iterate θ (k + 1) w = some w`; label this a necessary disambiguation/repair | correction-required |
 | `A-003` | `θⁿ` is not automatically composable because `θ` maps one generated submonoid to another | §1b gives domain `φ(A†)` and codomain `ψ(A†)` without equating them | Use an intrinsic submonoid equivalence plus an ambient `PEquiv`; iterate by partial composition and require a `some` result | resolved-design |
 | `A-004` | The printed sign-reversed quintuple is not a semantic inverse of a standard moving rule | §2 changes only the state tag. After write-then-move, the new head scans a neighbor rather than the written symbol. Checked `Machine.Audit.printedInverse_fails_on_moving_rule` gives a concrete counterexample | The tuple exists only in the non-public audit. Public `Rule.tapeAction` composes checked-write and move phases; `Rule.apply_eq_some_iff_undo_eq_some` proves the actual inverse step moves back before restoring | correction-required |
-| `A-005` | “Inverse-image rules constitute a Turing machine” does not define determinism, backward uniqueness, or coupling conflicts | §2 leaves the machine well-formedness convention implicit. The checked merge audit has a deterministic input-key table and individually reversible rules but two predecessors for one output | `TableDeterministic`, `ForwardCompatible`, `BackwardCompatible`, `BackwardUnique step`, and `FiniteMachine.Reversible` are separate. `backwardCompatible_iff_backwardUnique` characterizes the global condition for a deterministic table | resolved-design |
+| `A-005` | “Inverse-image rules constitute a Turing machine” does not define determinism, backward uniqueness, or coupling conflicts | §2 leaves the machine well-formedness convention implicit. The checked merge audit has a deterministic input-key table and individually reversible rules but two predecessors for one output | `TableDeterministic`, `ForwardCompatible`, `BackwardCompatible`, `BackwardUnique step`, and `FiniteMachine.Reversible` are separate. `backwardCompatible_iff_backwardUnique` characterizes the global condition for a deterministic table. Stage 5 uses disjoint phase tags and proves exact ambient inverse laws for both couplings rather than assuming their union is conflict-free | resolved-design |
 | `A-006` | The history construction is incomplete | §4 says it gives only the principle and spells out one representative relation, omitting the other rules and invariants | Stage 4 supplies a complete abstract simulator: full predecessor push, checked pop, exact `PEquiv`, generated-history invariant, reflection, and halting iff. Connecting it to the historical marker/tape scheme remains later work | source-confirmed |
 | `A-007` | The source says every history token represents a nonidentity relation while indexing one token per source time step | §4a(4) does not specify whether identity relations are compressed or count as steps | The clean simulator records the complete predecessor for every successful source transition. `history_length_of_forward` proves one new entry per actual step; word-copy identities are not source-machine transitions | resolved-design |
 | `A-008` | “Return to the initial configuration” is trivial under reflexive reachability | Theorem 1 describes a dynamic return | Define return with `StateTransition.Reaches₁` and prove the constructed run has positive length | correction-required |
@@ -34,9 +34,9 @@ Status vocabulary:
 | `A-013` | English §1e inserts the technical phrase “complete code” | French and the page-2 scan read `est bien un code`, “is indeed a code,” not `code complet` | Do not introduce maximal/complete-code theory or a completeness hypothesis | correction-required |
 | `A-014` | The French code definition calls ordered factorization data an `ensemble d'indices` | Multiplication order `mᵢ₁ … mᵢₚ` makes the indices a finite sequence, not an unordered set | Formalize factors as `FreeMonoid I`/lists | correction-required |
 | `A-015` | The printed history invariant has an inconsistent base case | §4a(3) gives `u₀,₀ = λv₀μν`, hence empty `w₀`; §4a(4), stated for every `i`, gives `w₀ = b²b = b³` | `History.Config.initial` has an explicit empty list, and `Valid.history_eq_nil_iff` proves that a generated empty history is exactly the initial checkpoint. The departure is intentional | correction-required |
-| `A-016` | §4a(7) does not itself prove both directions of the return/extra-target reductions | The direct clause gives extra-target passage only after the starred initial; the following prose says the behavior can be conditioned on halting but supplies no gadget proof | Construct explicit reversible gadgets and prove halt iff positive return / distinct reachability | isolated-obligation |
-| `A-017` | A semantic simulation theorem is insufficient for a computability reduction | The paper never provides finite encodings or proves its construction effective | Stage 4 proves both semantic iff theorems and joint primitive recursiveness for abstract history interpretation, including existing `FiniteMachine` descriptions. Every later reduction must still supply its own finite target description map, validity proof, and iff | isolated-obligation |
-| `A-018` | Mathlib's established halting predicate and its partial-recursive-to-TM construction use different code types | `ComputablePred.halting_problem` is over `Nat.Partrec.Code`; `Turing.PartrecToTM2.tr_eval` is over `Turing.ToPartrec.Code`. `ToPartrec.Code.exists_code` is existential, while the TM2→TM1 and TM1→TM0 support maps are explicitly `noncomputable` | Stages 3–4 supply the primitive-recursive universal search, exact source/history halting iff, and primitive-recursive existing finite-machine interpreter. They still do not compile `Nat.Partrec.Code` to a finite project machine; Stage 6 must construct that arrow or establish another explicit finite source | isolated-obligation |
+| `A-016` | §4a(7) does not itself prove both directions of the return/extra-target reductions | The direct clause gives extra-target passage only after the starred initial; the following prose says the behavior can be conditioned on halting but supplies no gadget proof | Stage 5 supplies complete abstract gadgets. `Coupling.History.target_strictlyReachable_iff_halts` and `positiveReturn_iff_halts` prove both directions, with structural target distinctness and positive rather than reflexive return. Compiling these gadgets to a finite tape machine remains separate under `A-017`/`A-025` | resolved-design |
+| `A-017` | A semantic simulation theorem is insufficient for a computability reduction | The paper never provides finite encodings or proves its construction effective | Stages 4–5 prove semantic iff theorems and joint primitive-recursive interpreters/endpoints for abstract history and coupling, including an existing `FiniteMachine` description. A later finite-machine reduction must still construct a finite target description, prove validity, and establish the final iff | isolated-obligation |
+| `A-018` | Mathlib's established halting predicate and its partial-recursive-to-TM construction use different code types | `ComputablePred.halting_problem` is over `Nat.Partrec.Code`; `Turing.PartrecToTM2.tr_eval` is over `Turing.ToPartrec.Code`. `ToPartrec.Code.exists_code` is existential, while the TM2→TM1 and TM1→TM0 support maps are explicitly `noncomputable` | Stages 3–5 supply the primitive-recursive universal search, exact source/history/coupling semantic iff theorems, and primitive-recursive existing-machine interpreters. They still do not compile `Nat.Partrec.Code` to a finite project machine; Stage 6 must construct that arrow or establish another explicit finite source | isolated-obligation |
 | `A-019` | Mathlib's set-based uniquely-decodable predicate forgets repeated indices in an indexed family | `InformationTheory.UniquelyDecodable` is defined for a `Set (List α)`; Lecerf's code data are indexed | Relate it to project `IsIndexedCode` only together with injectivity of the generator family | resolved-design |
 | `A-020` | Tape semantics and computable finite encodings pull in different directions | `Turing.Tape` has useful quotient-normalized semantics but no ready `Primcodable` instance. Stage-3 probes verified a canonical structural representation and an equivalence to the reference halves | `Side` structurally stores a nonblank farthest cell, giving unique trailing-blank normalization. `Tape`, `Config`, `Rule`, and `FiniteMachine` now have constructive `Primcodable` instances; a quotient bridge remains optional in a narrow audit leaf | resolved-design |
 | `A-021` | Treating a partial equivalence's option-valued function as globally injective is false | Checked theorem `Audit.emptyReversibleStep_next_not_injective`: the empty `PEquiv` sends distinct Boolean inputs to `none` | Use `BackwardUnique`, i.e. left uniqueness only for successful steps; `ReversibleStep.backwardUnique` proves it | resolved-design |
@@ -46,6 +46,8 @@ Status vocabulary:
 | `A-025` | An effective abstract history interpreter is not automatically a generated conventional finite Turing machine | `finiteForward_uniform_primrec` and `finiteBackward_uniform_primrec` interpret a finite source description, but `History.Config` contains an unbounded `List` of source configurations | Treat Stage 4 as the permitted cleaner equivalent reversible simulation. A finite tape/microstate compiler must separately encode the log and prove step/halting correspondence before finite-machine undecidability | isolated-obligation |
 | `A-026` | “Checkpoint uniqueness” cannot mean that a source configuration has only one valid history | The checked Boolean-cycle audit revisits `false` with histories `[]` and `[true, false]` | State uniqueness at equal elapsed/history length (`Valid.eq_of_history_length_eq`) and uniqueness of the empty initial checkpoint; retain longer cycle histories | resolved-design |
 | `A-027` | Blindly popping a stored predecessor is not an inverse on malformed ambient history states | `History.Audit.malformed_predecessor_rejected` checks a predecessor that does not step to the recorded current state | `History.backward` recomputes and validates the edge before popping; `forward_eq_some_iff_backward_eq_some` proves the exact inverse law without assuming `Valid` | resolved-design |
+| `A-028` | Closing only one privileged reverse-initial state would make the return gadget depend on runtime equality with a reduction input and can break the ambient inverse law on other components | The paper sketches conditioning behavior at one initial configuration but gives no total rule family or global reversibility argument | `Coupling.returnGadget` uniformly closes every inverse-terminal state to its matching forward-tagged state. `returnNext_eq_some_iff_returnPrev_eq_some` proves the exact ambient law; `exists_returnNext`, `exists_returnPrev`, and `returnGadget_not_terminal` expose totality | resolved-design |
+| `A-029` | The closed coupling is total, so it cannot itself serve as the halting machine in a halting reduction | Both branches of `returnNext` succeed, formalized by `exists_returnNext` and `returnGadget_not_terminal`; the open `turnaround` instead stops at the reverse-initial checkpoint | Use the open/history simulator for halting and distinct-target reachability, and the closed gadget only for positive return. Do not conflate these target predicates | resolved-design |
 
 ## Source Corrections Versus Design Choices
 
@@ -82,8 +84,8 @@ Every completed stage must classify findings under these headings:
 
 ## Axiom Audit Table
 
-Stages 2 through 4 introduce the checked transition, finite-machine, and
-abstract history-simulation surfaces.
+Stages 2 through 5 introduce the checked transition, finite-machine, abstract
+history-simulation, and forward/reverse coupling surfaces.
 
 | Lean declaration | Role | `#print axioms` result | Disposition |
 |---|---|---|---|
@@ -106,6 +108,13 @@ abstract history-simulation surfaces.
 | `Lecerf.Machine.FiniteMachine.step_uniform_primrec` | Joint finite-description interpreter | `propext`, `Classical.choice`, `Quot.sound` | Runtime definition is constructive and alphabet-enumeration-free; proof uses standard encoded-computability infrastructure |
 | `Lecerf.Machine.History.finiteForward_uniform_primrec` | Joint effective finite-source history execution | `propext`, `Classical.choice`, `Quot.sound` | Effective abstract interpreter, not a generated conventional finite tape machine |
 | `Lecerf.Machine.History.universalHistory_halts_iff_eval_dom` | Effective universal-source history halting iff | `propext`, `Classical.choice`, `Quot.sound` | Composes checked Stage-3 and Stage-4 equivalences; no project axiom |
+| `Lecerf.Machine.Coupling.turnaround` | Open phase-tagged reversible coupling | `propext`, `Quot.sound` | Exact `PEquiv` assembled from executable forward, terminal-switch, and inverse branches; no project axiom |
+| `Lecerf.Machine.Coupling.returnGadget` | Uniformly closed reversible return gadget | `propext`, `Quot.sound` | Exact `PEquiv`; every inverse-terminal component is closed uniformly |
+| `Lecerf.Machine.Coupling.History.target_strictlyReachable_iff_halts` | Distinct-target reachability iff source halting | `propext`, `Classical.choice`, `Quot.sound` | Both directions proved through generated-state reflection; target inequality is structural |
+| `Lecerf.Machine.Coupling.History.positiveReturn_iff_halts` | Positive return iff source halting | `propext`, `Classical.choice`, `Quot.sound` | Uses exact predecessor uniqueness at the return boundary; reflexive reachability is excluded |
+| `Lecerf.Machine.Coupling.History.universalReturnNext_primrec` | Primitive-recursive fixed universal return step | `propext`, `Classical.choice`, `Quot.sound` | Interpreter effectivity only; no finite output compiler is inferred |
+| `Lecerf.Machine.Coupling.History.universalTarget_strictlyReachable_iff_eval_dom` | Universal evaluation domain iff distinct-target reachability | `propext`, `Classical.choice`, `Quot.sound` | Semantic specialization of the checked universal source; not yet a finite-description reduction |
+| `Lecerf.Machine.Coupling.History.universalPositiveReturn_iff_eval_dom` | Universal evaluation domain iff positive return | `propext`, `Classical.choice`, `Quot.sound` | Semantic specialization; no `ManyOneReducible` or undecidability conclusion is claimed |
 
 For every later headline theorem, record the exact command, Lean output,
 mathlib or logical axioms present, and whether those axioms affect
@@ -204,3 +213,31 @@ executability or trust.
   `unsafe`, `noncomputable`, or explicit `Classical.choice`; boundary scans
   found no future coupling, reduction, code, or iterate layer. Whitespace and
   `git diff --check` passed.
+
+### Stage 5 forward/reverse coupling
+
+- Added `Machine.Coupling.{Core,Correctness,Computable,Audit,API}`. The public
+  machine API re-exports `Coupling.API`; the executable/axiom audit leaf remains
+  non-public.
+- The open `turnaround` and closed `returnGadget` satisfy exact ambient
+  forward/inverse iff laws. Audit examples cover halt-now, one-step halting,
+  and a nonhalting loop, including negative reachability and return checks.
+- `History.target_strictlyReachable_iff_halts` and
+  `History.positiveReturn_iff_halts` prove both semantic reduction directions.
+  The former uses a constructor-distinct target and positive reachability; the
+  latter uses `PositiveReturn` and exact predecessor uniqueness. Checked log
+  growth independently rules out a forward-history cycle.
+- Generic four-way coupling interpreters, history specializations, existing
+  finite-description specializations, and universal endpoints/steps are
+  primitive recursive. The two universal semantic iff corollaries terminate
+  at `Nat.Partrec.Code.eval` domain membership; no finite output machine,
+  validity predicate, many-one reduction, or undecidability conclusion is
+  present.
+- Focused `lake build Lecerf.Machine.Coupling.Audit` passed with 834 jobs.
+  Adjacent coupling/machine/root API builds passed, and full `lake build`
+  passed with 839 jobs.
+- Lean scans found no project proof hole, axiom declaration, proof-bypassing
+  `unsafe`, `noncomputable`, or explicit `Classical.choice`. Out-of-stage token
+  and public-import scans, trailing-whitespace checks, and `git diff --check`
+  passed. The exact `#print axioms` results are recorded above and contain only
+  standard Lean/mathlib axioms.
