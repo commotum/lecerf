@@ -68,7 +68,7 @@ Status labels in this file are:
 - A source quintuple means read the current symbol, write the replacement,
   then move by `-1`, `0`, or `+1`. Absence of an applicable rule means halt.
 - Under that convention the printed inverse quintuple fails for moving rules
-  rule in general: after a forward move the head scans a neighboring cell, not
+  in general: after a forward move the head scans a neighboring cell, not
   the symbol just written. `Rule.tapeAction` splits checked write and movement
   as composed partial equivalences; `Rule.undo` executes those operations in
   reverse order and its exact inverse iff is checked.

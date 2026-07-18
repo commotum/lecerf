@@ -490,12 +490,12 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`2-TRANSITION.md` is complete. The public transition layer defines successful
-step relations, backward uniqueness, terminality, halting, reflexive and
-positive reachability, positive return, and semantic reversible steps. It
-proves exact one-step inversion, successful predecessor uniqueness, reflexive
-and positive path reversal, safe endpoint evaluation reversal, and halting via
-a reachable terminal state. Finite audit examples check the zero-step,
-partial-domain, terminal-asymmetry, positive-cycle, and merging-step
-boundaries. Focused/public/full builds and scans passed. Stage 3 remains
-unstarted.
+`3-MACHINE.md` is complete. The public machine layer defines canonical
+finite-support blank tapes, primcodable configurations/rules/finite tables,
+first-match read-write-move execution, repaired rule inversion, semantic table
+compatibility, and whole-machine reversible `PEquiv` execution. A non-public
+audit checks the paper-tuple failure and the local-versus-global reversibility
+boundary. The fixed primitive-recursive `evaln` search source has an exact
+halting iff; the missing computable compiler from that source into finite rule
+tables is isolated rather than assumed. Focused/public/full builds, scans, and
+axiom audit passed. Stage 4 remains unstarted.

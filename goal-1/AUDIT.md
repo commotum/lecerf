@@ -22,8 +22,8 @@ Status vocabulary:
 | `A-001` | English §1b omits “at most one,” turning unique decipherability into an existence/generation assertion | French §1b and the page-1 scan read `il existe au plus un ensemble d'indices` | Define codehood by at-most-one ordered factorization, equivalently injectivity of the induced free-monoid morphism | correction-required |
 | `A-002` | If `n = 0`, `w = θⁿ(w)` is true for every `w` | The paper says `n ∈ N` but never defines `N`; its empty-word observation concerns all iterates and does not settle whether zero is included | State fixed orbit as `∃ k, iterate θ (k + 1) w = some w`; label this a necessary disambiguation/repair | correction-required |
 | `A-003` | `θⁿ` is not automatically composable because `θ` maps one generated submonoid to another | §1b gives domain `φ(A†)` and codomain `ψ(A†)` without equating them | Use an intrinsic submonoid equivalence plus an ambient `PEquiv`; iterate by partial composition and require a `some` result | resolved-design |
-| `A-004` | The printed sign-reversed quintuple is not a semantic inverse of a standard moving rule | §2 changes only the state tag. After write-then-move, the new head scans a neighbor rather than the written symbol. §3's displayed `+1` relation confirms the marker moves past the written symbol | Preserve the tuple only as syntax. Use conventional read-write-move semantics and compile a moving rule into reversible write/move phases, then prove the actual inverse-step iff | correction-required |
-| `A-005` | “Inverse-image rules constitute a Turing machine” does not define determinism, backward uniqueness, or coupling conflicts | §2 leaves the machine well-formedness convention implicit | Define rule-table determinism, global successful-output injectivity/partial inverse, and phase disjointness separately | resolved-design |
+| `A-004` | The printed sign-reversed quintuple is not a semantic inverse of a standard moving rule | §2 changes only the state tag. After write-then-move, the new head scans a neighbor rather than the written symbol. Checked `Machine.Audit.printedInverse_fails_on_moving_rule` gives a concrete counterexample | The tuple exists only in the non-public audit. Public `Rule.tapeAction` composes checked-write and move phases; `Rule.apply_eq_some_iff_undo_eq_some` proves the actual inverse step moves back before restoring | correction-required |
+| `A-005` | “Inverse-image rules constitute a Turing machine” does not define determinism, backward uniqueness, or coupling conflicts | §2 leaves the machine well-formedness convention implicit. The checked merge audit has a deterministic input-key table and individually reversible rules but two predecessors for one output | `TableDeterministic`, `ForwardCompatible`, `BackwardCompatible`, `BackwardUnique step`, and `FiniteMachine.Reversible` are separate. `backwardCompatible_iff_backwardUnique` characterizes the global condition for a deterministic table | resolved-design |
 | `A-006` | The history construction is incomplete | §4 says it gives only the principle and spells out one representative relation, omitting the other rules and invariants | Prove a complete clean history-log simulator first; any theorem connecting it to the historical marker scheme is later work | source-confirmed |
 | `A-007` | The source says every history token represents a nonidentity relation while indexing one token per source time step | §4a(4) does not specify whether identity relations are compressed or count as steps | Record one explicit token for every actual source transition; identities used only to copy untouched word symbols are not source-machine transitions | resolved-design |
 | `A-008` | “Return to the initial configuration” is trivial under reflexive reachability | Theorem 1 describes a dynamic return | Define return with `StateTransition.Reaches₁` and prove the constructed run has positive length | correction-required |
@@ -36,9 +36,9 @@ Status vocabulary:
 | `A-015` | The printed history invariant has an inconsistent base case | §4a(3) gives `u₀,₀ = λv₀μν`, hence empty `w₀`; §4a(4), stated for every `i`, gives `w₀ = b²b = b³` | Use an explicit empty initial history and state the later history format only after actual steps; document this departure | correction-required |
 | `A-016` | §4a(7) does not itself prove both directions of the return/extra-target reductions | The direct clause gives extra-target passage only after the starred initial; the following prose says the behavior can be conditioned on halting but supplies no gadget proof | Construct explicit reversible gadgets and prove halt iff positive return / distinct reachability | isolated-obligation |
 | `A-017` | A semantic simulation theorem is insufficient for a computability reduction | The paper never provides finite encodings or proves its construction effective | Every reduction arrow must include a computable instance map, validity proof, and preservation/reflection iff | isolated-obligation |
-| `A-018` | Mathlib's established halting predicate and its partial-recursive-to-TM construction use different code types | `ComputablePred.halting_problem` is over `Nat.Partrec.Code`; `Turing.PartrecToTM2.tr_eval` is over `Turing.ToPartrec.Code` | Do not claim an existing end-to-end bridge. Stage 3 must implement a computable syntax compiler/semantic iff, prove an undecidability source for `ToPartrec.Code`, or select another explicit interpreter route | isolated-obligation |
+| `A-018` | Mathlib's established halting predicate and its partial-recursive-to-TM construction use different code types | `ComputablePred.halting_problem` is over `Nat.Partrec.Code`; `Turing.PartrecToTM2.tr_eval` is over `Turing.ToPartrec.Code`. `ToPartrec.Code.exists_code` is existential, while the TM2→TM1 and TM1→TM0 support maps are explicitly `noncomputable` | Stage 3 supplies fixed primitive-recursive `universalEvalSearchStep`, a primitive-recursive start map, and exact halting iff as the replacement source. Do not claim an end-to-end finite compiler; Stage 6 must construct one or establish another explicit finite source | isolated-obligation |
 | `A-019` | Mathlib's set-based uniquely-decodable predicate forgets repeated indices in an indexed family | `InformationTheory.UniquelyDecodable` is defined for a `Set (List α)`; Lecerf's code data are indexed | Relate it to project `IsIndexedCode` only together with injectivity of the generator family | resolved-design |
-| `A-020` | Tape semantics and computable finite encodings pull in different directions | `Turing.Tape` has useful blank-normalized semantics, but Stage-1 inspection did not find a ready `Primcodable` instance for it | Fix doubly infinite finite-support semantics now. In Stage 3, reuse `Turing.Tape` only if an executable canonical encoding is supplied; otherwise define a canonical finite-support tape and bridge it | isolated-obligation |
+| `A-020` | Tape semantics and computable finite encodings pull in different directions | `Turing.Tape` has useful quotient-normalized semantics but no ready `Primcodable` instance. Stage-3 probes verified a canonical structural representation and an equivalence to the reference halves | `Side` structurally stores a nonblank farthest cell, giving unique trailing-blank normalization. `Tape`, `Config`, `Rule`, and `FiniteMachine` now have constructive `Primcodable` instances; a quotient bridge remains optional in a narrow audit leaf | resolved-design |
 | `A-021` | Treating a partial equivalence's option-valued function as globally injective is false | Checked theorem `Audit.emptyReversibleStep_next_not_injective`: the empty `PEquiv` sends distinct Boolean inputs to `none` | Use `BackwardUnique`, i.e. left uniqueness only for successful steps; `ReversibleStep.backwardUnique` proves it | resolved-design |
 | `A-022` | A reversible step does not make forward and reverse terminality or same-start halting pointwise equal | Checked single-edge audit: the target is forward-terminal but not reverse-terminal | Reverse paths with exchanged endpoints; require both appropriate endpoint terminal hypotheses in `mem_eval_next_iff_mem_eval_prev` | resolved-design |
 
@@ -76,7 +76,7 @@ Every completed stage must classify findings under these headings:
 
 ## Axiom Audit Table
 
-Stage 2 introduces the first substantive project declarations.
+Stages 2 and 3 introduce the checked transition and finite-machine surfaces.
 
 | Lean declaration | Role | `#print axioms` result | Disposition |
 |---|---|---|---|
@@ -86,6 +86,12 @@ Stage 2 introduces the first substantive project declarations.
 | `Lecerf.Transition.ReversibleStep.reachable_iff_reverse_reachable` | Reflexive path reversal | `propext`, `Quot.sound` | Standard Lean/mathlib axioms; no project axiom |
 | `Lecerf.Transition.ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable` | Positive path reversal | `propext`, `Quot.sound` | Standard Lean/mathlib axioms; no project axiom |
 | `Lecerf.Transition.ReversibleStep.mem_eval_next_iff_mem_eval_prev` | Endpoint evaluation reversal | `propext`, `Classical.choice`, `Quot.sound` | Standard Lean/mathlib axioms; endpoint terminal hypotheses are explicit |
+| `Lecerf.Machine.Tape.undo_act` | Write/move inverse order | `propext` | Constructive data/proof surface modulo proposition extensionality; no project axiom |
+| `Lecerf.Machine.Rule.apply_eq_some_iff_undo_eq_some` | Exact individual-rule inverse | `propext` | No project axiom; movement order is explicit in executable definitions |
+| `Lecerf.Machine.FiniteMachine.step_eq_some_iff_reverseStep_eq_some` | Exact global forward/reverse iff under compatibility | `propext` | No project axiom |
+| `Lecerf.Machine.FiniteMachine.backwardCompatible_iff_backwardUnique` | Whole-table reversibility characterization | `propext`, `Quot.sound` | Standard Lean quotient axiom inherited through relational infrastructure; no project axiom |
+| `Lecerf.Machine.Source.universalEvalSearchStep_halts_iff_eval_dom` | Effective source halting equivalence | `propext`, `Classical.choice`, `Quot.sound` | Standard mathlib `Part`/transition dependencies; no project axiom |
+| `Lecerf.Machine.Source.universalEvalSearchStep_primrec` | Primitive-recursive fixed source step | `propext`, `Classical.choice`, `Quot.sound` | The proof uses mathlib's encoded computability infrastructure; the declaration is constructive runtime data plus a standard proof, with no project axiom |
 
 For every later headline theorem, record the exact command, Lean output,
 mathlib or logical axioms present, and whether those axioms affect
@@ -125,3 +131,30 @@ executability or trust.
   out-of-scope import scan, whitespace check, and `git diff --check` passed.
 - Documentation scan hits are guardrail prose only. The exact `#print axioms`
   results are in the table above; no project-specific axiom was introduced.
+
+### Stage 3 finite-machine API
+
+- Added canonical `Machine.Tape`, finite `Machine.Core`, repaired
+  `Machine.Reversible`, effective `Machine.SourceBridge`, non-public
+  `Machine.Audit`, and thin `Machine.API`; the public root imports the API but
+  not the diagnostic leaf.
+- Focused builds passed for Tape, Core, Reversible, SourceBridge, and Audit.
+  The API/root adjacent build passed; full `lake build` passed with 830 jobs.
+- Executable audit examples check normalization and the exact read-write-move
+  equation. `printedInverse_fails_on_moving_rule` certifies the paper-tuple
+  counterexample, and `mergeMachine_not_reversible` certifies that local rule
+  invertibility plus table determinism is not whole-machine reversibility.
+- A temporary public-import signature/axiom probe checked the headline
+  declarations and was deleted. Exact representative results appear in the
+  table above; no project-specific axiom was introduced.
+- Lean scans over project machine sources found no `sorry`, `admit`, `axiom`,
+  `unsafe`, `noncomputable`, or explicit `Classical.choice`. Boundary scans
+  found no history simulator, code layer, iterate API, many-one reduction, or
+  undecidability conclusion in Stage 3.
+- Import inspection confirms the canonical tape core depends only on
+  `Primrec.List`; partial-recursive code is isolated in `SourceBridge`; and
+  `Audit` is not re-exported. Trailing-whitespace and `git diff --check`
+  passed.
+- The finite compiler from `Nat.Partrec.Code` to `FiniteMachine` remains
+  explicitly open under `A-018`. The replacement source theorem does not
+  discharge that future reduction arrow.
