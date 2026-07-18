@@ -94,8 +94,7 @@ private def containsNoTrue : Submonoid (Word Bool) where
   carrier := { word | true ∉ word }
   one_mem' := FreeMonoid.notMem_one
   mul_mem' := by
-    intro left right leftFresh rightFresh
-    intro member
+    intro left right leftFresh rightFresh member
     rcases FreeMonoid.mem_mul.mp member with leftMember | rightMember
     · exact leftFresh leftMember
     · exact rightFresh rightMember

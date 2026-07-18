@@ -434,4 +434,56 @@ theorem isIndexedCode_prependMarkerExtension_of_freshFor_left
   intro xs ys hxy
   exact hP xs.length xs rfl ys hxy
 
+/-- Lecerf's right-prefix fresh-marker criterion, in modern terminology.
+
+The final hypothesis is part of the paper's stated freshness condition.  The
+sharper theorem above shows that it is mathematically redundant. -/
+theorem isIndexedCode_prependMarkerExtension
+    (marker : A) (c : I → Word A) (k : J → Word A)
+    (hc : IsIndexedCode c) (hk : IsPrefixFree k)
+    (hfreshC : FreshFor marker c) (_hfreshK : FreshFor marker k) :
+    IsIndexedCode (prependMarkerExtension marker c k) :=
+  isIndexedCode_prependMarkerExtension_of_freshFor_left
+    marker c k hc hk hfreshC
+
+/-- Sharp right-marker extension theorem, dual to the left-marker theorem.
+Freshness is required only for the already-coded family. -/
+theorem isIndexedCode_appendMarkerExtension_of_freshFor_left
+    (marker : A) (c : I → Word A) (k : J → Word A)
+    (hc : IsIndexedCode c) (hk : IsSuffixFree k)
+    (hfreshC : FreshFor marker c) :
+    IsIndexedCode (appendMarkerExtension marker c k) := by
+  have hkReverse : IsPrefixFree (fun j ↦ reverse (k j)) := by
+    intro i j hij
+    apply hk
+    apply List.reverse_prefix.mp
+    simpa only [toList_reverse] using hij
+  have hfreshReverse : FreshFor marker (fun i ↦ reverse (c i)) := by
+    intro i
+    change marker ∉ (c i).toList.reverse
+    have hi : marker ∉ (c i).toList := hfreshC i
+    simpa using hi
+  have hprefix := isIndexedCode_prependMarkerExtension_of_freshFor_left
+    marker (fun i ↦ reverse (c i)) (fun j ↦ reverse (k j))
+      hc.reverse hkReverse hfreshReverse
+  apply isIndexedCode_reverse_iff.mp
+  have hext :
+      (fun index ↦ reverse (appendMarkerExtension marker c k index)) =
+        prependMarkerExtension marker (fun i ↦ reverse (c i))
+          (fun j ↦ reverse (k j)) := by
+    funext index
+    cases index <;> simp [appendMarkerExtension, prependMarkerExtension]
+  rw [hext]
+  exact hprefix
+
+/-- Lecerf's left-prefix fresh-marker criterion, expressed as the modern
+suffix-free dual. -/
+theorem isIndexedCode_appendMarkerExtension
+    (marker : A) (c : I → Word A) (k : J → Word A)
+    (hc : IsIndexedCode c) (hk : IsSuffixFree k)
+    (hfreshC : FreshFor marker c) (_hfreshK : FreshFor marker k) :
+    IsIndexedCode (appendMarkerExtension marker c k) :=
+  isIndexedCode_appendMarkerExtension_of_freshFor_left
+    marker c k hc hk hfreshC
+
 end Lecerf.Word
