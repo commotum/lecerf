@@ -155,11 +155,13 @@ theorem lookupRules_eq_some_key [DecidableEq Q] [DecidableEq Γ]
         exact enabled
       · exact ih h
 
+omit [Inhabited Γ] in
 theorem lookup_eq_some_mem [DecidableEq Q] [DecidableEq Γ]
     {machine : FiniteMachine Q Γ} {state : Q} {symbol : Γ} {rule : Rule Q Γ}
     (h : machine.lookup state symbol = some rule) : rule ∈ machine.rules :=
   lookupRules_eq_some_mem h
 
+omit [Inhabited Γ] in
 theorem lookup_eq_some_key [DecidableEq Q] [DecidableEq Γ]
     {machine : FiniteMachine Q Γ} {state : Q} {symbol : Γ} {rule : Rule Q Γ}
     (h : machine.lookup state symbol = some rule) :
@@ -167,18 +169,40 @@ theorem lookup_eq_some_key [DecidableEq Q] [DecidableEq Γ]
   lookupRules_eq_some_key h
 
 /-- Execute the first matching instruction. -/
+def applyRules [DecidableEq Q] [DecidableEq Γ] :
+    List (Rule Q Γ) → Config Q Γ → Option (Config Q Γ)
+  | [], _ => none
+  | rule :: rest, config =>
+      match rule.apply config with
+      | some next => some next
+      | none => applyRules rest config
+
+/-- First-match rule application agrees with lookup followed by the fixed
+read-write-move update. -/
+theorem applyRules_eq_lookupRules_map [DecidableEq Q] [DecidableEq Γ]
+    (rules : List (Rule Q Γ)) (config : Config Q Γ) :
+    applyRules rules config =
+      (lookupRules rules config.state config.tape.head).map fun rule =>
+        ⟨rule.target, config.tape.act rule.write rule.move⟩ := by
+  induction rules with
+  | nil => rfl
+  | cons rule rest ih =>
+      by_cases enabled : config.state = rule.source ∧ config.tape.head = rule.read
+      · simp [applyRules, lookupRules, Rule.apply, enabled]
+      · simp [applyRules, lookupRules, Rule.apply, enabled, ih, eq_comm]
+
+/-- Execute the first matching instruction. -/
 def step [DecidableEq Q] [DecidableEq Γ]
     (machine : FiniteMachine Q Γ) : Step (Config Q Γ) :=
-  fun config =>
-    (machine.lookup config.state config.tape.head).map fun rule =>
-      ⟨rule.target, config.tape.act rule.write rule.move⟩
+  applyRules machine.rules
 
 theorem step_eq_some_iff [DecidableEq Q] [DecidableEq Γ]
     (machine : FiniteMachine Q Γ) (config next : Config Q Γ) :
     machine.step config = some next ↔
       ∃ rule, machine.lookup config.state config.tape.head = some rule ∧
         next = ⟨rule.target, config.tape.act rule.write rule.move⟩ := by
-  simp [step, eq_comm]
+  rw [step, applyRules_eq_lookupRules_map]
+  simp [lookup, eq_comm]
 
 /-- Halting means that no table rule matches the current state and symbol. -/
 def HaltsAt [DecidableEq Q] [DecidableEq Γ]
@@ -188,7 +212,8 @@ def HaltsAt [DecidableEq Q] [DecidableEq Γ]
 theorem haltsAt_iff_lookup_eq_none [DecidableEq Q] [DecidableEq Γ]
     (machine : FiniteMachine Q Γ) (config : Config Q Γ) :
     machine.HaltsAt config ↔ machine.lookup config.state config.tape.head = none := by
-  simp [HaltsAt, Terminal, step]
+  rw [HaltsAt, Terminal, step, applyRules_eq_lookupRules_map]
+  simp [lookup]
 
 /-- No two table entries may use the same source/read key. This predicate is
 separate from the functionality of the executable first-match step. -/

@@ -206,6 +206,11 @@ theorem write_self (tape : Tape Γ) : write tape.head tape = tape := by
   cases tape
   rfl
 
+theorem write_eq_self_of_head_eq {symbol : Γ} {tape : Tape Γ}
+    (head : tape.head = symbol) : write symbol tape = tape := by
+  rw [← head]
+  exact write_self tape
+
 @[simp]
 theorem write_write (first second : Γ) (tape : Tape Γ) :
     write second (write first tape) = write second tape := by
