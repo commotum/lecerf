@@ -46,16 +46,17 @@ def checkedWrite (old new : Γ) : Tape Γ ≃. Tape Γ where
         simp only [reduceCtorEq, false_iff]
         intro written
         apply targetHead
-        rw [← written]
-        exact write_head _ _
+        exact (congrArg Tape.head (Option.some.inj written)).symm.trans
+          (write_head _ _)
     · by_cases targetHead : target.head = new
       · rw [if_pos targetHead, if_neg sourceHead]
         simp only [reduceCtorEq, iff_false]
         intro restored
         apply sourceHead
-        rw [← restored]
-        exact write_head _ _
+        exact (congrArg Tape.head (Option.some.inj restored)).symm.trans
+          (write_head _ _)
       · rw [if_neg targetHead, if_neg sourceHead]
+        simp
 
 /-- Movement is a total equivalence; its inverse uses the opposite direction. -/
 def moveEquiv (direction : Move) : Tape Γ ≃ Tape Γ where
@@ -75,6 +76,7 @@ by movement. -/
 def tapeAction (rule : Rule Q Γ) : Tape Γ ≃. Tape Γ :=
   (Tape.checkedWrite rule.read rule.write).trans (Tape.moveEquiv rule.move).toPEquiv
 
+omit [DecidableEq Q] in
 theorem tapeAction_apply (rule : Rule Q Γ) (tape : Tape Γ) :
     rule.tapeAction tape =
       if tape.head = rule.read then some (tape.act rule.write rule.move) else none := by
@@ -115,9 +117,9 @@ theorem apply_eq_some_iff_undo_eq_some (rule : Rule Q Γ) (config next : Config 
         rcases inverse_enabled with ⟨rfl, written_eq⟩
         apply congrArg (fun restored =>
           (⟨nextState, restored⟩ : Config Q Γ))
-        rw [Tape.write_write]
-        rw [Tape.write_eq_self_of_head_eq written_eq]
-        exact Tape.move_move_reverse direction nextTape
+        rw [Tape.act, Tape.write_write,
+          Tape.write_eq_self_of_head_eq written_eq,
+          Tape.move_move_reverse]
       · contradiction
   · simp only [enabled, if_false, reduceCtorEq, false_iff]
     intro inverse_eq
@@ -295,7 +297,7 @@ theorem applyRules_eq_some_of_mem_of_compatible
               intro config firstNext secondNext firstRule secondRule firstMem secondMem
               exact compatible (List.mem_cons_of_mem first firstMem)
                 (List.mem_cons_of_mem first secondMem)
-            exact ih compatibleRest ruleMem ruleStep
+            exact ih compatibleRest ruleMem
 
 theorem undoRules_eq_some_of_mem_of_compatible
     {rules : List (Rule Q Γ)}
@@ -327,7 +329,7 @@ theorem undoRules_eq_some_of_mem_of_compatible
               intro config firstPrev secondPrev firstRule secondRule firstMem secondMem
               exact compatible (List.mem_cons_of_mem first firstMem)
                 (List.mem_cons_of_mem first secondMem)
-            exact ih compatibleRest ruleMem ruleUndo
+            exact ih compatibleRest ruleMem
 
 /-- Under the two table-compatibility conditions, first-match forward and
 reverse execution are exact partial inverses. -/
@@ -360,8 +362,7 @@ theorem backwardCompatible_iff_backwardUnique (machine : FiniteMachine Q Γ)
           (tableDeterministic_forwardCompatible deterministic) backward config next).symm
     }
     exact reversible.backwardUnique
-  · intro unique
-    intro config firstPrev secondPrev first second firstMem secondMem firstUndo secondUndo
+  · intro unique config firstPrev secondPrev first second firstMem secondMem firstUndo secondUndo
     have firstRuleStep := (first.apply_eq_some_iff_undo_eq_some firstPrev config).mpr firstUndo
     have secondRuleStep := (second.apply_eq_some_iff_undo_eq_some secondPrev config).mpr secondUndo
     have forward := tableDeterministic_forwardCompatible deterministic
