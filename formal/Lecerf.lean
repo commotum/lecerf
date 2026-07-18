@@ -21,4 +21,8 @@ It additionally exports self-delimiting Boolean configuration codes, the
 successful-edge machine-step code isomorphism and exact iteration theorems,
 and a primitive-recursive finite-table word interpreter with a checked
 syntactic reversibility guard.
+The undecidability API further exports strictly positive fixed-word and
+distinct-word orbit problems for these finite descriptors, computable checking
+of a supplied exponent, recursively enumerable witness existence, explicit
+many-one reductions, and noncomputability of both existential problems.
 -/
