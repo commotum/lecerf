@@ -451,4 +451,50 @@ executability or trust.
   schema uniformly described by a finite two-tape table. It is **not**
   Lecerf's finite local `α`/`ω`/`β` list, a proof about `τ_min`, or
   a lowering of the reversible two-tape tables to a one-tape machine. Stage 9
-  remains unstarted.
+  consumes the checked finite descriptor boundary without claiming those
+  historical identifications.
+
+### Stage 9 positive code-iterate undecidability
+
+- Added reusable `Transition.ExactEffectivity` and
+  `Undecidability.CodeIterates.{Problems,Effectivity,Correspondence,Reduction,
+  API,Audit}`. The audit is not imported by any public API.
+- Raw problem inputs are inherited finite products containing a table, Boolean
+  words, and optionally a natural exponent. They contain no semantic
+  `CodeIso`, `PEquiv`, function, proof, or orbit witness. Descriptor validity is
+  an explicit conjunct in every yes-predicate.
+- `PositiveFixedOrbitYes` and `DistinctOrbitYes` quantify exact exponent
+  `k + 1`; `PositiveIterateAtYes` explicitly requires its supplied exponent to
+  be nonzero. The partiality diagnostic proves a failed exact iterate remains
+  failed after every extension, and the public correspondence uses literal
+  semantic `PEquiv.iterate`.
+- `positiveIterateAtYes_primrec` and
+  `positiveIterateAtYes_computablePred` separate total supplied-exponent
+  recognition from existential search. The witness relations are primitive
+  recursive, and `positiveFixedOrbitYes_re` / `distinctOrbitYes_re` are proved
+  by partial recursive `Nat.rfind`; no total finder or no-instance recognizer
+  is inferred.
+- `encodeReturnInput` and `encodeReachabilityInput` leave arbitrary raw tables
+  unchanged and canonically encode only endpoints. Their primitive-recursive
+  proofs, generic iff theorems, and generic `ManyOneReducible` witnesses are
+  checked before composition with Stage 6. Invalid descriptors reflect to
+  no-instances in both directions, and configuration-code injectivity supplies
+  distinct target words. The audit also checks that fixed-orbit reduction words
+  are nonempty, so the proof does not use the free-monoid identity solution.
+- Focused builds passed for `ExactEffectivity` (812 jobs), `Problems` (892),
+  `Effectivity` (894), `Correspondence` (894), `Reduction` (907), and `Audit`
+  (908). Public API/root integration passed with 927 jobs; replaying the audit
+  with the root passed with 928 jobs; full `lake build` passed with 927 jobs.
+- A temporary root-import probe checked the exact public input, predicate,
+  effectivity, correspondence, many-one, and noncomputability signatures and
+  was deleted. Lean scans found no `sorry`, `admit`, project `axiom`, or
+  proof-bypassing `unsafe`. Stage-9 `noncomputable section`s inherit only the
+  documented one-time fixed target encodings; every varying map is proved
+  primitive recursive/computable. Shortcut scans confirmed positive exponents,
+  exact `Option` iteration, and no fallback totalization. Whitespace and
+  `git diff --check` passed.
+- The nine Stage-9 axiom commands recorded in the table all report exactly
+  `[propext, Classical.choice, Quot.sound]`. No project-specific axiom appears.
+  The completed theorem is for the finite-machine-presented successful-edge
+  code-isomorphism subclass. The historical finite local relation encoding and
+  two-to-one-tape lowering remain explicitly unresolved.
