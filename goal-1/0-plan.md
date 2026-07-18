@@ -115,6 +115,11 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   extensions, intrinsic generated-submonoid code isomorphisms, the weaker paper
   epimorphism, exact ambient partial domains, and bind-based positive iteration
   now form the public `Lecerf.Word` API.
+- Stage 8 is in progress. Checked evidence favors a cleaner whole-configuration
+  encoding over the finite alphabet `Bool`: successful edges of a reversible
+  two-tape machine index genuine source and target codes. This is a uniformly
+  finite-machine-described but generally infinite code schema, not yet the
+  paper's finite local `alpha`/`omega`/`beta` relation list.
 
 ## Current Design Decisions
 
@@ -202,6 +207,15 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - Project-local `Lecerf.PEquiv.iterate` uses `Option.bind`, and
   `positiveIterate θ k` means exactly `k + 1` iterations, with checked inverse
   and definedness laws.
+- For the first machine-step/code bridge, use canonical self-delimiting Boolean
+  frames of complete `Primcodable` two-tape configurations. Source and target
+  relation families are indexed by successful configuration edges; whole-step
+  backward uniqueness, not local rule inversion, proves target codehood.
+- Treat this whole-configuration construction as a cleaner uniform schema for
+  a genuine code isomorphism. Its finite machine descriptor and executable
+  interpreter must be separated from the semantic infinite edge family and
+  noncomputable `CodeIso` constructor. A comparison with Lecerf's finite local
+  `alpha`/`omega`/`beta` relations remains an explicit later obligation.
 - Interpret “recursively unsolvable in `n`” as a uniform existential problem
   over finite descriptions. Keep supplied-exponent evaluation,
   semidecidability of existence, and noncomputability of existence distinct.
@@ -269,7 +283,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 5 | `COUPLING` | Complete | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Complete | Three finite reversible two-tape undecidability reductions |
 | 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
-| 8 | `STEP-CODE` | Not started | Machine-step representation by code maps |
+| 8 | `STEP-CODE` | In progress | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Not started | Iterate-equation reductions |
 | 10 | `PAPER-AUDIT` | Not started | Claim map, public API, corrections, axiom audit |
 
@@ -501,15 +515,22 @@ morphism/isomorphism, closing the construction omitted by the note.
 
 ### Detailed Implementation Plan
 
-- Specify the word alphabet, boundary markers, state/head markers, and
-  well-formed configuration language.
-- Define encode/decode and prove round trips on well-formed configurations.
-- Translate every transition family, including tape extension and stationary
-  moves, into relation words.
-- Prove both relation families are codes and the induced map has the claimed
-  injectivity/bijection properties.
-- Prove step preservation and reflection; isolate any difference from
-  Lecerf's `α/ω/β` encoding.
+- Encode complete canonical two-tape configurations as self-delimiting unary
+  frames over `Bool`; define executable single/concatenated decoding and prove
+  both round trips on the accepted language.
+- Index relation words by all successful configuration edges of the finite
+  machine. Prove the source family is a code from framing and forward
+  functionality, and the target family is a code from whole-step backward
+  uniqueness.
+- Construct the intrinsic code isomorphism and prove strong one-step and exact
+  iterate preservation/reflection, including undefined terminal applications
+  and positive reachability.
+- Supply a finite machine descriptor and executable interpreter boundary for
+  Stage 9; do not store semantic choice or proof objects as runtime input.
+- Cover every move and blank-extension case through the checked generic
+  two-tape transition theorem. Record that the generally infinite edge schema
+  is a cleaner equivalent bridge, not Lecerf's finite local
+  `alpha`/`omega`/`beta` relation table.
 
 ### Completion Requirements
 
@@ -579,7 +600,8 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`6-MACHINE-UNDEC.md` and `7-WORD-CODES.md` are complete. The public machine API
+`6-MACHINE-UNDEC.md` and `7-WORD-CODES.md` are complete, and
+`8-STEP-CODE.md` is in progress. The public machine API
 contains fixed finite
 two-tape forward-history, open-turnaround, and closed-return tables; checked
 syntactic certificates implying semantic reversibility; exact source-halting
@@ -598,4 +620,8 @@ scoped ambient partial action, and positive partial iteration. Its arbitrary
 semantic decoding is explicitly noncomputable; Stage 8 must supply executable
 finite syntax before any reduction data is claimed. A one-tape lowering and a
 closer connection to Lecerf's historical marker encoding remain explicit
-follow-up work. Stage 8 has not been started.
+follow-up work. Stage 8 is building a self-delimiting Boolean encoding of
+complete two-tape configurations and a successful-edge code isomorphism with
+exact step/iterate semantics. The construction is intentionally recorded as a
+uniform infinite code schema described by a finite machine, not as the paper's
+still-unreconstructed finite local relation table. Stage 9 has not started.
