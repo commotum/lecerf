@@ -29,7 +29,8 @@ theorem valid_of_reachable {σ : Type u} {next : Step σ} {start : σ}
 /-- Every generated history is reached by executable simulator steps. -/
 theorem Valid.reachable {σ : Type u} {next : Step σ} {start : σ}
     {config : Config σ} (valid : Valid next start config) :
-    Reachable (forward next) (Config.initial start) config := by
+    Reachable (Lecerf.Machine.History.forward next)
+      (Config.initial start) config := by
   induction valid with
   | initial => exact Reachable.refl _ _
   | push valid sourceStep reachable =>
@@ -54,6 +55,53 @@ theorem Valid.current_reachable {σ : Type u} {next : Step σ} {start : σ}
   | push _ sourceStep reachable =>
       exact Reachable.trans reachable (Reachable.single sourceStep)
 
+/-- Determinism makes generated checkpoints unique at a fixed elapsed step
+count.  Equality of the current source state alone would be false for cyclic
+computations, whose later visits carry longer histories. -/
+theorem Valid.eq_of_history_length_eq {σ : Type u} {next : Step σ} {start : σ}
+    {first second : Config σ} (firstValid : Valid next start first)
+    (secondValid : Valid next start second)
+    (lengthEq : first.history.length = second.history.length) : first = second := by
+  induction firstValid generalizing second with
+  | initial =>
+      cases secondValid with
+      | initial => rfl
+      | @push current _ history _ _ =>
+          change 0 = (current :: history).length at lengthEq
+          simp at lengthEq
+  | @push current firstTarget history firstValid firstStep ih =>
+      cases secondValid with
+      | initial =>
+          change (current :: history).length = 0 at lengthEq
+          simp at lengthEq
+      | @push secondCurrent secondTarget secondHistory secondValid secondStep =>
+          have tailLength : history.length = secondHistory.length := by
+            change (current :: history).length =
+              (secondCurrent :: secondHistory).length at lengthEq
+            simpa using lengthEq
+          have previousEq : Config.encode current history =
+              Config.encode secondCurrent secondHistory :=
+            ih secondValid tailLength
+          have currentEq : current = secondCurrent :=
+            congrArg Config.current previousEq
+          have historyEq : history = secondHistory :=
+            congrArg Config.history previousEq
+          subst secondCurrent
+          subst secondHistory
+          have targetEq : firstTarget = secondTarget :=
+            Step.successor_unique next firstStep secondStep
+          subst secondTarget
+          rfl
+
+/-- Reachable simulator checkpoints at the same elapsed step count are equal. -/
+theorem reachable_checkpoint_unique_of_history_length_eq {σ : Type u}
+    {next : Step σ} {start : σ} {first second : Config σ}
+    (firstReachable : Reachable (forward next) (Config.initial start) first)
+    (secondReachable : Reachable (forward next) (Config.initial start) second)
+    (lengthEq : first.history.length = second.history.length) : first = second :=
+  (valid_of_reachable firstReachable).eq_of_history_length_eq
+    (valid_of_reachable secondReachable) lengthEq
+
 /-- A successful source step is one positive simulator step at every valid or
 malformed history prefix; the runtime theorem itself needs no invariant. -/
 theorem strictlyReachable_of_source_step {σ : Type u} {next : Step σ}
@@ -72,7 +120,7 @@ theorem history_length_of_forward {σ : Type u} {next : Step σ}
     target.history.length = source.history.length + 1 := by
   obtain ⟨_, historyEq⟩ := (forward_eq_some_iff next source target).mp step
   rw [historyEq]
-  simp [Nat.add_comm]
+  simp
 
 /-- Every source run generates some explicit history ending in its target. -/
 theorem valid_checkpoint_of_source_reachable {σ : Type u} {next : Step σ}
