@@ -544,7 +544,8 @@ prefix/suffix codes, code-generated submonoids, and the paper's map classes.
 ### Big Picture Objective
 
 Encode machine configurations and individual steps as applications of a code
-morphism/isomorphism, closing the construction omitted by the note.
+morphism/isomorphism, supplying a complete cleaner bridge while keeping the
+note's omitted finite local construction as explicit historical follow-up.
 
 ### Detailed Implementation Plan
 
@@ -609,8 +610,9 @@ equation problems for code isomorphisms.
 
 - Finalize the input types and predicates for positive fixed-point orbit and
   distinct-word orbit reachability.
-- Construct `(machine, start)` to `(θ, w)` and
-  `(machine, start, target)` to `(θ, w₁, w₂)` computably.
+- Construct `(machine, start)` and `(machine, start, target)` computably as raw
+  finite descriptors plus canonical words; connect those executable outputs to
+  the proof-side semantic `θ.toPEquiv` action under the validity guard.
 - Prove iteration corresponds exactly to machine reachability, including
   definedness at every intermediate word.
 - Derive undecidability with `ManyOneReducible` and explicitly state what is

@@ -31,25 +31,25 @@ theorem mergeStep_not_backwardUnique : ¬BackwardUnique mergeStep := by
 /-- Full predecessor records distinguish the two branches of a source merge. -/
 example : forward mergeStep (Config.encode 0 []) =
     some (Config.encode 2 [0]) := by
-  native_decide
+  decide
 
 example : forward mergeStep (Config.encode 1 []) =
     some (Config.encode 2 [1]) := by
-  native_decide
+  decide
 
 example : backward mergeStep (Config.encode 2 [0]) =
     some (Config.encode 0 []) := by
-  native_decide
+  decide
 
 example : backward mergeStep (Config.encode 2 [1]) =
     some (Config.encode 1 []) := by
-  native_decide
+  decide
 
 /-- A stored predecessor that does not actually produce the current state is
 rejected rather than blindly popped. -/
 theorem malformed_predecessor_rejected :
     backward mergeStep (Config.encode 2 [2]) = none := by
-  native_decide
+  decide
 
 example : BackwardUnique (forward mergeStep) :=
   (reversible mergeStep).backwardUnique
@@ -83,6 +83,6 @@ example : Valid toggleStep false (Config.encode false []) :=
 valid histories, so uniqueness must retain a length qualifier. -/
 theorem cyclic_checkpoints_differ :
     Config.encode false [] ≠ Config.encode false [true, false] := by
-  native_decide
+  decide
 
 end Lecerf.Machine.History.Audit

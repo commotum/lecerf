@@ -29,7 +29,7 @@ def validTable : TwoTape.FiniteMachine Bool Bool Bool :=
 
 /-- The finite checker accepts a singleton reversible table. -/
 example : validTable.SyntacticallyReversible := by
-  native_decide
+  decide
 
 def conflictingRule : TwoTape.Rule Bool Bool Bool where
   source := false
@@ -46,7 +46,7 @@ def conflictingTable : TwoTape.FiniteMachine Bool Bool Bool :=
 
 /-- Conflicting entries with the same complete forward key are rejected. -/
 example : ¬conflictingTable.SyntacticallyReversible := by
-  native_decide
+  decide
 
 #print axioms Lecerf.Machine.TwoTape.HistoryCompiler.return_positiveReturn_iff_source_halts
 #print axioms Lecerf.Machine.Compiler.ReversibleUniversal.eval_dom_iff_history_halts

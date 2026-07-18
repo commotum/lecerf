@@ -18,7 +18,7 @@ def printedInverse {Q Γ : Type*} (rule : Rule Q Γ) : Rule Q Γ :=
   ⟨rule.target, rule.write, rule.source, rule.read, rule.move.reverse⟩
 
 example : Side.ofList [true, false, false] = Side.ofList [true] := by
-  native_decide
+  decide
 
 def movingRule : Rule Bool Bool :=
   ⟨false, false, true, true, .right⟩
@@ -30,17 +30,17 @@ def afterMove : Config Bool Bool :=
 
 /-- The selected convention really is read, then write, then move right. -/
 example : movingRule.apply start = some afterMove := by
-  native_decide
+  decide
 
 /-- The repaired semantic inverse moves left before checking/restoring. -/
 example : movingRule.undo afterMove = some start := by
-  native_decide
+  decide
 
 /-- The printed tuple tries to read the written symbol before moving back, so
 it is not enabled on the actual successor configuration. -/
 theorem printedInverse_fails_on_moving_rule :
     (printedInverse movingRule).apply afterMove = none := by
-  native_decide
+  decide
 
 def firstMergeRule : Rule Bool Bool :=
   ⟨false, false, true, false, .stay⟩
@@ -65,10 +65,10 @@ example : mergeMachine.TableDeterministic := by
   · rfl
 
 example : mergeMachine.step firstPredecessor = some merged := by
-  native_decide
+  decide
 
 example : mergeMachine.step secondPredecessor = some merged := by
-  native_decide
+  decide
 
 /-- Both table entries are individually partial equivalences, but their union
 merges two configurations and is therefore not a reversible machine. -/
@@ -76,11 +76,11 @@ theorem mergeMachine_not_reversible : ¬mergeMachine.Reversible := by
   intro reversible
   have firstStep : StepRel mergeMachine.step firstPredecessor merged := by
     change merged ∈ mergeMachine.step firstPredecessor
-    rw [show mergeMachine.step firstPredecessor = some merged by native_decide]
+    rw [show mergeMachine.step firstPredecessor = some merged by decide]
     simp
   have secondStep : StepRel mergeMachine.step secondPredecessor merged := by
     change merged ∈ mergeMachine.step secondPredecessor
-    rw [show mergeMachine.step secondPredecessor = some merged by native_decide]
+    rw [show mergeMachine.step secondPredecessor = some merged by decide]
     simp
   have predecessorsEqual : firstPredecessor = secondPredecessor :=
     reversible.2 firstStep secondStep

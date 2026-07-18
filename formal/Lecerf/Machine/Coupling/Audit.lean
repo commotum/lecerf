@@ -28,29 +28,29 @@ def haltAfterOne : Step Nat
 def loop : Step Nat := fun state => some state
 
 example : (turnaroundStep haltNow).next (start 0) = some (target 0) := by
-  native_decide
+  decide
 
 example : Terminal (turnaroundStep haltNow).next (target 0) := by
   exact terminal_target haltNow 0
 
 example : (returnStep haltNow).next (target 0) = some (start 0) := by
-  native_decide
+  decide
 
 def oneStepCheckpoint : Lecerf.Machine.History.Config Nat :=
   Lecerf.Machine.History.Config.encode 1 [0]
 
 example : (turnaroundStep haltAfterOne).next (start 0) =
     some (Config.forward oneStepCheckpoint) := by
-  native_decide
+  decide
 
 example : (turnaroundStep haltAfterOne).next
     (Config.forward oneStepCheckpoint) =
       some (Config.reverse oneStepCheckpoint) := by
-  native_decide
+  decide
 
 example : (turnaroundStep haltAfterOne).next
     (Config.reverse oneStepCheckpoint) = some (target 0) := by
-  native_decide
+  decide
 
 theorem haltNow_halts : HaltsFrom haltNow 0 :=
   (by rfl : Terminal haltNow 0).haltsFrom
