@@ -43,6 +43,7 @@ private theorem lift_targetWord_eq_encodeConfigs
   simp [targetWord, ConfigCode.encodeConfigs,
     ConfigCode.encodeConfigListBits, List.map_map, Function.comp_def]
 
+omit [DecidableEq Q] in
 private theorem encodeConfigs_single
     (config : Config Q Γ₁ Γ₂) :
     ConfigCode.encodeConfigs [config] = ConfigCode.encodeConfig config := by
@@ -135,7 +136,7 @@ theorem stepCodeIso_apply_eq_some_iff
     exact (stepCodeIso_apply_eq_some_iff_exists machine backward source
       (ConfigCode.encodeConfig target)).mpr ⟨target, step, rfl⟩
 
-/-- Executable equation on canonical single-configuration words. -/
+/-- Exact equation on canonical single-configuration words. -/
 theorem stepCodeIso_apply_encodeConfig
     (machine : FiniteMachine Q Γ₁ Γ₂)
     (backward : BackwardUnique machine.step)
