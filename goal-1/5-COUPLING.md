@@ -39,8 +39,10 @@
   reversible transition. On the generated history orbit, the only relevant
   reverse-terminal checkpoint is the empty-history initial checkpoint.
 - Positive return reflection cannot hold for an arbitrary reversible source:
-  its forward direction may already contain cycles. It will be proved for the
-  history lift using strict growth of the stored log.
+  its forward direction may already contain cycles. For the history lift,
+  checked log growth rules out a forward-only cycle, while the implemented
+  headline reflection uses the stronger exact-predecessor fact at the closed
+  return boundary.
 - No-spurious reflection will classify every positive run from a forward-tagged
   initial history: until a forward-terminal switch occurs it corresponds to a
   positive history-forward path; once a switch occurs, history/source halting
@@ -73,9 +75,10 @@ Do not begin any many-one reduction or undecidability conclusion.
 - Specialize to `History.reversible next`. Prove strict history-length growth
   over every positive forward path and hence absence of a positive
   history-forward return.
-- Prove the positive-run classification described above for both open and
-  closed coupling forward behavior. Derive exact iff theorems for source
-  halting versus distinct reverse-initial reachability and positive return.
+- Prove a generated-state invariant for both open and closed coupling
+  behavior. Derive exact iff theorems for source halting versus distinct
+  reverse-initial reachability and positive return; use the closed boundary's
+  unique predecessor to reflect a return to the forward start.
 - Prove forward and reverse initial configurations are unequal by constructor
   discrimination; never rely on a user-supplied inequality assumption.
 - Add uniform primitive-recursive coupling interpreters and specialize them to
@@ -116,8 +119,11 @@ Do not begin any many-one reduction or undecidability conclusion.
 - Specified-target reachability uses `StrictlyReachable` and a proved unequal
   reverse-tagged target. Positive return uses `PositiveReturn`; reflexive
   `Reachable.refl` cannot prove either result.
-- Reflection must rule out a forward-only positive cycle. For the history lift
-  this must follow from checked log growth, not an assumed acyclicity axiom.
+- Reflection must rule out a forward-only positive cycle from checked facts,
+  not an assumed acyclicity axiom. `history_length_lt_of_strictlyReachable`
+  and `not_positiveReturn_forward` certify this directly; the headline return
+  iff additionally uses the stronger exact-predecessor theorem at the closed
+  boundary.
 - The halting, target-reachability, and return statements are semantic iff
   theorems. They are not yet called many-one reductions or undecidability
   results.
@@ -144,10 +150,12 @@ Do not begin any many-one reduction or undecidability conclusion.
 - The reverse-tagged initial state is the implemented specified target. The
   paper's optional additional framed `u_st` construction remains a later
   historical refinement unless a distinct need arises.
-- Scan Stage 5 Lean sources for `eval`, `sorry`, `admit`, `axiom`, `unsafe`,
-  `noncomputable`, `Classical.choice`, `ManyOne`, `Undecidable`, `FreeMonoid`,
-  and iterate/code declarations. Classify proof-only imported `HaltsFrom`
-  semantics separately from runtime dependencies.
+- Scan Stage 5 Lean sources for `sorry`, `admit`, project `axiom`, `unsafe`,
+  `noncomputable`, explicit `Classical.choice`, `ManyOne`, `Undecidable`,
+  `FreeMonoid`, and iterate/code declarations. Classify the intentional
+  universal-source `Nat.Partrec.Code.eval` semantic corollaries separately
+  from runtime definitions, which do not inspect evaluation or halting
+  witnesses.
 
 ## Completion Requirements
 
@@ -173,4 +181,42 @@ Do not begin any many-one reduction or undecidability conclusion.
 
 ## Stage Results
 
-- In progress.
+- Complete on 2026-07-17. Added
+  `Lecerf.Machine.Coupling.{Core,Correctness,Computable,Audit,API}` and exposed
+  the stable API through `Lecerf.Machine.API` and `Lecerf`; the audit leaf is
+  not publicly imported.
+- `Direction` and `Config` provide constructive phase tags and encodings.
+  `turnaroundNext`/`turnaroundPrev` implement the open coupling, and
+  `returnNext`/`returnPrev` implement the uniformly closed return gadget. The
+  exact ambient inverse laws
+  `turnaroundNext_eq_some_iff_turnaroundPrev_eq_some` and
+  `returnNext_eq_some_iff_returnPrev_eq_some` construct `turnaround` and
+  `returnGadget` as `ReversibleStep`s. Eight executable boundary equations
+  cover internal forward/reverse moves, turnaround, open stopping, and closed
+  return.
+- Generic path lifting proves that source halting reaches the reverse-tagged
+  start in both gadgets. The history specialization defines `History.start`
+  and the structurally distinct `History.target`, propagates `History.Generated`
+  over reachable coupled states, and proves
+  `History.target_strictlyReachable_iff_halts`, `History.terminal_target`, and
+  `History.positiveReturn_iff_halts`. Return reflection follows from
+  `History.return_prev_start` and `History.predecessor_of_start`; independent
+  log-growth theorems exclude a positive forward-history cycle.
+- Generic, history-specific, existing-`FiniteMachine`, and fixed universal
+  coupling interpreters and endpoint maps are primitive recursive. In
+  particular, `universalTarget_strictlyReachable_iff_eval_dom` and
+  `universalPositiveReturn_iff_eval_dom` specialize the semantic equivalences
+  to the checked evaluator-search source.
+- These are abstract interpreter/effectivity results. They do not generate a
+  conventional finite tape machine, define a finite validity predicate, state
+  a `ManyOneReducible` result, or derive undecidability. The finite source
+  compiler, history-list tape compiler, and exact decidable finite
+  reversibility criterion remain Stage-6 dependencies under `A-018`, `A-023`,
+  `A-024`, and `A-025`.
+- Focused builds through `Coupling.Audit`, adjacent public API builds, and full
+  `lake build` passed. The final full build completed 839 jobs. Source scans,
+  import-boundary checks, whitespace checks, and `git diff --check` passed.
+  Representative axiom output contains only `propext`, `Quot.sound`, and,
+  where inherited transition/evaluation infrastructure requires it,
+  `Classical.choice`; no project axiom or proof hole was introduced.
+- Stage 6 has not been started.

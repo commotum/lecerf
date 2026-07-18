@@ -348,8 +348,9 @@ Coupling/Correctness + History/Computable + Machine/Effectivity + SourceBridge
 
 `Coupling/Core` defines constructive phase-tagged configurations, an open
 turnaround `PEquiv`, and a uniformly closed return `PEquiv`; it imports no
-history, machine syntax, or halting semantics. `Coupling/Correctness` owns
-generic path lifting and the history-generated invariant. `Coupling/Computable`
+history or machine syntax, and its runtime definitions inspect neither a
+halting witness nor evaluation semantics. `Coupling/Correctness` owns generic
+path lifting and the history-generated invariant. `Coupling/Computable`
 owns the primitive-recursive generic interpreters and finite/universal source
 specializations. `Coupling/Audit` is a non-public diagnostic and axiom-audit
 leaf.
@@ -456,6 +457,7 @@ Machine/API                  -> Machine/History/API, Machine/Coupling/API
 Full `lake build` passed with 835 jobs after the Stage-4 public API import
 changed.
 
-Stage-5 focused builds passed through `Coupling.Audit` (835 jobs), and the
+Stage-5 focused builds passed through `Coupling.Audit` (834 jobs), and the
 public `Machine.API`/root adjacent build passed after adding `Coupling.API`.
-The final full-build count is recorded in `5-COUPLING.md` and `AUDIT.md`.
+The final full `lake build` passed with 839 jobs; detailed validation and axiom
+results are recorded in `5-COUPLING.md` and `AUDIT.md`.
