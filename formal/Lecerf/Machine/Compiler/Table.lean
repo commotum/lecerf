@@ -59,7 +59,7 @@ theorem lookup_rulesForSymbols_eq
       | none =>
           by_cases equal : first = symbol
           · subst first
-            simp [ih, ruleFor]
+            simp [h, ih, ruleFor]
           · by_cases member : symbol ∈ rest <;>
               simp [Ne.symm equal, ih, member, ruleFor]
       | some output =>
@@ -68,7 +68,7 @@ theorem lookup_rulesForSymbols_eq
           · subst first
             simp [FiniteMachine.lookupRules, h]
           · by_cases member : symbol ∈ rest <;>
-              simp [FiniteMachine.lookupRules, Ne.symm equal, ih, member, ruleFor]
+              simp [FiniteMachine.lookupRules, equal, Ne.symm equal, ih, member, ruleFor]
 
 omit [Inhabited Γ] in
 theorem lookupRules_append [DecidableEq Q] [DecidableEq Γ]
@@ -100,6 +100,7 @@ theorem lookup_rulesForSymbols_ne
           rcases output with ⟨target, write, move⟩
           simp [FiniteMachine.lookupRules, notEqual, ih]
 
+omit [Inhabited Γ] in
 /-- Lookup in the expanded table is exactly the supplied transition entry on
 the listed support, and is absent off that support. -/
 theorem lookup_compile_eq

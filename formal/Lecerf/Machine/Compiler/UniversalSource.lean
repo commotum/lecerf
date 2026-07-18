@@ -17,14 +17,13 @@ preserve the equivalences proved here.
 
 namespace Lecerf.Machine.Compiler.UniversalSource
 
-open List (Vector)
 open Encodable Denumerable
 open Turing
 
 /-- The binary partial function interpreted by the fixed universal program.
 The first component is decoded as a `Nat.Partrec.Code`; the second is its
 input. -/
-def universalNatEval (input : Vector Nat 2) : Part Nat :=
+def universalNatEval (input : List.Vector Nat 2) : Part Nat :=
   Nat.Partrec.Code.eval
     (ofNat Nat.Partrec.Code input.head)
     input.tail.head
@@ -42,7 +41,7 @@ theorem universalNatEval_partrec' : Nat.Partrec' universalNatEval := by
 /-- A `ToPartrec.Code` exists which implements `universalNatEval`. -/
 theorem exists_universalCode :
     ∃ universal : Turing.ToPartrec.Code,
-      ∀ input : Vector Nat 2,
+      ∀ input : List.Vector Nat 2,
         universal.eval input.1 = pure <$> universalNatEval input :=
   Turing.ToPartrec.Code.exists_code universalNatEval_partrec'
 
@@ -55,14 +54,14 @@ noncomputable def universalCode : Turing.ToPartrec.Code :=
   Classical.choose exists_universalCode
 
 /-- Specification inherited from the witness selected by `universalCode`. -/
-theorem universalCode_spec (input : Vector Nat 2) :
+theorem universalCode_spec (input : List.Vector Nat 2) :
     universalCode.eval input.1 = pure <$> universalNatEval input :=
   Classical.choose_spec exists_universalCode input
 
 /-- Encode a source program and its input as the two natural numbers expected
 by `universalCode`. -/
-def encodedInput (code : Nat.Partrec.Code) (input : Nat) : Vector Nat 2 :=
-  encode code ::ᵥ input ::ᵥ Vector.nil
+def encodedInput (code : Nat.Partrec.Code) (input : Nat) : List.Vector Nat 2 :=
+  encode code ::ᵥ input ::ᵥ List.Vector.nil
 
 @[simp]
 theorem encodedInput_head (code : Nat.Partrec.Code) (input : Nat) :
@@ -78,10 +77,10 @@ theorem encodedInput_tail_head (code : Nat.Partrec.Code) (input : Nat) :
 theorem encodedInput_joint_primrec :
     Primrec fun data : Nat.Partrec.Code × Nat =>
       encodedInput data.1 data.2 := by
-  have tail : Primrec fun data : Nat.Partrec.Code × Nat => Vector Nat 1 =>
-      data.2 ::ᵥ Vector.nil :=
+  have tail : Primrec (fun data : Nat.Partrec.Code × Nat =>
+      (data.2 ::ᵥ List.Vector.nil : List.Vector Nat 1)) :=
     Primrec.vector_cons.comp Primrec.snd
-      (Primrec.const (Vector.nil : Vector Nat 0))
+      (Primrec.const (List.Vector.nil : List.Vector Nat 0))
   exact (Primrec.vector_cons.comp
     (Primrec.encode.comp Primrec.fst) tail).of_eq fun _ => rfl
 
