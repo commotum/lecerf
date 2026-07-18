@@ -158,13 +158,80 @@ private theorem finishDecodeFold_foldl_some
               simp [decodeFoldStep, decodeConfigListBitsAux, hdecode,
                 finishDecodeFold_foldl_none]
           | some config =>
-              simpa [decodeFoldStep, decodeConfigListBitsAux, hdecode,
-                List.reverse_cons, List.append_assoc, Function.comp_apply] using
-                ih (config :: configsRev) 0
+              simp only [List.foldl_cons, decodeFoldStep, Bool.false_eq_true,
+                if_false, hdecode, decodeConfigListBitsAux]
+              rw [ih (config :: configsRev) 0]
+              cases decodeConfigListBitsAux (C := C) 0 bits <;>
+                simp [List.reverse_cons, List.append_assoc]
 
 private theorem decodeConfigListBitsFold_eq (bits : List Bool) :
     decodeConfigListBitsFold (C := C) bits = decodeConfigListBits bits := by
   simpa [decodeConfigListBitsFold, decodeConfigListBits] using
     finishDecodeFold_foldl_some (C := C) bits [] 0
+
+private theorem decodeFoldStep_primrec :
+    Primrec₂ (decodeFoldStep (C := C)) := by
+  have hdecoded : Primrec fun data : DecodeFoldState C × List C ↦
+      Encodable.decode₂ C data.1.2 :=
+    Primrec.decode₂.comp (Primrec.snd.comp Primrec.fst)
+  have hprepend : Primrec₂ fun (data : DecodeFoldState C × List C)
+      (config : C) ↦ config :: data.2 :=
+    (Primrec.list_cons.comp Primrec.snd
+      (Primrec.snd.comp Primrec.fst)).to₂
+  have hdecodeAndPrepend : Primrec fun data : DecodeFoldState C × List C ↦
+      (Encodable.decode₂ C data.1.2).map fun config ↦ config :: data.2 :=
+    Primrec.option_map hdecoded hprepend
+  have haccept : Primrec fun state : DecodeFoldState C ↦
+      state.1.bind fun configs ↦
+        (Encodable.decode₂ C state.2).map fun config ↦ config :: configs :=
+    Primrec.option_bind Primrec.fst hdecodeAndPrepend.to₂
+  have hfalse : Primrec fun state : DecodeFoldState C ↦
+      (state.1.bind (fun configs ↦
+          (Encodable.decode₂ C state.2).map fun config ↦ config :: configs), 0) :=
+    Primrec.pair haccept (Primrec.const 0)
+  have htrue : Primrec fun state : DecodeFoldState C ↦
+      (state.1, state.2 + 1) :=
+    Primrec.pair Primrec.fst (Primrec.succ.comp Primrec.snd)
+  apply Primrec₂.uncurry.mp
+  exact (Primrec.cond Primrec.snd (htrue.comp Primrec.fst)
+    (hfalse.comp Primrec.fst)).of_eq fun data ↦ by
+      rcases data with ⟨state, bit⟩
+      cases bit <;> simp [decodeFoldStep, haccept]
+
+private theorem finishDecodeFold_primrec :
+    Primrec (finishDecodeFold (C := C)) := by
+  have hboundary : PrimrecPred fun state : DecodeFoldState C ↦ state.2 = 0 :=
+    Primrec.eq.comp Primrec.snd (Primrec.const 0)
+  have haccept : Primrec fun state : DecodeFoldState C ↦
+      state.1.map List.reverse :=
+    Primrec.option_map Primrec.fst
+      (Primrec.list_reverse.comp Primrec.snd).to₂
+  exact (Primrec.ite hboundary haccept (Primrec.const none)).of_eq fun state ↦ by
+    simp [finishDecodeFold]
+
+private theorem decodeConfigListBitsFold_primrec :
+    Primrec (decodeConfigListBitsFold (C := C)) := by
+  have hfoldStep : Primrec₂ fun (_bits : List Bool)
+      (data : DecodeFoldState C × Bool) ↦
+      decodeFoldStep data.1 data.2 :=
+    (decodeFoldStep_primrec.comp
+      (Primrec.fst.comp Primrec.snd)
+      (Primrec.snd.comp Primrec.snd)).to₂
+  have hfold : Primrec fun bits : List Bool ↦
+      bits.foldl decodeFoldStep (some [], 0 : DecodeFoldState C) :=
+    Primrec.list_foldl Primrec.id (Primrec.const (some [], 0)) hfoldStep
+  exact finishDecodeFold_primrec.comp hfold
+
+/-- Decoding an entire concatenation of configuration frames is primitive
+recursive. -/
+theorem decodeConfigListBits_primrec :
+    Primrec (decodeConfigListBits : List Bool → Option (List C)) :=
+  decodeConfigListBitsFold_primrec.of_eq decodeConfigListBitsFold_eq
+
+/-- Decoding a word as an entire configuration-frame concatenation is
+primitive recursive. -/
+theorem decodeConfigs_primrec :
+    Primrec (decodeConfigs : Word Bool → Option (List C)) := by
+  exact decodeConfigListBits_primrec.comp wordToList_primrec
 
 end Lecerf.Encoding.ConfigCode

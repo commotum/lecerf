@@ -25,15 +25,15 @@ abbrev TestMachine := Lecerf.Machine.TwoTape.FiniteMachine Bool Bool Bool
 
 /-- A run of `true` bits without its terminating `false` is rejected. -/
 example : ConfigCode.decodeUnaryFrame [true, true] = none := by
-  native_decide
+  decide
 
 /-- The exact single-frame decoder rejects data after a terminator. -/
 example : ConfigCode.decodeUnaryFrame [false, true] = none := by
-  native_decide
+  decide
 
 /-- Canonical unary frames decode to their supplied value. -/
 example : ConfigCode.decodeUnaryFrame (ConfigCode.unaryFrame 4) = some 4 := by
-  native_decide
+  decide
 
 def initial : TestConfig :=
   Lecerf.Machine.TwoTape.Config.blank false
@@ -47,7 +47,7 @@ example :
 example :
     ConfigCode.decodeConfigs (C := TestConfig)
         (FreeMonoid.ofList [true, true]) = none := by
-  native_decide
+  decide
 
 /-- Canonical concatenated frames round-trip as a whole input. -/
 example :
@@ -78,24 +78,24 @@ def movementTarget (direction : Tape.Move) : TestConfig :=
 
 theorem leftMachine_step :
     leftMachine.step initial = some (movementTarget .left) := by
-  native_decide
+  decide
 
 theorem stayMachine_step :
     stayMachine.step initial = some (movementTarget .stay) := by
-  native_decide
+  decide
 
 theorem rightMachine_step :
     rightMachine.step initial = some (movementTarget .right) := by
-  native_decide
+  decide
 
 theorem leftMachine_reversible : leftMachine.Reversible :=
-  (show leftMachine.SyntacticallyReversible by native_decide).reversible
+  (show leftMachine.SyntacticallyReversible by decide).reversible
 
 theorem stayMachine_reversible : stayMachine.Reversible :=
-  (show stayMachine.SyntacticallyReversible by native_decide).reversible
+  (show stayMachine.SyntacticallyReversible by decide).reversible
 
 theorem rightMachine_reversible : rightMachine.Reversible :=
-  (show rightMachine.SyntacticallyReversible by native_decide).reversible
+  (show rightMachine.SyntacticallyReversible by decide).reversible
 
 /-- The semantic code isomorphism represents the `.left` machine step. -/
 example :
@@ -152,12 +152,12 @@ cell while retaining the written nonblank cell on the normalized left side. -/
 theorem rightMachine_blank_extension :
     (movementTarget .right).tape₁.head = false ∧
       (movementTarget .right).tape₁.left.cells = [true] := by
-  native_decide
+  decide
 
 /-- The sole rule has source state `false`, so its target is terminal. -/
 theorem rightMachine_target_terminal :
     rightMachine.step (movementTarget .right) = none := by
-  native_decide
+  decide
 
 /-- Terminality is literal undefinedness of the semantic code action. -/
 example :
@@ -170,7 +170,12 @@ example :
 example :
     applyWord rightMachine.step
         (ConfigCode.encodeConfigs [movementTarget .right]) = none := by
-  simp [applyWord, rightMachine_target_terminal]
+  have failed :
+      traverse rightMachine.step [movementTarget .right] = none := by
+    unfold traverse
+    rw [rightMachine_target_terminal]
+    rfl
+  simp [applyWord, failed]
 
 /-! ## Deterministic merge: target codehood really needs backward uniqueness -/
 
@@ -195,15 +200,15 @@ def merged : TestConfig :=
 /-- The two rules have distinct forward states, hence distinct lookup keys. -/
 theorem mergeMachine_deterministic : mergeMachine.TableDeterministic :=
   (FiniteMachine.pairwise_forwardPairValid_iff_tableDeterministic
-    mergeMachine).mp (by native_decide)
+    mergeMachine).mp (by decide)
 
 theorem mergeMachine_first_step :
     mergeMachine.step firstPredecessor = some merged := by
-  native_decide
+  decide
 
 theorem mergeMachine_second_step :
     mergeMachine.step secondPredecessor = some merged := by
-  native_decide
+  decide
 
 /-- The deterministic first-match transition nevertheless merges two
 successful predecessors. -/
