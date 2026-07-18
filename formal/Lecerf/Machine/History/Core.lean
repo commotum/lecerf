@@ -44,6 +44,10 @@ def encode (current : σ) (history : List σ) : Config σ :=
 def decode (config : Config σ) : σ × List σ :=
   (config.current, config.history)
 
+/-- Forget the log and recover the represented source state. -/
+def project (config : Config σ) : σ :=
+  config.current
+
 @[simp]
 theorem decode_encode (current : σ) (history : List σ) :
     decode (encode current history) = (current, history) :=
@@ -53,6 +57,11 @@ theorem decode_encode (current : σ) (history : List σ) :
 theorem encode_decode (config : Config σ) :
     encode config.decode.1 config.decode.2 = config := by
   cases config
+  rfl
+
+@[simp]
+theorem project_encode (current : σ) (history : List σ) :
+    project (encode current history) = current :=
   rfl
 
 theorem encode_injective :
@@ -72,6 +81,10 @@ theorem initial_current (state : σ) : (initial state).current = state :=
 theorem initial_history (state : σ) : (initial state).history = [] :=
   rfl
 
+@[simp]
+theorem project_initial (state : σ) : project (initial state) = state :=
+  rfl
+
 end Config
 
 /-- Execute one source step and push the complete predecessor if it succeeds. -/
@@ -89,6 +102,12 @@ def backward {σ : Type u} [DecidableEq σ] (next : Step σ) : Step (Config σ)
         some ⟨previous, history⟩
       else
         none
+
+@[simp]
+theorem backward_initial {σ : Type u} [DecidableEq σ]
+    (next : Step σ) (start : σ) :
+    backward next (Config.initial start) = none :=
+  rfl
 
 @[simp]
 theorem forward_encode {σ : Type u} (next : Step σ) (current : σ)

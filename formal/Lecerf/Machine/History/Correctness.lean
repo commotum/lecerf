@@ -102,6 +102,36 @@ theorem reachable_checkpoint_unique_of_history_length_eq {σ : Type u}
   (valid_of_reachable firstReachable).eq_of_history_length_eq
     (valid_of_reachable secondReachable) lengthEq
 
+/-- A generated empty history is exactly the freshly encoded initial
+checkpoint.  Thus no later run can masquerade as an unstarted computation. -/
+theorem Valid.history_eq_nil_iff {σ : Type u} {next : Step σ} {start : σ}
+    {config : Config σ} (valid : Valid next start config) :
+    config.history = [] ↔ config = Config.initial start := by
+  constructor
+  · intro historyNil
+    have sameLength : config.history.length =
+        (Config.initial start).history.length := by
+      simp [historyNil]
+    exact valid.eq_of_history_length_eq Valid.initial sameLength
+  · rintro rfl
+    rfl
+
+/-- Checked reverse execution retraces every valid history to the unique
+empty-history checkpoint. -/
+theorem Valid.backward_reachable_initial {σ : Type u} [DecidableEq σ]
+    {next : Step σ} {start : σ} {config : Config σ}
+    (valid : Valid next start config) :
+    Reachable (backward next) config (Config.initial start) := by
+  have forwardReachable := valid.reachable
+  have reverseReachable := (reversible next).reachable_reverse forwardReachable
+  simpa using reverseReachable
+
+/-- Fresh simulator states are terminal for checked reverse execution. -/
+theorem terminal_backward_initial {σ : Type u} [DecidableEq σ]
+    (next : Step σ) (start : σ) :
+    Terminal (backward next) (Config.initial start) :=
+  backward_initial next start
+
 /-- A successful source step is one positive simulator step at every valid or
 malformed history prefix; the runtime theorem itself needs no invariant. -/
 theorem strictlyReachable_of_source_step {σ : Type u} {next : Step σ}
