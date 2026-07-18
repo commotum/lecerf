@@ -12,6 +12,8 @@ Public modules:
 ```text
 Lecerf.Transition.Core
 Lecerf.Transition.Reversible
+Lecerf.Transition.ExactCore
+Lecerf.Transition.ExactEffectivity
 Lecerf.Transition.API
 ```
 
@@ -456,6 +458,7 @@ Lecerf.Machine.TwoTape.Core
 Lecerf.Machine.TwoTape.Reversible
 Lecerf.Machine.TwoTape.Effectivity
 Lecerf.Machine.TwoTape.Validity
+Lecerf.Machine.TwoTape.API
 Lecerf.Machine.TwoTape.HistoryCompiler.Core
 Lecerf.Machine.TwoTape.HistoryCompiler.Basic
 Lecerf.Machine.TwoTape.HistoryCompiler.Trace
@@ -853,6 +856,7 @@ Public modules:
 ```text
 Lecerf.Encoding.ConfigCode
 Lecerf.Encoding.ConfigCodeEffectivity
+Lecerf.Transition.ExactCore
 Lecerf.Transition.Exact
 Lecerf.Encoding.StepCode.Core
 Lecerf.Encoding.StepCode.Correctness
@@ -921,9 +925,10 @@ decodeConfigs_primrec :
 
 ### Exact transition and semantic code schema
 
-`Lecerf.Transition.Exact` defines bind-preserving `exactIterate` and
-`ExactSteps`, proves their addition laws, and gives exact bridges to
-reflexive reachability, strict reachability, and `Lecerf.PEquiv.iterate`.
+`Lecerf.Transition.ExactCore` defines bind-preserving `exactIterate` and
+`ExactSteps` and proves their addition, reflexive-reachability, and
+strict-reachability laws. `Lecerf.Transition.Exact` adds the isolated bridge to
+`Lecerf.PEquiv.iterate` without pulling the Word layer into `Transition.API`.
 Failure at any intermediate step remains `none`.
 
 For a finite two-tape table, the semantic relation index is the generally

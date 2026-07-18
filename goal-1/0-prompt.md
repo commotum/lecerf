@@ -13,7 +13,7 @@ nontrivial iterate-equation undecidability results.
 Inspect actual files and tests first, update current facts, select the first
 incomplete stage, create its stage file from the template, and implement only
 that stage. Keep imports and rebuilds lean. Do not use sorry, admit, fabricated
-proofs, unexplained project axioms, n = 0 trivialization, totalization of
+proofs, unexplained project axioms, native_decide-generated axioms, n = 0 trivialization, totalization of
 partial iterates, or conflation of local rule inversion with deterministic
 reversible execution. Every undecidability theorem requires an explicit
 computable reduction and preservation/reflection proof. Record corrections to

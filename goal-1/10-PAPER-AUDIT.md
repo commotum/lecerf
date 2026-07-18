@@ -78,25 +78,28 @@ build and consolidated no-cheating/axiom audit.
    the original goal complete only if every requirement has direct evidence;
    otherwise leave precise unresolved work and the goal active.
 
-## Build Structure
+## Realized Build Structure
 
-- Existing thin public roots are the first candidates for focused verification:
+- Thin public roots used for focused verification are
   `Lecerf.Transition.API`, `Lecerf.Machine.API`, `Lecerf.Word.API`,
   `Lecerf.Encoding.StepCode.API`, `Lecerf.Undecidability.API`, and `Lecerf`.
-- Existing audit leaves remain diagnostic and non-public. A possible
-  `formal/Lecerf/Audit.lean` may aggregate them and own final headline axiom
-  commands; it must not be imported by `Lecerf.lean`.
-- Goal documents expected to change are `0-plan.md`, `PAPER-MAP.md`,
-  `AUDIT.md`, `DEPENDENCIES.md`, `THEOREM-OUTLINE.md`, and this stage file.
-- Avoid edits to mathematical core/proof modules unless a signature probe or
-  requirement audit demonstrates a real missing theorem or false claim.
-- Focused builds will target any touched API/audit leaf and adjacent root.
-  Stage completion additionally requires a clean-state full build.
+- `Transition.ExactCore` now owns Word-free exact execution;
+  `Transition.Exact` owns only the `PEquiv` bridge. `Transition.API` exports
+  the core and effectivity layer without importing Word.
+- `Machine.TwoTape.API` intentionally exports the conventional two-tape model,
+  validity, history-compiler correctness, and endpoint effectivity through
+  `Machine.API`.
+- `PublicAudit` imports only `Lecerf`; `Lecerf.Audit` aggregates it and every
+  feature audit. Neither diagnostic module is imported by a public or internal
+  proof/runtime module.
+- Mathematical core edits were limited to narrowing two umbrella imports;
+  the only proof-body repairs replace generated-axiom `native_decide` uses in
+  diagnostic leaves with kernel `decide`.
 
 ## No-Cheating Checks
 
 - Scan every project Lean source, not only Stage-10 changes, for `sorry`,
-  `admit`, project `axiom`, and proof-bypassing `unsafe` declarations.
+  `admit`, project `axiom`, proof-bypassing `unsafe`, and `native_decide`.
 - Inspect all `noncomputable` and explicit classical-choice occurrences and
   classify whether they are fixed-data, semantic code decoding, diagnostics,
   or an impermissible varying reduction dependency.
@@ -124,8 +127,8 @@ build and consolidated no-cheating/axiom audit.
   closed compiled tables; every varying endpoint/map remains proved effective.
 - Semantic noncomputable data: arbitrary generated-submonoid decoding and
   ambient arbitrary-code action; never used as runtime reduction input.
-- Diagnostic: counterexamples, native/kernel checks, obstruction statements,
-  and axiom commands; never publicly re-exported.
+- Diagnostic: counterexamples, kernel-checked executable checks, obstruction
+  statements, and axiom commands; never publicly re-exported.
 - Historical follow-up: literal one-tape marker/sweeping implementation,
   finite `tau_min`, and comparison with the cleaner two-tape whole-
   configuration edge schema. These remain documented without being presented

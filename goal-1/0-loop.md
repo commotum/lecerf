@@ -78,11 +78,13 @@ module:
 4. Scan Lean sources and goal evidence:
 
    ```text
-   rg -n "sorry|admit|axiom|unsafe" formal goal-1 --glob '!formal/.lake/**'
+   rg -n "sorry|admit|axiom|unsafe|native_decide" formal goal-1 --glob '!formal/.lake/**'
    ```
 
    Documentation hits that describe guardrails are expected and must be
-   classified. Lean hits require removal or an explicit audit disposition.
+   classified. Lean hits require removal or an explicit audit disposition;
+   `native_decide` is included because its generated axioms evade a source
+   scan for the `axiom` keyword.
 
 5. Run stage-specific shortcut scans, `git diff --check`, and inspect the
    actual diff.

@@ -230,8 +230,12 @@ Run a broader build only when needed:
 Run a proof-hole scan over changed Lean code and the goal folder:
 
 ```text
-rg -n "sorry|admit|axiom" formal/Formal GOAL_DIR
+rg -n "sorry|admit|axiom|unsafe|native_decide" formal/Formal GOAL_DIR
 ```
+
+Include `native_decide` because its generated axioms do not appear as an
+`axiom` token in source; use kernel `decide` or a proved decision procedure for
+completed trust-sensitive modules.
 
 Run goal-specific shortcut scans. Replace the patterns with the forbidden
 terms for the active goal:

@@ -8,7 +8,8 @@ import Lecerf.Encoding.StepCode.API
 # Lecerf
 
 Public root for the formalization of reversible machines and code
-isomorphisms. It currently exports the generic transition layer together with
+isomorphisms. It exports the generic transition and exact-iteration layers
+together with
 canonical finite-support tapes, finite read-write-move machines, repaired
 inverse semantics, effective finite-machine execution, the universal search
 source, verified abstract and finite two-tape history simulations, exact

@@ -30,6 +30,7 @@ Feature-specific APIs are also available through:
 
 - `Lecerf.Transition.API`
 - `Lecerf.Machine.API`
+- `Lecerf.Machine.TwoTape.API`
 - `Lecerf.Word.API`
 - `Lecerf.Encoding.StepCode.API`
 - `Lecerf.Undecidability.API`

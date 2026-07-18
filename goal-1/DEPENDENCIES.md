@@ -393,7 +393,7 @@ The subtype-certified nonblank branch is computed through canonical
 The generic history dependency graph realized in Stage 4 is:
 
 ```text
-Transition/API
+Transition/Reversible
   -> Machine/History/Core
   -> Machine/History/Correctness
 
@@ -416,8 +416,9 @@ public path.
 `finiteForward_uniform_primrec` and `finiteBackward_uniform_primrec` close the
 effectivity question for interpreting a finite source description with an
 abstract history state. They do **not** compile the unbounded `List` log into
-a conventional one-tape `FiniteMachine`. That representation-level compiler,
-and the earlier ordinary-rule phase compiler, remain separate later bridges.
+a conventional one-tape `FiniteMachine`. Stage 6 separately supplies a
+conventional two-tape history compiler; the one-tape representation lowering
+and earlier ordinary-rule phase compiler remain explicit follow-ups.
 
 ### Stage 5 realized coupling boundary
 
@@ -425,7 +426,7 @@ The coupling layer is split so executable phase semantics remain below
 history-specific correctness and computability:
 
 ```text
-Transition/API + Primrec/List
+Transition/Reversible + Primrec/List
   -> Machine/Coupling/Core
 
 Machine/Coupling/Core + Machine/History/Correctness
@@ -534,6 +535,7 @@ formal/
     Transition/
       Core.lean
       Reversible.lean
+      ExactCore.lean
       Exact.lean
       ExactEffectivity.lean
       Audit.lean
@@ -559,6 +561,7 @@ formal/
         Reversible.lean
         Effectivity.lean
         Validity.lean
+        API.lean
         HistoryCompiler/
           Core.lean
           Basic.lean
@@ -648,7 +651,7 @@ Stage-4 realized dependency additions:
 
 ```text
 Machine/Effectivity          -> Machine/Core
-Machine/History/Core         -> Transition/API, Primrec/List
+Machine/History/Core         -> Transition/Reversible, Primrec/List
 Machine/History/Correctness  -> Machine/History/Core
 Machine/History/Computable   -> History/Correctness, Machine/Effectivity,
                                 Machine/SourceBridge
@@ -663,7 +666,7 @@ changed.
 Stage-5 realized dependency additions:
 
 ```text
-Machine/Coupling/Core        -> Transition/API, Primrec/List
+Machine/Coupling/Core        -> Transition/Reversible, Primrec/List
 Machine/Coupling/Correctness -> Coupling/Core, History/Correctness
 Machine/Coupling/Computable  -> Coupling/Correctness, History/Computable,
                                 Machine/Effectivity, Machine/SourceBridge
@@ -749,8 +752,11 @@ Encoding/ConfigCode
 Encoding/ConfigCodeEffectivity
   -> Encoding/ConfigCode, Mathlib Computability/Partrec
 
+Transition/ExactCore
+  -> Transition/Core
+
 Transition/Exact
-  -> Transition/Core, Word/CodeMorphism
+  -> Transition/ExactCore, Word/CodeMorphism
 
 Encoding/StepCode/Core
   -> Encoding/ConfigCode, Machine/TwoTape/Reversible,
@@ -855,7 +861,7 @@ Stage-9 realized dependency additions are:
 
 ```text
 Transition/ExactEffectivity
-  -> Transition/Exact, Mathlib Computability/Primrec/Basic
+  -> Transition/ExactCore, Mathlib Computability/Primrec/Basic
 
 Undecidability/CodeIterates/Problems
   -> Encoding/StepCode/Effectivity, Transition/Exact,
@@ -880,6 +886,28 @@ Undecidability/CodeIterates/Audit
 
 Undecidability/API
   -> EffectiveTransition, CodeIterates/API, ReversibleTwoTape/API
+```
+
+Stage-10 public-boundary additions are:
+
+```text
+Transition/API
+  -> Transition/Reversible, Transition/ExactCore,
+     Transition/ExactEffectivity
+
+Machine/TwoTape/API
+  -> Machine/TwoTape/Validity,
+     Machine/TwoTape/HistoryCompiler/Correctness,
+     Machine/TwoTape/HistoryCompiler/Effectivity
+
+Machine/API
+  -> Machine/History/API, Machine/Coupling/API, Machine/TwoTape/API
+
+Lecerf/PublicAudit
+  -> Lecerf  (diagnostic only)
+
+Lecerf/Audit
+  -> Lecerf/PublicAudit and every feature Audit leaf  (diagnostic only)
 ```
 
 The finite runtime aliases are exact products, with no functions, semantic

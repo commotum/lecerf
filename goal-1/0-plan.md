@@ -24,7 +24,7 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
 - Pin Lean and mathlib; keep the project buildable from the checked-in Lake
   manifest.
 - Completed Lean modules contain no `sorry`, `admit`, `unsafe` proof bypass,
-  or unexplained project-specific `axiom`.
+  unexplained project-specific `axiom`, or `native_decide`-generated axiom.
 - Never fabricate a theorem, paper claim, citation, or proof obligation.
 - Preserve the distinction between:
   - an individually invertible rule and a deterministic reversible machine;
@@ -41,8 +41,8 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   preservation in both directions.
 - Every undecidability result must be obtained from an explicit computable
   reduction with exact source and target predicates.
-- Treat iteration of a code isomorphism as partial unless closure of outputs
-  under further applications has been proved.
+- Treat iteration of a code isomorphism's ambient action as partial unless
+  closure of outputs under further applications has been proved.
 - Do not use `n = 0` to trivialize an iterate theorem. The final statement must
   resolve whether the paper intends a positive exponent, a supplied exponent,
   or another quantifier structure.
@@ -267,9 +267,10 @@ The original goal is complete only when all of the following are checked:
 
 ```text
 Transition/Core
-  -> Transition/Reversible
-  -> Transition/Exact
-  -> Transition/ExactEffectivity
+  |-> Transition/Reversible
+  `-> Transition/ExactCore
+       |-> Transition/Exact
+       `-> Transition/ExactEffectivity
 
 Machine/{Tape,Core,Reversible,Effectivity}
   -> Machine/History/{Core,Correctness,Computable}
