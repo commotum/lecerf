@@ -135,11 +135,12 @@ proposed API targets.
 
 Stage 3 supplies the concrete read-write-move semantics and repaired local and
 global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stage 4
-supplies the complete abstract full-history simulation for `L4a-SIM1` through
-`L4a-SIM5`, including effectivity and halting reflection. Starred coupling and
-the paper's halt-to-reverse construction remain in Stage 5, and a conventional
-finite tape compiler remains open, so no undecidability claim follows from
-these declarations alone.
+supplies clean abstract analogues of the machine-simulation content in
+`L4a-SIM1` through `L4a-SIM5`, including effectivity and halting reflection;
+the printed marker words, finite macro-machine, and code-map layer remain open.
+Starred coupling and the paper's halt-to-reverse construction remain in Stage
+5, and a conventional finite tape compiler remains open, so no undecidability
+claim follows from these declarations alone.
 
 ## Principal Reduction Map
 
