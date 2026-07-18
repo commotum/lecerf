@@ -155,7 +155,7 @@ ordinary finite-machine halting
 abstract reversible-transition halting
   -- phase-tagged coupling gadgets + semantic iff/effectivity (Stage 5 checked) -->
 abstract positive return / distinct-target reachability
-  -- pending source/history/coupling finite-tape compiler and validity proof -->
+  -- pending history/coupling finite-tape compiler and validity proof -->
 finite reversible-machine halting / return / reachability
   -- configuration code + step/iterate iff -->
 positive fixed orbit / distinct orbit of a partial code isomorphism
