@@ -287,7 +287,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 6 | `MACHINE-UNDEC` | Complete | Three finite reversible two-tape undecidability reductions |
 | 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Complete | Machine-step representation by code maps |
-| 9 | `ITERATE-UNDEC` | Not started | Iterate-equation reductions |
+| 9 | `ITERATE-UNDEC` | In progress | Iterate-equation reductions |
 | 10 | `PAPER-AUDIT` | Not started | Claim map, public API, corrections, axiom audit |
 
 ## 1-SOURCE-AUDIT
@@ -648,5 +648,7 @@ table descriptor whose validity guard and forward interpreter are uniformly
 primitive recursive. The semantic edge family remains generally infinite and
 the semantic `CodeIso` constructor remains noncomputable; neither is stored as
 runtime input. A one-tape lowering and the paper's finite local
-`alpha`/`omega`/`beta` encoding remain explicit follow-up work. Stage 9 has not
-started.
+`alpha`/`omega`/`beta` encoding remain explicit follow-up work. Stage 9 is in
+progress with finite raw descriptor/word inputs, strictly positive partial
+iteration, explicit validity guards, and a separate supplied-exponent
+effectivity boundary fixed as its implementation contract.
