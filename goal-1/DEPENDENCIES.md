@@ -280,6 +280,54 @@ complete alphabet list or use a concrete `Fin n`; a bare `[Fintype Γ]` is not
 sufficient reduction data. The probe did not prove the two-microstep semantic
 correspondence and was not promoted into project code.
 
+### Stage 4 realized history/effectivity boundary
+
+`Lecerf.Machine.Effectivity` imports only `Lecerf.Machine.Core` and proves the
+existing structural runtime primitive recursive without enumerating state or
+alphabet types. Its checked chain is:
+
+```text
+Side.head/tail/cons
+  -> Tape.head/write/move/act
+  -> Rule.apply
+  -> FiniteMachine.applyRules
+  -> FiniteMachine.step_uniform_primrec
+```
+
+The subtype-certified nonblank branch is computed through canonical
+`Encodable.decode₂`, not `Finset.univ`; the theorem assumptions need
+`Primcodable`, decidable equality, and the alphabet blank, but no `Finite` or
+`Fintype` instance.
+
+The generic history dependency graph realized in Stage 4 is:
+
+```text
+Transition/API
+  -> Machine/History/Core
+  -> Machine/History/Correctness
+
+Machine/Core
+  -> Machine/Effectivity
+
+History/Core + History/Correctness + Machine/Effectivity + SourceBridge
+  -> Machine/History/Computable
+  -> Machine/History/API
+  -> Machine/API
+```
+
+`History/Core` stores complete predecessor configurations and constructs an
+exact `PEquiv`; it does not import finite-machine syntax. `History.Correctness`
+owns reachability/invariant and halting proofs. `History.Computable` owns
+uniform interpreter theorems and source specializations. `History.Audit`
+imports the computability leaf for executable diagnostics but is not on the
+public path.
+
+`finiteForward_uniform_primrec` and `finiteBackward_uniform_primrec` close the
+effectivity question for interpreting a finite source description with an
+abstract history state. They do **not** compile the unbounded `List` log into
+a conventional one-tape `FiniteMachine`. That representation-level compiler,
+and the earlier ordinary-rule phase compiler, remain separate later bridges.
+
 ## Tentative Module Layout
 
 ```text
@@ -295,9 +343,15 @@ formal/
       Tape.lean
       Core.lean
       Reversible.lean
+      Effectivity.lean
       SourceBridge.lean
       Audit.lean
-      HistorySimulation.lean
+      History/
+        Core.lean
+        Correctness.lean
+        Computable.lean
+        Audit.lean
+        API.lean
       Coupling.lean
       API.lean
     Word/
@@ -343,3 +397,19 @@ Machine/Audit         -> Machine/Reversible   (not publicly re-exported)
 ```
 
 Full `lake build` passed with 830 jobs after the public API import changed.
+
+Stage-4 realized dependency additions:
+
+```text
+Machine/Effectivity          -> Machine/Core
+Machine/History/Core         -> Transition/API, Primrec/List
+Machine/History/Correctness  -> Machine/History/Core
+Machine/History/Computable   -> History/Correctness, Machine/Effectivity,
+                                Machine/SourceBridge
+Machine/History/API          -> Machine/History/Computable
+Machine/History/Audit        -> Machine/History/Computable (not re-exported)
+Machine/API                  -> Machine/History/API
+```
+
+Full `lake build` passed with 835 jobs after the Stage-4 public API import
+changed.

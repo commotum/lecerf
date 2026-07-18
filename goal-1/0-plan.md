@@ -130,8 +130,8 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   translations are explicitly noncomputable. Stage 6 must close this bridge
   through an explicit compiler; Stage 3 records the source replacement rather
   than claiming the missing reduction.
-- The first complete reversible simulation should use an explicit history log.
-  A faithful tape-level version of Lecerf's marker construction can be a later
+- The first complete reversible simulation uses an explicit history log. A
+  faithful tape-level version of Lecerf's marker construction can be a later
   refinement.
 - The implemented history log stores the entire previous source configuration
   on each successful step. `backward` recomputes and validates the popped edge,
@@ -190,7 +190,9 @@ The original goal is complete only when all of the following are checked:
 Transition/Core
   -> Transition/Reversible
   -> Machine/Core
-  -> Machine/HistorySimulation
+  -> Machine/History/Core
+  -> Machine/History/Correctness
+  -> Machine/History/Computable
   -> Machine/Coupling
   -> Undecidability/ReversibleMachine
 
@@ -202,8 +204,9 @@ Word/Code
 Audit/* and API leaves depend downward; core modules never import them.
 ```
 
-Exact module names remain provisional until the source-audit stage verifies
-which mathlib abstractions can be reused without semantic mismatch.
+The realized history hierarchy also depends sideways on
+`Machine/Effectivity` and `Machine/SourceBridge`; exact import edges are
+recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 
 ## Stage Index
 
@@ -517,12 +520,13 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`3-MACHINE.md` is complete. The public machine layer defines canonical
-finite-support blank tapes, primcodable configurations/rules/finite tables,
-first-match read-write-move execution, repaired rule inversion, semantic table
-compatibility, and whole-machine reversible `PEquiv` execution. A non-public
-audit checks the paper-tuple failure and the local-versus-global reversibility
-boundary. The fixed primitive-recursive `evaln` search source has an exact
-halting iff; the missing computable compiler from that source into finite rule
-tables is isolated rather than assumed. Focused/public/full builds, scans, and
-axiom audit passed. Stage 4 remains unstarted.
+`4-HISTORY-SIM.md` is complete. The public machine layer now additionally
+exports primitive-recursive finite-machine execution and a full-predecessor
+history simulator with checked inverse execution, exact reachable-history
+invariant, source reachability preservation/reflection, history growth,
+cycle-safe checkpoint uniqueness, reverse retracing, and halting equivalence.
+Both generic and finite-description history interpreters are primitive
+recursive, and the universal `evaln` source is instantiated. The abstract
+unbounded log has not been compiled to a conventional finite tape machine;
+coupling and undecidability remain unstarted. Focused/public/full builds,
+scans, and axiom audit passed. Stage 5 is the next incomplete stage.

@@ -37,11 +37,12 @@
   construction; one source step is one positive simulator step. Later
   microstate or tape encodings may refine a source step to several simulator
   steps without changing this semantic theorem.
-- Effectivity will be stated uniformly for a computable source interpreter
-  and instantiated for the checked universal search source. Whether the
-  existing `FiniteMachine.step` interpreter can be proved uniformly
-  computable within this stage is a checked implementation question. No
-  finite-description compiler will be claimed without an explicit Lean
+- Effectivity is stated uniformly for a jointly primitive-recursive source
+  interpreter, which yields explicit `Computable` corollaries, and is
+  instantiated for the checked universal search source. This is not a closure
+  theorem from an arbitrary `Computable` hypothesis. The existing
+  `FiniteMachine.step` interpreter is now proved uniformly primitive recursive.
+  No output-description compiler is claimed without an explicit Lean
   construction and computability proof.
 - "Checkpoint uniqueness" means injective encode/decode and exact
   characterization of reachable well-formed checkpoints. It does not mean a
