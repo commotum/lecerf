@@ -83,4 +83,14 @@ theorem mem_returnMachine_iff
       entry ∈ (turnaroundMachine machine).rules ∨ entry ∈ bottomRules := by
   simp [returnMachine]
 
+theorem mem_returnMachine_expanded_iff
+    {machine : Lecerf.Machine.FiniteMachine Q Γ}
+    {entry : TwoTape.Rule (Control Q Γ) Γ (Mark Q Γ)} :
+    entry ∈ (returnMachine machine).rules ↔
+      entry ∈ forwardRules machine ∨ entry ∈ boundaryRules machine ∨
+        entry ∈ scanRules ∨ entry ∈ inspectRules machine ∨
+          entry ∈ restoreRules machine ∨ entry ∈ bottomRules := by
+  rw [mem_returnMachine_iff, mem_turnaroundMachine_iff]
+  tauto
+
 end Lecerf.Machine.TwoTape.HistoryCompiler
