@@ -2,6 +2,7 @@ import Lecerf.Machine.Reversible
 import Lecerf.Machine.SourceBridge
 import Lecerf.Machine.History.API
 import Lecerf.Machine.Coupling.API
+import Lecerf.Machine.TwoTape.API
 
 /-!
 # Public finite-machine API
@@ -9,7 +10,9 @@ import Lecerf.Machine.Coupling.API
 Stable exports for canonical tapes, finite read-write-move machines, repaired
 inverse execution, effective finite-machine interpretation, the universal
 halting source, the abstract reversible history simulator, and exact
-forward--reverse target and return couplings. Diagnostic counterexamples
+forward--reverse target and return couplings. It also exports the conventional
+finite two-tape model and the finite history compiler's reversibility,
+correctness, and effectivity results. Diagnostic counterexamples
 remain in `Lecerf.Machine.Audit`, `Lecerf.Machine.History.Audit`, and
 `Lecerf.Machine.Coupling.Audit`.
 -/

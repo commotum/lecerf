@@ -1,9 +1,12 @@
 import Lecerf.Transition.Reversible
+import Lecerf.Transition.ExactCore
 
 /-!
 # Public transition API
 
-Stable re-export of generic deterministic partial execution and reversible
-partial-step semantics. Diagnostic examples remain in
+Stable re-export of generic deterministic partial execution, exact-length
+execution and reachability, and reversible partial-step semantics. Bridges to
+word-level partial-equivalence powers remain in `Lecerf.Transition.Exact`.
+Diagnostic examples remain in
 `Lecerf.Transition.Audit` and are intentionally not imported here.
 -/

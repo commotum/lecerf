@@ -1,4 +1,4 @@
-import Lecerf.Transition.Exact
+import Lecerf.Transition.ExactCore
 import Mathlib.Computability.Primrec.Basic
 
 /-!

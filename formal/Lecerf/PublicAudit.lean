@@ -15,6 +15,9 @@ through reversible machines and simulations to both undecidability layers.
 #check Lecerf.Transition.BackwardUnique
 #check Lecerf.Transition.ReversibleStep
 #check Lecerf.Transition.PositiveReturn
+#check Lecerf.Transition.exactIterate
+#check Lecerf.Transition.ExactSteps
+#check Lecerf.Transition.exactIterate_uniform_primrec
 #check Lecerf.Transition.ReversibleStep.next_eq_some_iff_prev_eq_some
 #check Lecerf.Transition.ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable
 
@@ -67,12 +70,15 @@ through reversible machines and simulations to both undecidability layers.
 #check Lecerf.Undecidability.CodeIterates.positiveIterateAtYes_computablePred
 #check Lecerf.Undecidability.CodeIterates.positiveFixedOrbitYes_re
 #check Lecerf.Undecidability.CodeIterates.distinctOrbitYes_re
+#check Lecerf.Undecidability.CodeIterates.positiveFixedOrbitYes_iff_stepCodeIso_positiveIterate
+#check Lecerf.Undecidability.CodeIterates.distinctOrbitYes_iff_stepCodeIso_positiveIterate
 #check Lecerf.Undecidability.CodeIterates.partrecHalts0_manyOne_positiveFixedOrbitYes
 #check Lecerf.Undecidability.CodeIterates.partrecHalts0_manyOne_distinctOrbitYes
 
 /-! ## Headline axiom audit -/
 
 #print axioms Lecerf.Transition.haltsFrom_iff_exists_reachable_terminal
+#print axioms Lecerf.Transition.exactIterate_uniform_primrec
 #print axioms Lecerf.Transition.ReversibleStep.next_eq_some_iff_prev_eq_some
 #print axioms Lecerf.Transition.ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable
 
@@ -121,8 +127,9 @@ through reversible machines and simulations to both undecidability layers.
 #print axioms Lecerf.Undecidability.CodeIterates.positiveIterateAtYes_computablePred
 #print axioms Lecerf.Undecidability.CodeIterates.positiveFixedOrbitYes_re
 #print axioms Lecerf.Undecidability.CodeIterates.distinctOrbitYes_re
+#print axioms Lecerf.Undecidability.CodeIterates.positiveFixedOrbitYes_iff_stepCodeIso_positiveIterate
+#print axioms Lecerf.Undecidability.CodeIterates.distinctOrbitYes_iff_stepCodeIso_positiveIterate
 #print axioms Lecerf.Undecidability.CodeIterates.partrecHalts0_manyOne_positiveFixedOrbitYes
 #print axioms Lecerf.Undecidability.CodeIterates.partrecHalts0_manyOne_distinctOrbitYes
 #print axioms Lecerf.Undecidability.CodeIterates.positiveFixedOrbitYes_not_computable
 #print axioms Lecerf.Undecidability.CodeIterates.distinctOrbitYes_not_computable
-

@@ -1,8 +1,9 @@
 # Theorem and Reduction Outline
 
-Stage 2 through Stage 9 declarations are identified as implemented below.
-The remaining paper audit and historical-encoding reconciliation are not
-claimed by these declarations.
+Stages 2 through 9 implement the declarations identified below, and Stage 10
+audits their integrated public and trust surface. Historical one-tape and
+finite local relation-list reconciliation remains explicitly outside the
+cleaner theorem branch claimed by these declarations.
 
 ## 1. Partial Transition Systems (implemented)
 

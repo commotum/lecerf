@@ -162,7 +162,7 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   universal `Turing.ToPartrec.Code`; `Compiler.FiniteSource` lowers that fixed
   program through mathlib's checked TM simulations and finite support to an
   actual finite one-tape table. Only the encoded program/input tape varies, and
-  `FiniteSourceComputable.initial_primrec` proves that map primitive recursive.
+  `Compiler.FiniteSource.initial_primrec` proves that map primitive recursive.
   The one-time universal-program and finite-encoding choices are isolated and
   visible in the axiom audit.
 - The first complete reversible simulation uses an explicit history log. A

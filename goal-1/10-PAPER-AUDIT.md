@@ -8,19 +8,18 @@
 - The pinned project remains Lean `v4.31.0` with mathlib commit
   `fabf563a7c95a166b8d7b6efca11c8b4dc9d911f` in both `lakefile.toml` and
   `lake-manifest.json`.
-- The worktree contains one carried Stage-9 documentation modification in
-  `goal-1/AUDIT.md`. It belongs to the requested fold-back and must be
-  preserved and validated, not discarded.
+- At stage start the worktree contained one carried Stage-9 documentation
+  modification in `goal-1/AUDIT.md`; it has been preserved through the
+  Stage-10 reconciliation.
 - `formal/Lecerf.lean` exports thin transition, machine, undecidability, word,
   and machine-step-code APIs. Feature-specific audit leaves are not imported by
   the public root.
-- There is no consolidated `Lecerf.Audit` target. Existing audit leaves already
-  exercise the principal boundaries and print representative axioms; Stage 10
-  must decide from coverage, not aesthetics, whether a non-public aggregator is
-  useful.
-- `0-plan.md` contains a checked documentation contradiction: Stage-8 results
-  are misplaced under `4-HISTORY-SIM`, and its dependency-shape prose still
-  calls now-realized later module names provisional. These must be repaired.
+- `Lecerf.PublicAudit` now probes the root-exported headline signatures and
+  their axioms; non-public `Lecerf.Audit` aggregates it with every feature
+  audit without entering the public import graph.
+- Stage-8 results were initially misplaced under `4-HISTORY-SIM`, and the
+  dependency sketch used obsolete provisional names. Both authoritative
+  records have been repaired.
 - The remaining one-tape lowering and literal finite local
   `alpha`/`omega`/`beta` reconstruction are explicitly documented historical
   follow-ups. The user permits a cleaner equivalent theorem first, so these
@@ -154,4 +153,3 @@ build and consolidated no-cheating/axiom audit.
 
 - In progress. This contract records the initial contradictions and direct
   evidence requirements before any Stage-10 integration edits.
-
