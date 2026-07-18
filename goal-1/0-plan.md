@@ -299,7 +299,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 7 | `WORD-CODES` | Complete | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Complete | Machine-step representation by code maps |
 | 9 | `ITERATE-UNDEC` | Complete | Iterate-equation reductions |
-| 10 | `PAPER-AUDIT` | Not started | Claim map, public API, corrections, axiom audit |
+| 10 | `PAPER-AUDIT` | In progress | Claim map, public API, corrections, axiom audit |
 
 ## 1-SOURCE-AUDIT
 
@@ -701,4 +701,5 @@ finite guarded descriptor/word problem inputs, strictly positive partial
 iteration, primitive-recursive supplied-exponent recognition, recursively
 enumerable existential predicates, executable/semantic correspondence,
 explicit computable reductions, and both iterate-equation noncomputability
-results. Stage 10 is the first incomplete stage.
+results. Stage 10 is in progress as the final public-surface, claim-map,
+correction, dependency, clean-build, and axiom audit.
