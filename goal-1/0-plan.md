@@ -89,6 +89,11 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   finite-support tapes, finite first-match rule tables, repaired phased inverse
   execution, whole-machine reversibility, and a fixed primitive-recursive
   `Nat.Partrec.Code.evaln` search source.
+- Stage 4 is in progress. Its boundary is an abstract reversible simulator
+  that stores complete predecessor configurations, proves its history
+  invariant from initialization and execution, and preserves computability
+  for an explicitly computable source interpreter. Coupling and
+  undecidability remain outside this stage.
 
 ## Current Design Decisions
 
@@ -193,7 +198,7 @@ which mathlib abstractions can be reused without semantic mismatch.
 | 1 | `SOURCE-AUDIT` | Complete | Fixed conventions, claim inventory, corrected target statements |
 | 2 | `TRANSITION` | Complete | Reversible partial-transition API |
 | 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
-| 4 | `HISTORY-SIM` | Not started | Constructive reversible history simulation |
+| 4 | `HISTORY-SIM` | In progress | Constructive reversible history simulation |
 | 5 | `COUPLING` | Not started | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |
 | 7 | `WORD-CODES` | Not started | Free-monoid code and morphism API |
