@@ -47,6 +47,7 @@ theorem source_injective :
     Function.Injective (source : Edge machine → Config Q Γ₁ Γ₂) := by
   rintro ⟨firstSource, firstTarget, firstStep⟩
     ⟨secondSource, secondTarget, secondStep⟩ sourceEq
+  change firstSource = secondSource at sourceEq
   subst secondSource
   have targetEq : firstTarget = secondTarget :=
     Option.some.inj (firstStep.symm.trans secondStep)
@@ -58,6 +59,7 @@ theorem target_injective (backward : BackwardUnique machine.step) :
     Function.Injective (target : Edge machine → Config Q Γ₁ Γ₂) := by
   rintro ⟨firstSource, firstTarget, firstStep⟩
     ⟨secondSource, secondTarget, secondStep⟩ targetEq
+  change firstTarget = secondTarget at targetEq
   subst secondTarget
   have sourceEq : firstSource = secondSource := backward firstStep secondStep
   subst secondSource
@@ -77,25 +79,26 @@ def targetWord {machine : FiniteMachine Q Γ₁ Γ₂} (edge : Edge machine) :
 
 /-- Successful source words always form an indexed code. -/
 theorem sourceWord_isIndexedCode (machine : FiniteMachine Q Γ₁ Γ₂) :
-    IsIndexedCode (@sourceWord Q Γ₁ Γ₂ _ _ _ _ _ _ machine) := by
-  simpa only [sourceWord] using
-    (ConfigCode.encodeConfig_isIndexedCode
-      (C := Config Q Γ₁ Γ₂)).comp (@Edge.source_injective Q Γ₁ Γ₂
-        _ _ _ _ _ _ machine)
+    IsIndexedCode (sourceWord (machine := machine)) := by
+  change IsIndexedCode
+    (fun edge : Edge machine => ConfigCode.encodeConfig edge.source)
+  exact (ConfigCode.encodeConfig_isIndexedCode
+    (C := Config Q Γ₁ Γ₂)).comp (Edge.source_injective (machine := machine))
 
 /-- Under backward uniqueness, successful target words form an indexed code. -/
 theorem targetWord_isIndexedCode (machine : FiniteMachine Q Γ₁ Γ₂)
     (backward : BackwardUnique machine.step) :
-    IsIndexedCode (@targetWord Q Γ₁ Γ₂ _ _ _ _ _ _ machine) := by
-  simpa only [targetWord] using
-    (ConfigCode.encodeConfig_isIndexedCode
-      (C := Config Q Γ₁ Γ₂)).comp (Edge.target_injective backward)
+    IsIndexedCode (targetWord (machine := machine)) := by
+  change IsIndexedCode
+    (fun edge : Edge machine => ConfigCode.encodeConfig edge.target)
+  exact (ConfigCode.encodeConfig_isIndexedCode
+    (C := Config Q Γ₁ Γ₂)).comp (Edge.target_injective backward)
 
 /-- Target-edge codehood is exactly whole-step successful-predecessor
 uniqueness.  Individual rule invertibility is not enough. -/
 theorem targetWord_isIndexedCode_iff_backwardUnique
     (machine : FiniteMachine Q Γ₁ Γ₂) :
-    IsIndexedCode (@targetWord Q Γ₁ Γ₂ _ _ _ _ _ _ machine) ↔
+    IsIndexedCode (targetWord (machine := machine)) ↔
       BackwardUnique machine.step := by
   constructor
   · intro targetCode first second target firstStep secondStep
@@ -112,7 +115,7 @@ distinct edges may select the same target configuration. -/
 noncomputable def stepCodeEpi (machine : FiniteMachine Q Γ₁ Γ₂) :
     PaperCodeEpi Bool (Edge machine) (Config Q Γ₁ Γ₂) :=
   PaperCodeEpi.ofCodes
-    (@sourceWord Q Γ₁ Γ₂ _ _ _ _ _ _ machine)
+    (sourceWord (machine := machine))
     (ConfigCode.encodeConfig : Config Q Γ₁ Γ₂ → Word Bool)
     Edge.target
     (sourceWord_isIndexedCode machine)
@@ -124,21 +127,23 @@ noncomputable def stepCodeIso (machine : FiniteMachine Q Γ₁ Γ₂)
     (backward : BackwardUnique machine.step) :
     CodeIso Bool (Edge machine) :=
   CodeIso.ofCodes
-    (@sourceWord Q Γ₁ Γ₂ _ _ _ _ _ _ machine)
-    (@targetWord Q Γ₁ Γ₂ _ _ _ _ _ _ machine)
+    (sourceWord (machine := machine))
+    (targetWord (machine := machine))
     (sourceWord_isIndexedCode machine)
     (targetWord_isIndexedCode machine backward)
 
 @[simp]
 theorem stepCodeIso_source (machine : FiniteMachine Q Γ₁ Γ₂)
     (backward : BackwardUnique machine.step) :
-    (stepCodeIso machine backward).source = sourceWord :=
+    (stepCodeIso machine backward).source =
+      sourceWord (machine := machine) :=
   rfl
 
 @[simp]
 theorem stepCodeIso_target (machine : FiniteMachine Q Γ₁ Γ₂)
     (backward : BackwardUnique machine.step) :
-    (stepCodeIso machine backward).target = targetWord :=
+    (stepCodeIso machine backward).target =
+      targetWord (machine := machine) :=
   rfl
 
 /-- The semantic code isomorphism maps every displayed successful edge. -/
