@@ -139,6 +139,21 @@ private theorem restoreRule_applies
   rw [key.1]
   rw [restore_work selected, erase_token_stay]
 
+omit [Fintype Q] [Fintype Γ] in
+private theorem bottomRule_applies (config : SourceConfig Q Γ) :
+    (bottomRule config.state config.tape.head).apply (bottomTarget config) =
+      some (checkpoint config) := by
+  rw [TwoTape.Rule.apply_eq_some_iff]
+  refine ⟨rfl, rfl, bottomTarget_history_head config, ?_⟩
+  change
+    (⟨.forward config.state, config.tape,
+        initialHistory⟩ : TargetConfig Q Γ) =
+      ⟨.forward config.state,
+        config.tape.act config.tape.head .stay,
+        (Tape.move .left initialHistory).act .bottom .right⟩
+  rw [show config.tape.act config.tape.head .stay = config.tape by
+    simp [Tape.act], close_bottom]
+
 /-- A selected source rule is executed and recorded by the forward-only
 history machine. -/
 theorem historyMachine_step_forward
@@ -378,5 +393,51 @@ theorem returnMachine_step_restore
         Or.inr <| mem_restoreRules_iff.mpr
           ⟨rule, Lecerf.Machine.FiniteMachine.lookup_eq_some_mem selected, rfl⟩
   · exact restoreRule_applies rest selected
+
+/-- The exposed bottom marker is terminal in the open turnaround table. -/
+theorem turnaroundMachine_step_bottomTarget
+    {source : SourceMachine Q Γ} (config : SourceConfig Q Γ) :
+    (turnaroundMachine source).step (bottomTarget config) = none := by
+  cases machineStep : (turnaroundMachine source).step (bottomTarget config) with
+  | none => rfl
+  | some next =>
+      exfalso
+      obtain ⟨entry, entryMem, entryStep⟩ :=
+        TwoTape.FiniteMachine.applyRules_eq_some_exists machineStep
+      rcases mem_turnaroundMachine_iff.mp entryMem with
+        forward | boundary | scan | inspect | restore
+      · obtain ⟨rule, _, rfl⟩ := mem_forwardRules_iff.mp forward
+        simp [TwoTape.Rule.apply, forwardRule, bottomTarget] at entryStep
+      · obtain ⟨state, symbol, _, rfl⟩ :=
+          mem_boundaryRules_iff.mp boundary
+        simp [TwoTape.Rule.apply, boundaryRule, bottomTarget] at entryStep
+      · obtain ⟨state, symbol, rfl⟩ := mem_scanRules_iff.mp scan
+        simp [TwoTape.Rule.apply, scanRule, bottomTarget] at entryStep
+      · obtain ⟨rule, _, symbol, rfl⟩ :=
+          mem_inspectRules_iff.mp inspect
+        simp [TwoTape.Rule.apply, inspectRule, bottomTarget, initialHistory,
+          Tape.move, Side.cons, Side.head, Side.tail, default_mark] at entryStep
+      · obtain ⟨rule, _, rfl⟩ := mem_restoreRules_iff.mp restore
+        simp [TwoTape.Rule.apply, restoreRule, bottomTarget] at entryStep
+
+/-- Proposition-level terminality of the open bottom target. -/
+theorem turnaroundMachine_bottomTarget_terminal
+    {source : SourceMachine Q Γ} (config : SourceConfig Q Γ) :
+    Terminal (turnaroundMachine source).step (bottomTarget config) :=
+  turnaroundMachine_step_bottomTarget config
+
+/-- The added bottom rule closes the reverse run back to a fresh forward
+checkpoint in one step. -/
+theorem returnMachine_step_bottomTarget
+    {source : SourceMachine Q Γ} (sourceDeterministic : source.TableDeterministic)
+    (config : SourceConfig Q Γ) :
+    (returnMachine source).step (bottomTarget config) =
+      some (checkpoint config) := by
+  apply step_eq_some_of_rule _
+    (TwoTape.FiniteMachine.tableDeterministic_forwardCompatible
+      (returnMachine_tableDeterministic sourceDeterministic))
+  · exact mem_returnMachine_iff.mpr <| Or.inr <|
+      mem_bottomRules_iff.mpr ⟨config.state, config.tape.head, rfl⟩
+  · exact bottomRule_applies config
 
 end Lecerf.Machine.TwoTape.HistoryCompiler
