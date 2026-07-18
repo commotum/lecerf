@@ -271,6 +271,15 @@ needed by the public executable layer and would inherit quotient/classical
 dependencies. A checked project bridge may be added later in a narrow audit
 leaf if a concrete TM translation consumes it.
 
+A separate phase-control compiler probe generated ordinary `normal`/`move`
+rule families and proved the forward compiled table deterministic from
+`TableDeterministic` plus `ReverseTableCompatible`. It also exposed an
+effectivity boundary: `Finset.univ.toList` is explicitly `noncomputable` in
+the pinned mathlib source. A public compiler must therefore accept a checked
+complete alphabet list or use a concrete `Fin n`; a bare `[Fintype Γ]` is not
+sufficient reduction data. The probe did not prove the two-microstep semantic
+correspondence and was not promoted into project code.
+
 ## Tentative Module Layout
 
 ```text

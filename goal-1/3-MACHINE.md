@@ -37,6 +37,10 @@
   checks the written symbol, restores the read symbol, and returns to the
   source state. This phased operation, not the printed tuple alone, is the
   local inverse theorem.
+- Stage 3 accepts this atomic semantic phase decomposition as the cleaner
+  equivalent theorem allowed by the project objective. Generating an ordinary
+  finite rule table with explicit micro-control states is recorded separately
+  and is not part of the current public claim.
 - Machine execution selects the first applicable rule. A syntactic table
   predicate rules out conflicting rules with the same source/read key.
   Reverse determinism is stated separately as uniqueness of successful
@@ -158,6 +162,13 @@ effective halting source for the history simulation.
   the cleaner equivalent theorem permitted by the project objective; a
   finite-alphabet syntactic phase compiler remains a later connection to
   Lecerf's presentation and must not be inferred from the current API.
+  A compiling diagnostic prototype confirmed the expected `normal`/`move`
+  rule families and table-determinism proof, but `Fintype Γ` enumeration via
+  `Finset.univ.toList` is explicitly noncomputable and the two-step theorem was
+  not completed. An effective version should accept a complete symbol list or
+  use a concrete `Fin n` alphabet.
+  `lake env lean /tmp/PhasePrototype.lean` passed with only unused-section-
+  variable linter warnings; the prototype is not imported project code.
 - `ReverseTableCompatible` is proved sufficient for backward compatibility.
   The exact theorem currently available is semantic
   `backwardCompatible_iff_backwardUnique`; the converse characterization by a

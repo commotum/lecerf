@@ -288,8 +288,11 @@ source.
 ### Completion Requirements
 
 - The configuration-step equation is executable and covered by focused tests.
-- A syntactic inverse theorem explicitly undoes execution under stated side
-  conditions; movement order is not hidden in notation.
+- A rule-level inverse theorem explicitly undoes execution under stated side
+  conditions; movement order is not hidden in notation. The implemented
+  atomic semantic phase decomposition is accepted as the cleaner equivalent
+  result, while generation of an ordinary finite microstate table is recorded
+  as an explicit later bridge.
 - Determinism and reversibility are separate predicates with proved
   consequences.
 - The source-machine translation is computable and semantics-preserving, or a
