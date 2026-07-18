@@ -1,4 +1,5 @@
 import Lecerf.Transition.API
+import Lecerf.Machine.API
 
 /-!
 # Lecerf
