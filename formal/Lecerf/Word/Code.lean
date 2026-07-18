@@ -178,6 +178,24 @@ theorem isIndexedCode_of :
     IsIndexedCode (FreeMonoid.of : I → Word I) := by
   simpa using (isIndexedCode_singleton_iff (id : I → I)).2 Function.injective_id
 
+/-- Substituting through an injective reindexing preserves indexed codehood. -/
+theorem IsIndexedCode.comp {c : I → Word A} (hc : IsIndexedCode c)
+    {f : J → I} (hf : Function.Injective f) :
+    IsIndexedCode (fun j ↦ c (f j)) := by
+  have lift_comp_map :
+      (FreeMonoid.lift c).comp (FreeMonoid.map f) =
+        FreeMonoid.lift (fun j ↦ c (f j)) := by
+    apply FreeMonoid.hom_eq
+    intro j
+    simp
+  intro x y hxy
+  apply (freeMonoidMap_injective_iff f).2 hf
+  apply hc
+  change ((FreeMonoid.lift c).comp (FreeMonoid.map f)) x =
+    ((FreeMonoid.lift c).comp (FreeMonoid.map f)) y
+  rw [lift_comp_map]
+  exact hxy
+
 end Word
 
 end Lecerf

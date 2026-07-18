@@ -38,6 +38,16 @@ theorem unaryFrame_succ (n : Nat) : unaryFrame (n + 1) = true :: unaryFrame n :=
 theorem unaryFrame_ne_nil (n : Nat) : unaryFrame n ≠ [] := by
   cases n <;> simp
 
+/-- List-library form of the recursive unary-frame definition. -/
+theorem unaryFrame_eq_replicate_append (n : Nat) :
+    unaryFrame n = List.replicate n true ++ [false] := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      change true :: unaryFrame n = List.replicate (n + 1) true ++ [false]
+      rw [ih, List.replicate_succ]
+      rfl
+
 /-- No unary frame is a proper prefix of another unary frame. -/
 theorem unaryFrame_isPrefix_iff {m n : Nat} :
     unaryFrame m <+: unaryFrame n ↔ m = n := by
@@ -64,6 +74,22 @@ theorem decodeUnaryFrame_unaryFrame (n : Nat) :
   | zero => rfl
   | succ n ih => simp [unaryFrame, decodeUnaryFrame, ih]
 
+/-- The exact unary decoder accepts precisely the canonical unary frames. -/
+theorem decodeUnaryFrame_eq_some_iff {bits : List Bool} {n : Nat} :
+    decodeUnaryFrame bits = some n ↔ bits = unaryFrame n := by
+  induction bits generalizing n with
+  | nil => simp [decodeUnaryFrame, unaryFrame_ne_nil n]
+  | cons bit bits ih =>
+      cases bit with
+      | false =>
+          cases bits with
+          | nil => cases n <;> simp [decodeUnaryFrame, unaryFrame]
+          | cons bit bits => cases n <;> simp [decodeUnaryFrame, unaryFrame]
+      | true =>
+          cases n with
+          | zero => simp [decodeUnaryFrame, unaryFrame]
+          | succ n => simp [decodeUnaryFrame, unaryFrame, ih]
+
 variable {C : Type u} [Primcodable C]
 
 /-- Bit-list representation of a configuration. -/
@@ -72,12 +98,20 @@ def encodeConfigBits (config : C) : List Bool :=
 
 /-- Decode exactly one configuration frame. -/
 def decodeConfigBits (bits : List Bool) : Option C :=
-  (decodeUnaryFrame bits).bind (@Encodable.decode C _)
+  (decodeUnaryFrame bits).bind (Encodable.decode₂ C)
 
 @[simp]
 theorem decodeConfigBits_encodeConfigBits (config : C) :
     decodeConfigBits (encodeConfigBits config) = some config := by
-  simp [decodeConfigBits, encodeConfigBits, Encodable.encodek]
+  simp [decodeConfigBits, encodeConfigBits]
+
+/-- Bit-list decoding succeeds exactly on the canonical frame of the returned
+configuration. -/
+theorem decodeConfigBits_eq_some_iff {bits : List Bool} {config : C} :
+    decodeConfigBits bits = some config ↔ bits = encodeConfigBits config := by
+  simp [decodeConfigBits, Option.bind_eq_some_iff,
+    decodeUnaryFrame_eq_some_iff, Encodable.decode₂_eq_some,
+    encodeConfigBits]
 
 /-- A configuration as a free-monoid word over `Bool`. -/
 def encodeConfig (config : C) : Word Bool :=
@@ -96,6 +130,18 @@ theorem encodeConfig_toList (config : C) :
 theorem decodeConfig_encodeConfig (config : C) :
     decodeConfig (encodeConfig config) = some config := by
   simp [decodeConfig, encodeConfig]
+
+/-- Word decoding succeeds exactly on the canonical encoding of the returned
+configuration. -/
+theorem decodeConfig_eq_some_iff {word : Word Bool} {config : C} :
+    decodeConfig word = some config ↔ word = encodeConfig config := by
+  rw [decodeConfig, decodeConfigBits_eq_some_iff]
+  constructor
+  · intro hbits
+    apply FreeMonoid.toList.injective
+    simpa [encodeConfig] using hbits
+  · rintro rfl
+    rfl
 
 /-- The configuration frame family is prefix-free. -/
 theorem encodeConfig_isPrefixFree :
@@ -131,7 +177,7 @@ def decodeConfigListBitsAux : Nat → List Bool → Option (List C)
   | count, [] => if count = 0 then some [] else none
   | count, true :: rest => decodeConfigListBitsAux (count + 1) rest
   | count, false :: rest =>
-      match @Encodable.decode C _ count with
+      match Encodable.decode₂ C count with
       | none => none
       | some config =>
           (decodeConfigListBitsAux 0 rest).map (config :: ·)
@@ -147,7 +193,7 @@ def decodeConfigListBits (bits : List Bool) : Option (List C) :=
 private theorem decodeConfigListBitsAux_unaryFrame_append
     (count n : Nat) (rest : List Bool) :
     decodeConfigListBitsAux (C := C) count (unaryFrame n ++ rest) =
-      match @Encodable.decode C _ (count + n) with
+      match Encodable.decode₂ C (count + n) with
       | none => none
       | some config =>
           (decodeConfigListBitsAux 0 rest).map (config :: ·) := by
@@ -162,7 +208,7 @@ private theorem decodeConfigListBitsAux_encode_append
     decodeConfigListBitsAux 0 (encodeConfigBits config ++ rest) =
       (decodeConfigListBitsAux 0 rest).map (config :: ·) := by
   rw [encodeConfigBits, decodeConfigListBitsAux_unaryFrame_append]
-  simp [Encodable.encodek]
+  simp
 
 @[simp]
 theorem decodeConfigListBits_encodeConfigListBits (configs : List C) :
@@ -180,6 +226,61 @@ theorem decodeConfigListBits_encodeConfigListBits (configs : List C) :
           some (config :: configs)
       simpa [decodeConfigListBits] using congrArg (Option.map (config :: ·)) ih
 
+private theorem decodeConfigListBitsAux_reconstruct
+    {count : Nat} {bits : List Bool} {configs : List C}
+    (hdecode : decodeConfigListBitsAux count bits = some configs) :
+    List.replicate count true ++ bits = encodeConfigListBits configs := by
+  induction bits generalizing count configs with
+  | nil =>
+      cases count with
+      | zero =>
+          have hconfigs : configs = [] := by
+            simpa [decodeConfigListBitsAux] using hdecode.symm
+          subst configs
+          rfl
+      | succ count =>
+          simp [decodeConfigListBitsAux] at hdecode
+  | cons bit bits ih =>
+      cases bit with
+      | true =>
+          have htail := ih
+            (count := count + 1) (configs := configs) hdecode
+          calc
+            List.replicate count true ++ true :: bits =
+                (List.replicate count true ++ [true]) ++ bits := by
+                  simp [List.append_assoc]
+            _ = List.replicate (count + 1) true ++ bits := by
+                  rw [List.replicate_succ']
+            _ = encodeConfigListBits configs := htail
+      | false =>
+          simp only [decodeConfigListBitsAux] at hdecode
+          cases hcode : Encodable.decode₂ C count with
+          | none => simp [hcode] at hdecode
+          | some config =>
+              rw [hcode] at hdecode
+              rcases Option.map_eq_some_iff.mp hdecode with
+                ⟨restConfigs, hrest, rfl⟩
+              have hrestBits := ih
+                (count := 0) (configs := restConfigs) hrest
+              have hcount : Encodable.encode config = count :=
+                Encodable.decode₂_eq_some.mp hcode
+              simp only [List.replicate_zero, List.nil_append] at hrestBits
+              simp [encodeConfigListBits, encodeConfigBits,
+                unaryFrame_eq_replicate_append, hcount, hrestBits]
+
+/-- The concatenation parser accepts exactly canonical concatenations and
+reconstructs every accepted bit list. -/
+theorem decodeConfigListBits_eq_some_iff
+    {bits : List Bool} {configs : List C} :
+    decodeConfigListBits bits = some configs ↔
+      bits = encodeConfigListBits configs := by
+  constructor
+  · intro hdecode
+    simpa [decodeConfigListBits] using
+      (decodeConfigListBitsAux_reconstruct (C := C) hdecode)
+  · rintro rfl
+    exact decodeConfigListBits_encodeConfigListBits configs
+
 /-- Word-valued concatenation of configuration frames. -/
 def encodeConfigs (configs : List C) : Word Bool :=
   FreeMonoid.ofList (encodeConfigListBits configs)
@@ -192,6 +293,17 @@ def decodeConfigs (word : Word Bool) : Option (List C) :=
 theorem decodeConfigs_encodeConfigs (configs : List C) :
     decodeConfigs (encodeConfigs configs) = some configs := by
   simp [decodeConfigs, encodeConfigs]
+
+/-- Word-level exactness of the concatenation codec. -/
+theorem decodeConfigs_eq_some_iff {word : Word Bool} {configs : List C} :
+    decodeConfigs word = some configs ↔ word = encodeConfigs configs := by
+  rw [decodeConfigs, decodeConfigListBits_eq_some_iff]
+  constructor
+  · intro hbits
+    apply FreeMonoid.toList.injective
+    simpa [encodeConfigs] using hbits
+  · rintro rfl
+    rfl
 
 /-- Concatenating the executable frames agrees with the homomorphic extension
 of the indexed configuration code. -/
