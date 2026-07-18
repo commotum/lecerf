@@ -58,6 +58,12 @@ def ReversePairValid (first second : Rule Q Γ) : Prop :=
 private instance forwardPairValidRefl : Std.Refl (@ForwardPairValid Q Γ) where
   refl _ := Or.inl rfl
 
+private instance forwardPairValidDecidable :
+    DecidableRel (@ForwardPairValid Q Γ) :=
+  fun _ _ => by
+    unfold ForwardPairValid
+    infer_instance
+
 private instance forwardPairValidSymm : Std.Symm (@ForwardPairValid Q Γ) where
   symm first second := by
     rintro (equal | sourceNe | readNe)
@@ -67,6 +73,12 @@ private instance forwardPairValidSymm : Std.Symm (@ForwardPairValid Q Γ) where
 
 private instance reversePairValidRefl : Std.Refl (@ReversePairValid Q Γ) where
   refl _ := Or.inl rfl
+
+private instance reversePairValidDecidable :
+    DecidableRel (@ReversePairValid Q Γ) :=
+  fun _ _ => by
+    unfold ReversePairValid
+    infer_instance
 
 private instance reversePairValidSymm : Std.Symm (@ReversePairValid Q Γ) where
   symm first second := by
@@ -82,8 +94,11 @@ def SyntacticallyReversible (machine : FiniteMachine Q Γ) : Prop :=
     machine.rules.Pairwise ReversePairValid
 
 instance (machine : FiniteMachine Q Γ) : Decidable machine.SyntacticallyReversible :=
-  inferInstance
+  by
+    unfold SyntacticallyReversible
+    infer_instance
 
+omit [Inhabited Γ] [Primcodable Q] [Primcodable Γ] in
 theorem pairwise_forwardPairValid_iff_tableDeterministic
     (machine : FiniteMachine Q Γ) :
     machine.rules.Pairwise ForwardPairValid ↔ machine.TableDeterministic := by
@@ -105,6 +120,7 @@ theorem pairwise_forwardPairValid_iff_tableDeterministic
       · exact Or.inr (Or.inr readEq)
     · exact Or.inr (Or.inl sourceEq)
 
+omit [Inhabited Γ] [Primcodable Q] [Primcodable Γ] [DecidableEq Γ] in
 theorem pairwise_reversePairValid_iff_reverseTableCompatible
     (machine : FiniteMachine Q Γ) :
     machine.rules.Pairwise ReversePairValid ↔
@@ -123,6 +139,7 @@ theorem pairwise_reversePairValid_iff_reverseTableCompatible
     · exact Or.inr (Or.inr (compatible firstMem secondMem rulesNe targetEq))
     · exact Or.inr (Or.inl targetEq)
 
+omit [Inhabited Γ] [Primcodable Q] [Primcodable Γ] in
 theorem syntacticallyReversible_iff (machine : FiniteMachine Q Γ) :
     machine.SyntacticallyReversible ↔
       machine.TableDeterministic ∧ machine.ReverseTableCompatible := by
@@ -130,6 +147,7 @@ theorem syntacticallyReversible_iff (machine : FiniteMachine Q Γ) :
     (pairwise_forwardPairValid_iff_tableDeterministic machine)
     (pairwise_reversePairValid_iff_reverseTableCompatible machine)
 
+omit [Primcodable Q] [Primcodable Γ] in
 /-- The finite syntactic certificate implies the semantic whole-machine
 reversibility predicate. -/
 theorem SyntacticallyReversible.reversible
@@ -163,9 +181,10 @@ private theorem pairwise_primrec
     · intro pairwise first firstMem second secondMem
       by_cases equal : second = first
       · subst first
-        exact refl_of _
+        exact refl_of R second
       · exact pairwise.forall secondMem firstMem equal
 
+omit [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ] in
 private theorem forwardPairValid_primrec :
     PrimrecRel (@ForwardPairValid Q Γ) := by
   have ruleEq : PrimrecRel fun first second : Rule Q Γ => first = second :=
@@ -180,9 +199,13 @@ private theorem forwardPairValid_primrec :
     (Primrec.eq.comp₂
       (Rule.read_primrec.comp₂ Primrec₂.left)
       (Rule.read_primrec.comp₂ Primrec₂.right)).not
-  exact (ruleEq.or (sourceNe.or readNe)).of_eq fun _ _ => by
-    simp [ForwardPairValid, or_assoc]
+  exact (ruleEq.or (sourceNe.or readNe)).of_eq fun
+    | ⟨first, second⟩ => by
+        change (first = second ∨ first.source ≠ second.source ∨
+          first.read ≠ second.read) ↔ ForwardPairValid first second
+        rfl
 
+omit [Inhabited Γ] [DecidableEq Q] [DecidableEq Γ] in
 private theorem reversePairValid_primrec :
     PrimrecRel (@ReversePairValid Q Γ) := by
   have ruleEq : PrimrecRel fun first second : Rule Q Γ => first = second :=
@@ -202,9 +225,14 @@ private theorem reversePairValid_primrec :
     (Primrec.eq.comp₂
       (Rule.write_primrec.comp₂ Primrec₂.left)
       (Rule.write_primrec.comp₂ Primrec₂.right)).not
-  exact (ruleEq.or (targetNe.or (moveEq.and writeNe))).of_eq fun _ _ => by
-    simp [ReversePairValid, or_assoc]
+  exact (ruleEq.or (targetNe.or (moveEq.and writeNe))).of_eq fun
+    | ⟨first, second⟩ => by
+        change (first = second ∨ first.target ≠ second.target ∨
+          (first.move = second.move ∧ first.write ≠ second.write)) ↔
+            ReversePairValid first second
+        rfl
 
+omit [Inhabited Γ] in
 /-- The finite syntactic validity predicate is primitive recursive uniformly
 in the raw rule-table description. -/
 theorem syntacticallyReversible_primrec :
