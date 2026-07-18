@@ -145,10 +145,6 @@ theorem step_erases (config : Config State Symbol) :
       Turing.TM0.step ambientMachine (eraseConfig config) := by
   rw [machine, Table.step_compile_eq delta Finset.univ.toList Finset.univ.toList
     config (by simp) (by simp)]
-  change Option.map eraseConfig
-      ((delta config.state config.tape.head).map fun output =>
-        (⟨output.1,
-          config.tape.act output.2.1 output.2.2⟩ : Config State Symbol)) = _
   unfold delta
   split
   next h =>
@@ -165,11 +161,16 @@ theorem step_erases (config : Config State Symbol) :
 loses no configuration information. -/
 theorem eraseConfig_injective : Function.Injective eraseConfig := by
   intro first second equal
-  apply Config.ext
-  · apply Subtype.ext
-    exact congrArg Turing.TM0.Cfg.q equal
-  · apply TapeBridge.tapeEquiv.symm.injective
-    exact congrArg Turing.TM0.Cfg.Tape equal
+  rcases first with ⟨firstState, firstTape⟩
+  rcases second with ⟨secondState, secondTape⟩
+  have stateEqual : firstState = secondState :=
+    Subtype.ext (congrArg Turing.TM0.Cfg.q equal)
+  have tapeEqual : firstTape = secondTape :=
+    TapeBridge.tapeEquiv.symm.injective
+      (congrArg Turing.TM0.Cfg.Tape equal)
+  cases stateEqual
+  cases tapeEqual
+  rfl
 
 /-- Exact one-step correspondence packages as mathlib's refinement relation. -/
 theorem machine_respects_ambient :
@@ -186,7 +187,7 @@ theorem machine_respects_ambient :
   | some next =>
       have exactStep := step_erases config
       rw [localStep] at exactStep
-      exact TransGen.single exactStep.symm
+      exact Relation.TransGen.single exactStep.symm
 
 /-- The finite source table is structurally deterministic. -/
 theorem machine_tableDeterministic : machine.TableDeterministic := by
@@ -194,8 +195,7 @@ theorem machine_tableDeterministic : machine.TableDeterministic := by
 
 /-- Tape input supplied to the fixed TM1/TM0 translation. -/
 def translatedInput (input : List Nat) : List Symbol :=
-  Turing.TM2to1.trInit Turing.PartrecToTM2.K'
-    Turing.PartrecToTM2.Γ' Turing.PartrecToTM2.K'.main
+  Turing.TM2to1.trInit Turing.PartrecToTM2.K'.main
     (Turing.PartrecToTM2.trList input)
 
 /-- The partial-recursive source configuration is exactly mathlib's generic
@@ -268,9 +268,7 @@ theorem erase_initial (input : List Nat) :
     eraseConfig (initial input) =
       (Turing.TM0.init (translatedInput input) :
         Turing.TM0.Cfg Symbol AmbientState) := by
-  apply Turing.TM0.Cfg.ext
-  · rfl
-  · simp [initial, eraseConfig, Turing.TM0.init]
+  simp [initial, initialState, eraseConfig, Turing.TM0.init]
 
 /-- Local conventional-table evaluation and the supported TM0 program have
 the same definedness from translated inputs. -/

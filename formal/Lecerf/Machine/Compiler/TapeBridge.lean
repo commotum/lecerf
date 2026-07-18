@@ -146,6 +146,7 @@ def tapeToLocal (tape : Turing.Tape Γ) : Tape Γ :=
 def tapeToMathlib (tape : Tape Γ) : Turing.Tape Γ :=
   ⟨tape.head, sideToBlank tape.left, sideToBlank tape.right⟩
 
+omit [DecidableEq Γ] in
 @[simp]
 theorem tapeToMathlib_head (tape : Tape Γ) :
     (tapeToMathlib tape).head = tape.head :=
@@ -174,6 +175,7 @@ theorem tapeToLocal_write (symbol : Γ) (tape : Turing.Tape Γ) :
   cases tape
   rfl
 
+omit [DecidableEq Γ] in
 @[simp]
 theorem tapeToMathlib_write (symbol : Γ) (tape : Tape Γ) :
     tapeToMathlib (Tape.write symbol tape) =
