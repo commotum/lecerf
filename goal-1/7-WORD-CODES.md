@@ -65,7 +65,7 @@ constructions, generated submonoids, code morphism classes, intrinsic code
 isomorphisms, the paper's weaker epimorphism notion, and partial positive
 iteration.
 
-## Detailed Implementation Plan
+## Implemented Direction
 
 1. Add `Word/Code.lean` with `Word`, `IsIndexedCode`, the exact bridge to
    `InformationTheory.UniquelyDecodable`, and consequences such as generator

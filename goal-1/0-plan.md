@@ -280,7 +280,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 Turn the French source, English transcription, and relevant mathlib APIs into
 an explicit formal specification without proving the substantive results.
 
-### Implemented Direction
+### Detailed Implementation Plan
 
 - Compare every mathematical statement in the English transcription against
   the French transcription and scans; assign stable claim identifiers.
@@ -467,7 +467,7 @@ reductions.
 Create a precise reusable API for free-monoid words, uniquely decodable codes,
 prefix/suffix codes, code-generated submonoids, and the paper's map classes.
 
-### Detailed Implementation Plan
+### Implemented Direction
 
 - Words use `FreeMonoid`; lists are accessed only through its checked API.
 - Indexed codehood is injectivity of `FreeMonoid.lift`. Its exact bridge to
