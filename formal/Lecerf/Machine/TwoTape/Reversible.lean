@@ -191,6 +191,7 @@ instance (machine : FiniteMachine Q Γ₁ Γ₂) :
   unfold SyntacticallyReversible
   infer_instance
 
+omit [Inhabited Γ₁] [Inhabited Γ₂] in
 theorem pairwise_forwardPairValid_iff_tableDeterministic
     (machine : FiniteMachine Q Γ₁ Γ₂) :
     machine.rules.Pairwise ForwardPairValid ↔ machine.TableDeterministic := by
@@ -406,6 +407,16 @@ theorem backwardCompatible_iff_backwardUnique (machine : FiniteMachine Q Γ₁ �
     have secondMachineStep :=
       applyRules_eq_some_of_mem_of_compatible forward secondMem secondRuleStep
     exact unique firstMachineStep secondMachineStep
+
+/-- Incoming separation plus deterministic forward lookup gives successful
+predecessor uniqueness for the executable table transition. -/
+theorem OutputSeparated.backwardUnique
+    {machine : FiniteMachine Q Γ₁ Γ₂}
+    (separated : machine.OutputSeparated)
+    (deterministic : machine.TableDeterministic) :
+    BackwardUnique machine.step :=
+  (machine.backwardCompatible_iff_backwardUnique deterministic).mp
+    (outputSeparated_backwardCompatible separated)
 
 /-- Semantic whole-machine reversibility: deterministic forward lookup and
 unique successful predecessors. -/

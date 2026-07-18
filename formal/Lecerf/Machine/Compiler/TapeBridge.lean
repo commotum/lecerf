@@ -115,6 +115,23 @@ theorem blankToSide_tail (blank : Turing.ListBlank Γ) :
   rw [← blank.cons_head_tail]
   simp only [Turing.ListBlank.tail_cons, blankToSide_cons, Side.tail_cons]
 
+@[simp]
+theorem sideToBlank_head (side : Side Γ) :
+    (sideToBlank side).head = Side.head side := by
+  simpa using (blankToSide_head (sideToBlank side)).symm
+
+@[simp]
+theorem sideToBlank_cons (head : Γ) (side : Side Γ) :
+    sideToBlank (Side.cons head side) = (sideToBlank side).cons head := by
+  apply sideEquiv.injective
+  simp
+
+@[simp]
+theorem sideToBlank_tail (side : Side Γ) :
+    sideToBlank (Side.tail side) = (sideToBlank side).tail := by
+  apply sideEquiv.injective
+  simp
+
 /-- Canonicalize both sides of a mathlib tape. -/
 def tapeToLocal (tape : Turing.Tape Γ) : Tape Γ :=
   ⟨tape.head, blankToSide tape.left, blankToSide tape.right⟩
@@ -131,8 +148,25 @@ def tapeEquiv : Turing.Tape Γ ≃ Tape Γ where
   right_inv := by intro tape; cases tape; simp [tapeToLocal, tapeToMathlib]
 
 @[simp]
+theorem tapeToLocal_tapeToMathlib (tape : Tape Γ) :
+    tapeToLocal (tapeToMathlib tape) = tape :=
+  tapeEquiv.apply_symm_apply tape
+
+@[simp]
+theorem tapeToMathlib_tapeToLocal (tape : Turing.Tape Γ) :
+    tapeToMathlib (tapeToLocal tape) = tape :=
+  tapeEquiv.symm_apply_apply tape
+
+@[simp]
 theorem tapeToLocal_write (symbol : Γ) (tape : Turing.Tape Γ) :
     tapeToLocal (tape.write symbol) = Tape.write symbol (tapeToLocal tape) := by
+  cases tape
+  rfl
+
+@[simp]
+theorem tapeToMathlib_write (symbol : Γ) (tape : Tape Γ) :
+    tapeToMathlib (Tape.write symbol tape) =
+      (tapeToMathlib tape).write symbol := by
   cases tape
   rfl
 
@@ -144,10 +178,24 @@ theorem tapeToLocal_move_left (tape : Turing.Tape Γ) :
     blankToSide_head, blankToSide_tail]
 
 @[simp]
+theorem tapeToMathlib_move_left (tape : Tape Γ) :
+    tapeToMathlib (Tape.move .left tape) =
+      (tapeToMathlib tape).move Turing.Dir.left := by
+  cases tape
+  simp [tapeToMathlib, Tape.move, Turing.Tape.move]
+
+@[simp]
 theorem tapeToLocal_move_right (tape : Turing.Tape Γ) :
     tapeToLocal (tape.move Turing.Dir.right) = Tape.move .right (tapeToLocal tape) := by
   cases tape
   simp [tapeToLocal, Turing.Tape.move, Tape.move,
     blankToSide_head, blankToSide_tail]
+
+@[simp]
+theorem tapeToMathlib_move_right (tape : Tape Γ) :
+    tapeToMathlib (Tape.move .right tape) =
+      (tapeToMathlib tape).move Turing.Dir.right := by
+  cases tape
+  simp [tapeToMathlib, Tape.move, Turing.Tape.move]
 
 end Lecerf.Machine.Compiler.TapeBridge
