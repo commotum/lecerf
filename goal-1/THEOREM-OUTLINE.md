@@ -1,8 +1,8 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 through Stage 6 declarations are identified as implemented below.
-The word, code-encoding, and iterate-problem layers remain proposed Lean
-surfaces and may be refined when implementation evidence requires it.
+Stage 2 through Stage 7 declarations are identified as implemented below.
+The machine-step code encoding and iterate-problem layers remain proposed
+Lean surfaces and may be refined when implementation evidence requires it.
 
 ## 1. Partial Transition Systems (implemented)
 
@@ -657,62 +657,192 @@ not yet state the same decision problems for the earlier one-tape
 `FiniteMachine`, and they do not yet identify the compiler with Lecerf's
 historical compact marker encoding.
 
-## 6. Words, Codes, and Code Maps
+## 6. Words, Codes, and Code Maps (implemented)
 
-Use:
+Public modules:
 
-```lean
-abbrev Word (A : Type u) := FreeMonoid A
-
-def IsIndexedCode (c : I → Word A) : Prop :=
-  Function.Injective (FreeMonoid.lift c)
+```text
+Lecerf.Word.Code
+Lecerf.Word.Prefix
+Lecerf.Word.CodeMorphism
+Lecerf.Word.API
 ```
 
-Prove the bridge to mathlib's set predicate, accounting for lost indices:
+`Lecerf.Word.Audit` is a non-public diagnostic leaf.
+
+The checked indexed-code core is:
 
 ```lean
+abbrev Lecerf.Word (A : Type u) := FreeMonoid A
+
+def Lecerf.Word.IsIndexedCode (c : I → Word A) : Prop :=
+  Function.Injective (FreeMonoid.lift c)
+
+def Lecerf.Word.codewordSet (c : I → Word A) : Set (List A) :=
+  Set.range fun i ↦ (c i).toList
+
 isIndexedCode_iff_injective_and_uniquelyDecodable :
   IsIndexedCode c ↔
     Function.Injective c ∧
       InformationTheory.UniquelyDecodable
-        (Set.range fun i => (c i).toList)
+        (Set.range fun i ↦ (c i).toList)
 ```
 
-The exact orientation/namespace can change after compiling the proof, but the
-extra generator injectivity cannot be omitted.
-
-Prefix/suffix predicates use the displayed equations in §1d:
+The generator-injectivity conjunct is necessary: the set predicate forgets
+duplicate indices. Checked supporting declarations include:
 
 ```text
-PrefixFree C: x,y ∈ C and x is a prefix of y imply x = y
-SuffixFree C: x,y ∈ C and x is a suffix of y imply x = y
+IsIndexedCode.injective
+IsIndexedCode.ne_one
+IsIndexedCode.uniquelyDecodable
+isIndexedCode_of_injective_of_uniquelyDecodable
+isIndexedCode_singleton_iff
+isIndexedCode_of
 ```
 
-Exclude the empty word where needed; a naive pairwise predicate alone admits
-the singleton empty code. Prove both fresh-marker extension lemmas with
-freshness meaning that the marker occurs in no component word.
+Thus duplicate indices and empty codewords are rejected by the indexed
+predicate rather than being hidden by the set representation.
 
-Map classes remain distinct:
-
-- `MonoidHom`: a total multiplicative function;
-- `IsIndexedCode`: injectivity of the generator-induced homomorphism;
-- `CodeIso`: a `MulEquiv` between source/target generated submonoids, with a
-  multiplicative ambient partial-equivalence view;
-- `PaperCodeEpi`: a source code, target code, and generator selector whose
-  values may repeat and need not cover the target code.
-
-For a same-ambient-type partial equivalence:
+The prefix/suffix layer exposes:
 
 ```lean
-def PEquiv.iterate (θ : α ≃. α) : Nat → α ≃. α
-  | 0     => PEquiv.refl α
-  | n + 1 => (iterate θ n).trans θ
+def FreshFor (marker : A) (c : I → Word A) : Prop
+def IsPrefixFree (c : I → Word A) : Prop
+def IsSuffixFree (c : I → Word A) : Prop
+def IsPrefixCode (c : I → Word A) : Prop
+def IsSuffixCode (c : I → Word A) : Prop
+
+IsPrefixCode.isIndexedCode
+IsSuffixCode.isIndexedCode
+IsIndexedCode.reverse
+isIndexedCode_reverse_iff
 ```
 
-Prove that its forward application is repeated `Option.bind`. No undefined
-application is totalized as identity or an absorbing value.
+`IsPrefixCode` and `IsSuffixCode` pair their pairwise condition with
+`∀ i, c i ≠ 1`; a singleton empty family is therefore not promoted to a code.
+The checked fresh-marker results are:
 
-## 7. Machine-Step Encoding by Codes
+```lean
+isIndexedCode_prependMarkerExtension_of_freshFor_left
+isIndexedCode_appendMarkerExtension_of_freshFor_left
+isIndexedCode_prependMarkerExtension
+isIndexedCode_appendMarkerExtension
+```
+
+The sharp prepend theorem assumes `IsIndexedCode c`, `IsPrefixFree k`, and
+`FreshFor marker c`; its append dual uses `IsSuffixFree k`. The final two
+paper-shaped theorems additionally accept `FreshFor marker k`, documenting
+that the paper's extra auxiliary-family freshness is sufficient but
+mathematically redundant.
+
+Generated submonoids and map classes are separate checked objects:
+
+```lean
+def generated (codewords : I → Word A) : Submonoid (Word A) :=
+  Submonoid.closure (Set.range codewords)
+
+def generator (codewords : I → Word A) (i : I) : generated codewords
+
+noncomputable def encodingEquiv (codewords : I → Word A)
+    (code : IsIndexedCode codewords) :
+    Word I ≃* generated codewords
+
+structure InjectiveMorphism (M N) [Monoid M] [Monoid N] where
+  toMonoidHom : M →* N
+  injective' : Function.Injective toMonoidHom
+
+structure CodeIso (A : Type u) (I : Type v) where
+  source : I → Word A
+  target : I → Word A
+  sourceCode : IsIndexedCode source
+  targetCode : IsIndexedCode target
+  toMulEquiv : generated source ≃* generated target
+  map_generator : ∀ i,
+    toMulEquiv (generator source i) = generator target i
+
+structure PaperCodeEpi (A : Type u) (I : Type v) (J : Type w) where
+  source : I → Word A
+  target : J → Word A
+  selector : I → J
+  sourceCode : IsIndexedCode source
+  targetCode : IsIndexedCode target
+  toMonoidHom : generated source →* generated target
+  map_generator : ∀ i,
+    toMonoidHom (generator source i) = generator target (selector i)
+```
+
+`MonoidHom`, `InjectiveMorphism`, `CodeIso`, and `PaperCodeEpi` are not
+aliases. In particular, `PaperCodeEpi.selector` need not be injective or
+surjective; the audit constructs one that repeats a selected target and omits
+another. `CodeIso.ofCodes` canonically constructs the intrinsic equivalence
+from two equally indexed codes, while `CodeIso.toPaperCodeEpi` forgets to the
+paper-specific class with identity selector.
+
+The semantic ambient action is:
+
+```lean
+noncomputable def CodeIso.toPEquiv (iso : CodeIso A I) : Word A ≃. Word A
+
+CodeIso.toPEquiv_isSome_iff :
+  (iso.toPEquiv word).isSome ↔ word ∈ generated iso.source
+
+CodeIso.toPEquiv_symm_isSome_iff :
+  (iso.toPEquiv.symm word).isSome ↔ word ∈ generated iso.target
+
+CodeIso.toPEquiv_generator :
+  iso.toPEquiv (iso.source i) = some (iso.target i)
+```
+
+The file also proves the exact in-domain/out-of-domain equations, inverse
+equations, identity equation, and multiplication law. `encodingEquiv`, both
+`ofCodes` constructors, and `CodeIso.toPEquiv` are intentionally
+noncomputable: a bare semantic code proof does not provide an executable
+decoder or generated-submonoid membership test. Stage 8 must supply finite
+syntax, executable validation, membership, decoding, and interpretation
+before this layer can appear in computability data.
+
+Partial iteration is project-local under `Lecerf.PEquiv`:
+
+```lean
+def iterate (theta : X ≃. X) : Nat → X ≃. X
+  | 0 => PEquiv.refl X
+  | n + 1 => (iterate theta n).trans theta
+
+iterate_succ_apply :
+  iterate theta (n + 1) x = (iterate theta n x).bind theta
+
+iterate_add :
+  iterate theta (m + n) = (iterate theta m).trans (iterate theta n)
+
+iterate_symm :
+  (iterate theta n).symm = iterate theta.symm n
+
+iterate_symm_eq_some_iff :
+  iterate theta.symm n target = some source ↔
+    iterate theta n source = some target
+
+def positiveIterate (theta : X ≃. X) (k : Nat) : X ≃. X :=
+  iterate theta (k + 1)
+
+def PositiveIterate (theta : X ≃. X) (source target : X) : Prop :=
+  ∃ k, positiveIterate theta k source = some target
+```
+
+`DefinedAt`, `PositiveDefinedAt`, and `PositiveDefined` keep supplied-exponent
+and existential definedness separate. `iterate_add_eq_none_of_eq_none` proves
+that undefinedness propagates; `positiveIterate_zero` means one application,
+not exponent zero. No undefined application is totalized as identity or an
+absorbing value.
+
+The focused builds passed with 522 jobs for `Word.Code`, 526 for
+`Word.Prefix`, 693 for `Word.CodeMorphism`, and 696 for `Word.API` plus the
+audit. The adjacent audit/root build passed with 914 jobs and the full build
+with 913. The audit reports `[propext, Quot.sound]` for the code bridge and
+pure iteration declarations, and additionally `Classical.choice` for the two
+paper-shaped marker theorems and semantic ambient generator equation. No
+project-specific axiom is used.
+
+## 7. Machine-Step Encoding by Codes (Stage 8, unstarted)
 
 Construct a finite alphabet containing tape symbols, control/head markers,
 boundaries, phase/history symbols, and fresh separators. Proposed public
@@ -721,7 +851,7 @@ surface:
 ```lean
 encodeConfig : Config → Word Alphabet
 decodeConfig : Word Alphabet → Option Config
-stepCodeIso  : CodeIso Alphabet
+stepCodeIso  : CodeIso Alphabet RuleIndex
 
 decode_encode : decodeConfig (encodeConfig c) = some c
 
@@ -730,17 +860,18 @@ stepCodeIso_apply_iff :
     stepCodeIso.toPEquiv (encodeConfig c) = some (encodeConfig c')
 
 iterate_encode_iff_reaches :
-  (stepCodeIso.toPEquiv.iterate n) (encodeConfig c) =
+  Lecerf.PEquiv.iterate stepCodeIso.toPEquiv n (encodeConfig c) =
       some (encodeConfig c') ↔
     exactSteps machine.step n c c'
 ```
 
-The reverse implication is essential: no malformed ambient word may
+No declaration in this section is implemented yet. The reverse implication is
+essential: no malformed ambient word may
 masquerade as an encoded checkpoint. Every rule family, boundary case,
 stationary move, and tape-extension case must be covered. A later comparison
 theorem may relate this cleaner encoding to Lecerf's `α/ω/β` relations.
 
-## 8. Iterate Decision Problems
+## 8. Iterate Decision Problems (Stage 9, unstarted)
 
 Actual inputs are finite code-isomorphism descriptions with executable
 validation and interpretation, not raw `PEquiv` functions. The semantic
@@ -750,12 +881,12 @@ predicates are:
 def PositiveFixedOrbitYes (x : FixedOrbitInput) : Prop :=
   x.iso.Valid ∧
     ∃ k : Nat,
-      (x.iso.toPEquiv.iterate (k + 1)) x.word = some x.word
+      Lecerf.PEquiv.positiveIterate x.iso.toPEquiv k x.word = some x.word
 
 def DistinctOrbitYes (x : DistinctOrbitInput) : Prop :=
   x.iso.Valid ∧ x.start ≠ x.target ∧
     ∃ k : Nat,
-      (x.iso.toPEquiv.iterate (k + 1)) x.start = some x.target
+      Lecerf.PEquiv.positiveIterate x.iso.toPEquiv k x.start = some x.target
 ```
 
 This fixes the paper's orientation: in `w₁ = θⁿ(w₂)`, `w₂` is the start and
@@ -772,7 +903,8 @@ positiveFixedOrbit_not_computable
 distinctOrbit_not_computable
 ```
 
-Semidecidability requires an executable finite description and decidable word
+No declaration in this section is implemented yet. Semidecidability requires
+an executable finite description and decidable word
 equality. It does not imply a total witness finder or a decision procedure for
 no-instances.
 

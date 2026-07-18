@@ -61,8 +61,10 @@ Checked declarations:
 Decision: use `PEquiv σ σ` as the carrier of a generic reversible step, with
 named `next`/`prev` wrappers if the API benefits. It does not represent finite
 machine syntax, code multiplicativity, or a syntactic inverse instruction.
-Mathlib has no checked `PEquiv` power API, so define partial iteration locally
-and prove its forward map agrees with repeated `Option.bind`.
+Mathlib has no checked `PEquiv` power API. Stage 7 therefore defines
+`Lecerf.PEquiv.iterate` locally and proves that successor application is
+literal repeated `Option.bind`, together with addition, inverse, definedness,
+and positive-exponent laws.
 
 ### Stage 2 realized transition boundary
 
@@ -229,20 +231,85 @@ Checked declarations:
   flattened lists of codewords; its API includes exclusion of the empty word
   and injectivity consequences.
 
-Decision: define the paper-facing indexed predicate
+Stage 7 implements the paper-facing indexed predicate
 
 ```text
 IsIndexedCode (c : I → FreeMonoid A) :=
   Function.Injective (FreeMonoid.lift c)
 ```
 
-and prove its relation to
-`InformationTheory.UniquelyDecodable (Set.range fun i => (c i).toList)` plus
-injectivity of `c`. The additional injectivity is essential because a set
-forgets duplicate indices. Use `MulEquiv` between generated submonoids for the
-intrinsic mathematical isomorphism and an explicitly law-carrying ambient
-`PEquiv` for application. Avoid `Submonoid.equivMapOfInjective` in executable
-reduction data because it is noncomputable.
+with the exact checked bridge
+
+```lean
+isIndexedCode_iff_injective_and_uniquelyDecodable :
+  IsIndexedCode c ↔
+    Function.Injective c ∧
+      InformationTheory.UniquelyDecodable
+        (Set.range fun i ↦ (c i).toList)
+```
+
+The additional generator injectivity is essential because a set forgets
+duplicate indices. `IsIndexedCode.injective`, `.ne_one`, and
+`.uniquelyDecodable` expose the consequences separately;
+`isIndexedCode_of_injective_of_uniquelyDecodable`,
+`isIndexedCode_singleton_iff`, and `isIndexedCode_of` provide checked
+constructors.
+
+`Lecerf.Word.Prefix` implements `FreshFor`, `IsPrefixFree`, `IsSuffixFree`,
+`IsPrefixCode`, and `IsSuffixCode`. Prefix/suffix codehood includes explicit
+nonempty-generator hypotheses, so the pairwise predicates are not silently
+treated as codes when the sole word is empty. The checked marker theorems are:
+
+```text
+isIndexedCode_prependMarkerExtension_of_freshFor_left
+isIndexedCode_appendMarkerExtension_of_freshFor_left
+isIndexedCode_prependMarkerExtension
+isIndexedCode_appendMarkerExtension
+```
+
+The sharp variants require freshness only for the already-coded family `c`
+and prefix- or suffix-freeness of the auxiliary family `k`. The final two
+mirror the paper's stronger hypotheses by also accepting `FreshFor marker k`;
+their proofs record that this extra freshness is redundant.
+
+`Lecerf.Word.CodeMorphism` realizes the map boundaries rather than identifying
+them:
+
+- `generated c := Submonoid.closure (Set.range c)` and `generator c i`
+  expose the intrinsic generated submonoid;
+- `InjectiveMorphism M N` bundles a `MonoidHom` plus injectivity, but does not
+  claim surjectivity;
+- `CodeIso A I` stores source and target indexed codes, a `MulEquiv` between
+  their generated submonoids, and the generator correspondence law;
+- `PaperCodeEpi A I J` stores genuine source and target codes and an arbitrary
+  selector `I → J`; repeated selected targets and omitted target generators
+  are permitted; and
+- `CodeIso.toPEquiv` exposes the same-alphabet ambient action exactly on
+  `generated iso.source`, with its inverse exactly on `generated iso.target`.
+
+`encodingEquiv`, `CodeIso.ofCodes`, `PaperCodeEpi.ofCodes`, and
+`CodeIso.toPEquiv` are deliberately noncomputable semantic constructions:
+arbitrary generated-submonoid membership and decoding from a bare code proof
+need classical choice. Their domain, inverse-domain, generator, identity, and
+multiplication laws are nevertheless proved. Stage 8 must introduce an
+executable finite code-isomorphism description, validation procedure,
+membership/decoding algorithm, and semantic interpretation; this semantic
+`PEquiv` must not be used as raw reduction data.
+
+The project-local iteration surface is `Lecerf.PEquiv`:
+
+```text
+iterate, iterate_zero, iterate_succ, iterate_succ_apply, iterate_succ_left
+iterate_add, iterate_add_apply
+iterate_symm, iterate_symm_eq_some_iff
+DefinedAt, definedAt_iff_exists, definedAt_succ_iff
+positiveIterate, PositiveDefinedAt, PositiveDefined, PositiveIterate
+```
+
+Here `positiveIterate θ k = iterate θ (k + 1)` is itself a `PEquiv`, while
+`PositiveIterate θ source target` is the existential reachability predicate.
+Undefined intermediates propagate through `Option.bind`; zero iteration is
+total reflexivity and is not substituted for a positive witness.
 
 ### `Primcodable` constraints
 
@@ -498,6 +565,7 @@ formal/
       Code.lean
       Prefix.lean
       CodeMorphism.lean
+      Audit.lean
       API.lean
     Encoding/
       MachineStep.lean
@@ -607,3 +675,37 @@ On 2026-07-17, the focused
 jobs. Its representative axiom output contains only `propext`,
 `Classical.choice`, and `Quot.sound`. A subsequent full `lake build` passed
 with 893 jobs.
+
+Stage-7 realized dependency additions:
+
+```text
+Word/Code              -> FreeMonoid/Basic, InformationTheory/UniquelyDecodable
+Word/Prefix            -> Word/Code, Data/List/Infix
+Word/CodeMorphism      -> Word/Code, Submonoid/Membership, Data/PEquiv
+Word/API               -> Word/CodeMorphism, Word/Prefix
+Word/Audit             -> Word/API  (not publicly re-exported)
+Lecerf                  -> Word/API
+```
+
+The focused Stage-7 builds passed as follows: `Word.Code` with 522 jobs,
+`Word.Prefix` with 526 jobs, `Word.CodeMorphism` with 693 jobs, and
+`Word.API` plus `Word.Audit` with 696 jobs. The adjacent audit/root build
+passed with 914 jobs, and the final full `lake build` passed with 913 jobs.
+
+`Word.Audit` checks that duplicate indices and an empty generator are rejected,
+constructs a `PaperCodeEpi` whose selector both repeats and omits targets,
+checks that a `CodeIso` ambient application is `none` outside its generated
+source, and distinguishes zero from positive iteration. Its `#print axioms`
+output is:
+
+- the indexed/set code bridge: `[propext, Quot.sound]`;
+- both paper-shaped fresh-marker theorems and
+  `CodeIso.toPEquiv_generator`:
+  `[propext, Classical.choice, Quot.sound]`; and
+- `Lecerf.PEquiv.iterate_symm`, `positiveIterate`, and
+  `positiveIterate_symm`: `[propext, Quot.sound]`.
+
+These are Lean/mathlib foundational dependencies, not project-specific
+axioms. Stage 8 remains unstarted and must supply executable finite syntax
+before any computability or many-one reduction claim is made for code
+isomorphisms.
