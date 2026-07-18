@@ -138,7 +138,25 @@ def reverse : Move → Move
 theorem reverse_reverse (direction : Move) : direction.reverse.reverse = direction := by
   cases direction <;> rfl
 
+/-- A computable three-element representation of movements. -/
+def equivOptionBool : Move ≃ Option Bool where
+  toFun
+    | .left => none
+    | .stay => some false
+    | .right => some true
+  invFun
+    | none => .left
+    | some false => .stay
+    | some true => .right
+  left_inv := by intro direction; cases direction <;> rfl
+  right_inv := by intro code; cases code with
+    | none => rfl
+    | some bit => cases bit <;> rfl
+
 end Move
+
+instance : Primcodable Move :=
+  Primcodable.ofEquiv (Option Bool) Move.equivOptionBool
 
 /-- Shift the head without changing tape contents. -/
 def move [DecidableEq Γ] : Move → Tape Γ → Tape Γ
