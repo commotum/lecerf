@@ -23,9 +23,11 @@
 
 ## Updated Assumptions and Design Choices
 
-- A tape cell is `Option Γ`, with `none` the blank. Each half-tape is stored in
-  a canonical form that structurally ends in a nonblank cell, so trailing
-  blanks cannot have multiple representations.
+- The tape alphabet has an explicit `default` blank. Each half-tape is stored
+  as either all-blank or a nearest-first prefix ending structurally in a
+  subtype-certified nonblank cell, so trailing blanks cannot have multiple
+  representations. Taking the alphabet to be `Option Γ` recovers `none` as a
+  canonical blank when the payload type has no chosen blank.
 - The tape stores the current cell and two canonical half-tapes, nearest cell
   first. Left and right moves are exact inverses; stationary movement is the
   identity.
