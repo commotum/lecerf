@@ -66,13 +66,32 @@ def equivRep : Config σ ≃ Direction × σ where
 instance [Primcodable σ] : Primcodable (Config σ) :=
   Primcodable.ofEquiv (Direction × σ) equivRep
 
+/-- Construct a tagged configuration from its explicit representation. -/
+def encode (direction : Direction) (state : σ) : Config σ :=
+  ⟨direction, state⟩
+
+/-- Decode a tagged configuration without losing either component. -/
+def decode (config : Config σ) : Direction × σ :=
+  (config.direction, config.state)
+
+@[simp]
+theorem decode_encode (direction : Direction) (state : σ) :
+    decode (encode direction state) = (direction, state) :=
+  rfl
+
+@[simp]
+theorem encode_decode (config : Config σ) :
+    encode config.decode.1 config.decode.2 = config := by
+  cases config
+  rfl
+
 /-- Enter the forward copy of a state. -/
 def forward (state : σ) : Config σ :=
-  ⟨.forward, state⟩
+  encode .forward state
 
 /-- Enter the reverse copy of a state. -/
 def reverse (state : σ) : Config σ :=
-  ⟨.reverse, state⟩
+  encode .reverse state
 
 @[simp]
 theorem forward_direction (state : σ) : (forward state).direction = .forward :=

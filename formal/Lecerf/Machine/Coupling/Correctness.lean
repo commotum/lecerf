@@ -30,8 +30,10 @@ theorem turnaround_lift_forward_reachable {source target : σ}
   | refl => exact Reachable.refl _ _
   | tail reachable executed lifted =>
       change step.next _ = some _ at executed
-      exact Reachable.trans lifted (Reachable.single (by
-        simpa using turnaroundNext_forward_of_step step _ _ executed))
+      apply Reachable.trans lifted
+      apply Reachable.single
+      change turnaroundNext step (Config.forward _) = some (Config.forward _)
+      exact turnaroundNext_forward_of_step step _ _ executed
 
 /-- An inverse path lifts pointwise to the reverse copy of the open coupling. -/
 theorem turnaround_lift_reverse_reachable {source target : σ}
@@ -42,8 +44,10 @@ theorem turnaround_lift_reverse_reachable {source target : σ}
   | refl => exact Reachable.refl _ _
   | tail reachable executed lifted =>
       change step.prev _ = some _ at executed
-      exact Reachable.trans lifted (Reachable.single (by
-        simpa using turnaroundNext_reverse_of_inverse_step step _ _ executed))
+      apply Reachable.trans lifted
+      apply Reachable.single
+      change turnaroundNext step (Config.reverse _) = some (Config.reverse _)
+      exact turnaroundNext_reverse_of_inverse_step step _ _ executed
 
 /-- A forward path lifts pointwise to the forward copy of the closed gadget. -/
 theorem returnGadget_lift_forward_reachable {source target : σ}
@@ -54,8 +58,10 @@ theorem returnGadget_lift_forward_reachable {source target : σ}
   | refl => exact Reachable.refl _ _
   | tail reachable executed lifted =>
       change step.next _ = some _ at executed
-      exact Reachable.trans lifted (Reachable.single (by
-        simpa using returnNext_forward_of_step step _ _ executed))
+      apply Reachable.trans lifted
+      apply Reachable.single
+      change returnNext step (Config.forward _) = some (Config.forward _)
+      exact returnNext_forward_of_step step _ _ executed
 
 /-- An inverse path lifts pointwise to the reverse copy of the closed gadget. -/
 theorem returnGadget_lift_reverse_reachable {source target : σ}
@@ -66,8 +72,10 @@ theorem returnGadget_lift_reverse_reachable {source target : σ}
   | refl => exact Reachable.refl _ _
   | tail reachable executed lifted =>
       change step.prev _ = some _ at executed
-      exact Reachable.trans lifted (Reachable.single (by
-        simpa using returnNext_reverse_of_inverse_step step _ _ executed))
+      apply Reachable.trans lifted
+      apply Reachable.single
+      change returnNext step (Config.reverse _) = some (Config.reverse _)
+      exact returnNext_reverse_of_inverse_step step _ _ executed
 
 /-- If forward execution halts, the open coupling reaches the reverse copy of
 its start after the terminal switch and inverse retracing. -/
@@ -83,7 +91,9 @@ theorem turnaround_reverseStart_reachable_of_halts (start : σ)
     (turnaround_lift_forward_reachable step forwardReachable)
     (Reachable.trans
       (Reachable.single (by
-        simpa using turnaroundNext_forward_of_terminal step terminal terminalForward))
+        change turnaroundNext step (Config.forward terminal) =
+          some (Config.reverse terminal)
+        exact turnaroundNext_forward_of_terminal step terminal terminalForward))
       (turnaround_lift_reverse_reachable step reverseReachable))
 
 /-- The same preservation path exists inside the uniformly closed gadget. -/
@@ -99,7 +109,9 @@ theorem returnGadget_reverseStart_reachable_of_halts (start : σ)
     (returnGadget_lift_forward_reachable step forwardReachable)
     (Reachable.trans
       (Reachable.single (by
-        simpa using returnNext_forward_of_terminal step terminal terminalForward))
+        change returnNext step (Config.forward terminal) =
+          some (Config.reverse terminal)
+        exact returnNext_forward_of_terminal step terminal terminalForward))
       (returnGadget_lift_reverse_reachable step reverseReachable))
 
 end GenericPaths
@@ -151,10 +163,8 @@ theorem history_length_lt_of_strictlyReachable {source : Step σ}
       exact Nat.lt_succ_self _
   | tail reachable executed growing =>
       change Lecerf.Machine.History.forward source _ = some _ at executed
-      have finalGrowth : _ < _ := by
-        rw [Lecerf.Machine.History.history_length_of_forward executed]
-        exact Nat.lt_succ_self _
-      exact Nat.lt_trans growing finalGrowth
+      rw [Lecerf.Machine.History.history_length_of_forward executed]
+      exact Nat.lt_trans growing (Nat.lt_succ_self _)
 
 /-- In particular, the history-forward simulation has no positive return,
 even when the projected source machine has a cycle. -/
@@ -166,7 +176,7 @@ theorem not_positiveReturn_forward (source : Step σ)
     (history_length_lt_of_strictlyReachable returned)
 
 /-- Checked backward execution preserves validity of a generated history. -/
-theorem Valid.of_backward [DecidableEq σ] {source : Step σ} {initial : σ}
+theorem valid_of_backward [DecidableEq σ] {source : Step σ} {initial : σ}
     {config previous : Lecerf.Machine.History.Config σ}
     (valid : Lecerf.Machine.History.Valid source initial config)
     (executed : Lecerf.Machine.History.backward source config = some previous) :
@@ -233,16 +243,32 @@ theorem Generated.turnaround [DecidableEq σ] {source : Step σ} {initial : σ}
               source historyConfig).mp historyStep⟩
   | reverse =>
       rcases generated with ⟨valid, halts⟩
+      change Coupling.turnaroundNext
+        (Lecerf.Machine.History.reversible source)
+          (Config.reverse historyConfig) = some nextConfig at executed
       cases historyStep : Lecerf.Machine.History.backward source historyConfig with
       | none =>
-          simp [Coupling.turnaroundNext, Config.reverse,
-            Lecerf.Machine.History.reversible, historyStep] at executed
+          have inverseTerminal : Terminal
+              (Lecerf.Machine.History.reversible source).prev historyConfig := by
+            change Lecerf.Machine.History.backward source historyConfig = none
+            exact historyStep
+          have runtime := Coupling.turnaroundNext_reverse_of_inverse_terminal
+            (Lecerf.Machine.History.reversible source) historyConfig inverseTerminal
+          rw [runtime] at executed
+          contradiction
       | some previous =>
+          have inverseStep :
+              (Lecerf.Machine.History.reversible source).prev historyConfig =
+                some previous := by
+            change Lecerf.Machine.History.backward source historyConfig = some previous
+            exact historyStep
+          have runtime := Coupling.turnaroundNext_reverse_of_inverse_step
+            (Lecerf.Machine.History.reversible source) historyConfig previous inverseStep
           have nextEq : nextConfig = Config.reverse previous := by
-            simpa [Coupling.turnaroundNext, Config.reverse,
-              Lecerf.Machine.History.reversible, historyStep] using executed.symm
+            rw [runtime] at executed
+            exact (Option.some.inj executed).symm
           subst nextConfig
-          exact ⟨valid.of_backward historyStep, halts⟩
+          exact ⟨valid_of_backward valid historyStep, halts⟩
 
 /-- The generated-state invariant is preserved by every closed return-gadget
 step. -/
@@ -276,17 +302,33 @@ theorem Generated.returnStep [DecidableEq σ] {source : Step σ} {initial : σ}
               source historyConfig).mp historyStep⟩
   | reverse =>
       rcases generated with ⟨valid, halts⟩
+      change Coupling.returnNext
+        (Lecerf.Machine.History.reversible source)
+          (Config.reverse historyConfig) = some nextConfig at executed
       cases historyStep : Lecerf.Machine.History.backward source historyConfig with
       | some previous =>
+          have inverseStep :
+              (Lecerf.Machine.History.reversible source).prev historyConfig =
+                some previous := by
+            change Lecerf.Machine.History.backward source historyConfig = some previous
+            exact historyStep
+          have runtime := Coupling.returnNext_reverse_of_inverse_step
+            (Lecerf.Machine.History.reversible source) historyConfig previous inverseStep
           have nextEq : nextConfig = Config.reverse previous := by
-            simpa [Coupling.returnNext, Config.reverse,
-              Lecerf.Machine.History.reversible, historyStep] using executed.symm
+            rw [runtime] at executed
+            exact (Option.some.inj executed).symm
           subst nextConfig
-          exact ⟨valid.of_backward historyStep, halts⟩
+          exact ⟨valid_of_backward valid historyStep, halts⟩
       | none =>
+          have inverseTerminal : Terminal
+              (Lecerf.Machine.History.reversible source).prev historyConfig := by
+            change Lecerf.Machine.History.backward source historyConfig = none
+            exact historyStep
+          have runtime := Coupling.returnNext_reverse_of_inverse_terminal
+            (Lecerf.Machine.History.reversible source) historyConfig inverseTerminal
           have nextEq : nextConfig = Config.forward historyConfig := by
-            simpa [Coupling.returnNext, Config.forward, Config.reverse,
-              Lecerf.Machine.History.reversible, historyStep] using executed.symm
+            rw [runtime] at executed
+            exact (Option.some.inj executed).symm
           subst nextConfig
           exact valid
 
