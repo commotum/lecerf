@@ -46,6 +46,67 @@ def compile (delta : Delta Q Γ) (states : List Q) (symbols : List Γ) :
   ⟨states.flatMap fun state => rulesForSymbols delta state symbols⟩
 
 omit [Inhabited Γ] in
+/-- A rule occurs in one expanded state block exactly when it is the output
+for one of the listed symbols.  This statement deliberately permits repeated
+symbols. -/
+theorem mem_rulesForSymbols_iff
+    (delta : Delta Q Γ) (state : Q) (symbols : List Γ) (rule : Rule Q Γ) :
+    rule ∈ rulesForSymbols delta state symbols ↔
+      ∃ symbol ∈ symbols, ruleFor delta state symbol = some rule := by
+  induction symbols with
+  | nil => simp [rulesForSymbols]
+  | cons symbol rest ih =>
+      simp [rulesForSymbols, ih]
+
+omit [Inhabited Γ] in
+/-- Membership in an expanded table records a generating state and symbol.
+Duplicate support entries merely give duplicate witnesses. -/
+theorem mem_compile_iff
+    (delta : Delta Q Γ) (states : List Q) (symbols : List Γ) (rule : Rule Q Γ) :
+    rule ∈ (compile delta states symbols).rules ↔
+      ∃ state ∈ states, ∃ symbol ∈ symbols,
+        ruleFor delta state symbol = some rule := by
+  simp [compile, mem_rulesForSymbols_iff]
+
+omit [Inhabited Γ] in
+/-- Expanding a transition function yields a deterministic conventional rule
+table. Repetitions in either support list emit only identical rules. -/
+theorem compile_tableDeterministic
+    (delta : Delta Q Γ) (states : List Q) (symbols : List Γ) :
+    (compile delta states symbols).TableDeterministic := by
+  intro first firstMem second secondMem sourceEq readEq
+  rw [mem_compile_iff] at firstMem secondMem
+  rcases firstMem with ⟨firstState, _, firstSymbol, _, firstRule⟩
+  rcases secondMem with ⟨secondState, _, secondSymbol, _, secondRule⟩
+  have firstFields :
+      first.source = firstState ∧ first.read = firstSymbol := by
+    unfold ruleFor at firstRule
+    cases h : delta firstState firstSymbol with
+    | none => simp [h] at firstRule
+    | some output =>
+      rcases output with ⟨target, write, move⟩
+      simp [h] at firstRule
+      subst first
+      exact ⟨rfl, rfl⟩
+  have secondFields :
+      second.source = secondState ∧ second.read = secondSymbol := by
+    unfold ruleFor at secondRule
+    cases h : delta secondState secondSymbol with
+    | none => simp [h] at secondRule
+    | some output =>
+      rcases output with ⟨target, write, move⟩
+      simp [h] at secondRule
+      subst second
+      exact ⟨rfl, rfl⟩
+  have stateEq : firstState = secondState :=
+    firstFields.1.symm.trans (sourceEq.trans secondFields.1)
+  have symbolEq : firstSymbol = secondSymbol :=
+    firstFields.2.symm.trans (readEq.trans secondFields.2)
+  subst secondState
+  subst secondSymbol
+  exact Option.some.inj (firstRule.symm.trans secondRule)
+
+omit [Inhabited Γ] in
 theorem lookup_rulesForSymbols_eq
     [DecidableEq Q] [DecidableEq Γ]
     (delta : Delta Q Γ) (state : Q) (symbols : List Γ) (symbol : Γ) :

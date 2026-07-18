@@ -161,4 +161,134 @@ theorem step_erases (config : Config State Symbol) :
     | write written =>
         simp [Turing.TM0.step, eraseConfig, action, Tape.act, h]
 
+/-- Erasing the finite-support certificate and changing tape representation
+loses no configuration information. -/
+theorem eraseConfig_injective : Function.Injective eraseConfig := by
+  intro first second equal
+  apply Config.ext
+  · apply Subtype.ext
+    exact congrArg Turing.TM0.Cfg.q equal
+  · apply TapeBridge.tapeEquiv.symm.injective
+    exact congrArg Turing.TM0.Cfg.Tape equal
+
+/-- Exact one-step correspondence packages as mathlib's refinement relation. -/
+theorem machine_respects_ambient :
+    StateTransition.Respects machine.step
+      (Turing.TM0.step ambientMachine)
+      (fun source target => eraseConfig source = target) := by
+  rw [StateTransition.fun_respects]
+  intro config
+  cases localStep : machine.step config with
+  | none =>
+      have exactStep := step_erases config
+      rw [localStep] at exactStep
+      exact exactStep.symm
+  | some next =>
+      have exactStep := step_erases config
+      rw [localStep] at exactStep
+      exact TransGen.single exactStep.symm
+
+/-- The finite source table is structurally deterministic. -/
+theorem machine_tableDeterministic : machine.TableDeterministic := by
+  exact Table.compile_tableDeterministic delta _ _
+
+/-- Tape input supplied to the fixed TM1/TM0 translation. -/
+def translatedInput (input : List Nat) : List Symbol :=
+  Turing.TM2to1.trInit Turing.PartrecToTM2.K'
+    Turing.PartrecToTM2.Γ' Turing.PartrecToTM2.K'.main
+    (Turing.PartrecToTM2.trList input)
+
+/-- The partial-recursive source configuration is exactly mathlib's generic
+TM2 initial configuration under the fixed entry-label instance. -/
+theorem source_init_eq_tm2_init (input : List Nat) :
+    Turing.PartrecToTM2.init UniversalSource.universalCode input =
+      (Turing.TM2.init Turing.PartrecToTM2.K'.main
+        (Turing.PartrecToTM2.trList input) :
+        Turing.TM2.Cfg
+          (fun _ : Turing.PartrecToTM2.K' => Turing.PartrecToTM2.Γ')
+          Turing.PartrecToTM2.Λ' (Option Turing.PartrecToTM2.Γ')) := by
+  simp only [Turing.PartrecToTM2.init, Turing.TM2.init]
+  congr
+  funext index
+  cases index <;> rfl
+
+/-- The fixed TM1 simulation halts exactly when the selected source program
+halts on the supplied list of naturals. -/
+theorem tm1_eval_dom_iff_source (input : List Nat) :
+    (Turing.TM1.eval tm1Program (translatedInput input)).Dom ↔
+      (StateTransition.eval
+        (Turing.TM2.step Turing.PartrecToTM2.tr)
+        (Turing.PartrecToTM2.init UniversalSource.universalCode input)).Dom := by
+  calc
+    _ ↔ (Turing.TM2.eval Turing.PartrecToTM2.tr
+          Turing.PartrecToTM2.K'.main
+          (Turing.PartrecToTM2.trList input)).Dom :=
+      Turing.TM2to1.tr_eval_dom Turing.PartrecToTM2.tr
+        Turing.PartrecToTM2.K'.main (Turing.PartrecToTM2.trList input)
+    _ ↔ (StateTransition.eval
+          (Turing.TM2.step Turing.PartrecToTM2.tr)
+          (Turing.TM2.init Turing.PartrecToTM2.K'.main
+            (Turing.PartrecToTM2.trList input))).Dom := by
+      simp [Turing.TM2.eval]
+    _ ↔ _ := by rw [source_init_eq_tm2_init]
+
+/-- The fixed supported TM0 program preserves and reflects halting of the
+selected source program. -/
+theorem ambient_eval_dom_iff_source (input : List Nat) :
+    (Turing.TM0.eval ambientMachine (translatedInput input)).Dom ↔
+      (StateTransition.eval
+        (Turing.TM2.step Turing.PartrecToTM2.tr)
+        (Turing.PartrecToTM2.init UniversalSource.universalCode input)).Dom := by
+  change (Turing.TM0.eval (Turing.TM1to0.tr tm1Program)
+    (translatedInput input)).Dom ↔ _
+  rw [Turing.TM1to0.tr_eval]
+  exact tm1_eval_dom_iff_source input
+
+/-- The fixed TM0 program therefore halts exactly when an encoded
+`Nat.Partrec.Code` halts. -/
+theorem ambient_halts_iff_eval_dom (code : Nat.Partrec.Code) (input : Nat) :
+    (Turing.TM0.eval ambientMachine
+      (translatedInput (UniversalSource.encodedInput code input).1)).Dom ↔
+        (Nat.Partrec.Code.eval code input).Dom := by
+  rw [ambient_eval_dom_iff_source]
+  exact UniversalSource.tm2_halts_iff_eval_dom code input
+
+/-- The initial supported control state of the fixed conventional table. -/
+noncomputable def initialState : State :=
+  ⟨(Turing.TM0.init ([] : List Symbol)).q, ambient_supports.1⟩
+
+/-- Canonical-table start configuration for a supplied natural-number list. -/
+noncomputable def initial (input : List Nat) : Config State Symbol :=
+  ⟨initialState,
+    TapeBridge.tapeToLocal
+      (Turing.Tape.mk₁ (translatedInput input))⟩
+
+@[simp]
+theorem erase_initial (input : List Nat) :
+    eraseConfig (initial input) =
+      (Turing.TM0.init (translatedInput input) :
+        Turing.TM0.Cfg Symbol AmbientState) := by
+  apply Turing.TM0.Cfg.ext
+  · rfl
+  · simp [initial, eraseConfig, Turing.TM0.init]
+
+/-- Local conventional-table evaluation and the supported TM0 program have
+the same definedness from translated inputs. -/
+theorem local_eval_dom_iff_ambient (input : List Nat) :
+    (StateTransition.eval machine.step (initial input)).Dom ↔
+      (Turing.TM0.eval ambientMachine (translatedInput input)).Dom := by
+  have refinement := StateTransition.tr_eval_dom machine_respects_ambient
+    (erase_initial input)
+  rw [Turing.TM0.eval]
+  simpa using refinement.symm
+
+/-- The actual fixed conventional finite table halts exactly when the source
+partial-recursive code halts. -/
+theorem halts_iff_eval_dom (code : Nat.Partrec.Code) (input : Nat) :
+    (StateTransition.eval machine.step
+      (initial (UniversalSource.encodedInput code input).1)).Dom ↔
+        (Nat.Partrec.Code.eval code input).Dom := by
+  rw [local_eval_dom_iff_ambient]
+  exact ambient_halts_iff_eval_dom code input
+
 end Lecerf.Machine.Compiler.FiniteSource
