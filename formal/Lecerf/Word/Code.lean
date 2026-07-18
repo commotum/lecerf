@@ -141,7 +141,10 @@ whereas `IsIndexedCode` must distinguish the corresponding generators. -/
 theorem isIndexedCode_iff_injective_and_uniquelyDecodable {c : I → Word A} :
     IsIndexedCode c ↔
       Function.Injective c ∧
-        InformationTheory.UniquelyDecodable (codewordSet c) := by
+        InformationTheory.UniquelyDecodable
+          (Set.range fun i ↦ (c i).toList) := by
+  change IsIndexedCode c ↔
+    Function.Injective c ∧ InformationTheory.UniquelyDecodable (codewordSet c)
   constructor
   · intro hc
     exact ⟨hc.injective, hc.uniquelyDecodable⟩
