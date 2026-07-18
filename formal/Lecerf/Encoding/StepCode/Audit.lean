@@ -1,5 +1,6 @@
 import Lecerf.Encoding.StepCode.Correctness
 import Lecerf.Encoding.StepCode.Interpreter
+import Lecerf.Encoding.ConfigCodeEffectivity
 
 /-!
 # Machine-step code diagnostics
@@ -33,6 +34,14 @@ example : ConfigCode.decodeUnaryFrame [false, true] = none := by
 
 /-- Canonical unary frames decode to their supplied value. -/
 example : ConfigCode.decodeUnaryFrame (ConfigCode.unaryFrame 4) = some 4 := by
+  decide
+
+/-- This is a syntactically complete unary frame, but natural code `1` is not
+in the range of the pinned `Primcodable` representation of `TestConfig`.  The
+configuration decoder therefore rejects it as noncanonical data. -/
+example :
+    ConfigCode.decodeConfigBits (C := TestConfig)
+        (ConfigCode.unaryFrame 1) = none := by
   decide
 
 def initial : TestConfig :=
@@ -244,6 +253,8 @@ theorem mergeMachine_targetWord_not_isIndexedCode :
 
 #print axioms Lecerf.Encoding.ConfigCode.decodeConfigs_eq_some_iff
 #print axioms Lecerf.Encoding.ConfigCode.encodeConfig_isIndexedCode
+#print axioms Lecerf.Encoding.ConfigCode.encodeConfigs_primrec
+#print axioms Lecerf.Encoding.ConfigCode.decodeConfigs_primrec
 #print axioms Lecerf.Encoding.StepCode.targetWord_isIndexedCode_iff_backwardUnique
 #print axioms Lecerf.Encoding.StepCode.stepCodeIso_apply_eq_some_iff_exists
 #print axioms Lecerf.Encoding.StepCode.stepCodeIso_iterate_eq_some_iff

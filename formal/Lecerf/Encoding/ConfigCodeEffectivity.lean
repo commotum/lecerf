@@ -196,7 +196,12 @@ private theorem decodeFoldStep_primrec :
   exact (Primrec.cond Primrec.snd (htrue.comp Primrec.fst)
     (hfalse.comp Primrec.fst)).of_eq fun data ↦ by
       rcases data with ⟨state, bit⟩
-      cases bit <;> simp [decodeFoldStep, haccept]
+      cases bit with
+      | false =>
+          cases hconfigs : state.1 <;>
+            cases hconfig : Encodable.decode₂ C state.2 <;>
+              simp [decodeFoldStep, hconfigs, hconfig]
+      | true => rfl
 
 private theorem finishDecodeFold_primrec :
     Primrec (finishDecodeFold (C := C)) := by
@@ -218,7 +223,7 @@ private theorem decodeConfigListBitsFold_primrec :
       (Primrec.fst.comp Primrec.snd)
       (Primrec.snd.comp Primrec.snd)).to₂
   have hfold : Primrec fun bits : List Bool ↦
-      bits.foldl decodeFoldStep (some [], 0 : DecodeFoldState C) :=
+      bits.foldl decodeFoldStep ((some [], 0) : DecodeFoldState C) :=
     Primrec.list_foldl Primrec.id (Primrec.const (some [], 0)) hfoldStep
   exact finishDecodeFold_primrec.comp hfold
 
@@ -233,5 +238,45 @@ primitive recursive. -/
 theorem decodeConfigs_primrec :
     Primrec (decodeConfigs : Word Bool → Option (List C)) := by
   exact decodeConfigListBits_primrec.comp wordToList_primrec
+
+/-! ## Computability corollaries -/
+
+theorem unaryFrame_computable : Computable unaryFrame :=
+  unaryFrame_primrec.to_comp
+
+theorem decodeUnaryFrame_computable : Computable decodeUnaryFrame :=
+  decodeUnaryFrame_primrec.to_comp
+
+theorem encodeConfigBits_computable :
+    Computable (encodeConfigBits : C → List Bool) :=
+  encodeConfigBits_primrec.to_comp
+
+theorem decodeConfigBits_computable :
+    Computable (decodeConfigBits : List Bool → Option C) :=
+  decodeConfigBits_primrec.to_comp
+
+theorem encodeConfig_computable :
+    Computable (encodeConfig : C → Word Bool) :=
+  encodeConfig_primrec.to_comp
+
+theorem decodeConfig_computable :
+    Computable (decodeConfig : Word Bool → Option C) :=
+  decodeConfig_primrec.to_comp
+
+theorem encodeConfigListBits_computable :
+    Computable (encodeConfigListBits : List C → List Bool) :=
+  encodeConfigListBits_primrec.to_comp
+
+theorem decodeConfigListBits_computable :
+    Computable (decodeConfigListBits : List Bool → Option (List C)) :=
+  decodeConfigListBits_primrec.to_comp
+
+theorem encodeConfigs_computable :
+    Computable (encodeConfigs : List C → Word Bool) :=
+  encodeConfigs_primrec.to_comp
+
+theorem decodeConfigs_computable :
+    Computable (decodeConfigs : Word Bool → Option (List C)) :=
+  decodeConfigs_primrec.to_comp
 
 end Lecerf.Encoding.ConfigCode
