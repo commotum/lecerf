@@ -1,5 +1,5 @@
 import Lecerf.Machine.Coupling.Core
-import Lecerf.Machine.History.API
+import Lecerf.Machine.History.Correctness
 
 /-!
 # Correctness of forward--reverse coupling

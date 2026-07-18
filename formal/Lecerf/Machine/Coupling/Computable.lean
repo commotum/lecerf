@@ -1,5 +1,6 @@
 import Lecerf.Machine.Coupling.Correctness
 import Lecerf.Machine.Effectivity
+import Lecerf.Machine.History.Computable
 import Lecerf.Machine.SourceBridge
 
 /-!
@@ -468,6 +469,34 @@ theorem finiteReturnPrev_uniform_primrec
       data.1.step data.2)
     FiniteMachine.step_uniform_primrec).of_eq fun _ => rfl
 
+/-- Package an existing finite source description with its forward-tagged
+fresh history checkpoint.  This constructs reduction input data, not a new
+finite rule table. -/
+theorem finiteDescribedStart_primrec
+    {Q : Type u} {Γ : Type v} [Primcodable Q] [DecidableEq Q]
+    [Inhabited Γ] [Primcodable Γ] [DecidableEq Γ] :
+    Primrec fun data : FiniteMachine Q Γ × Lecerf.Machine.Config Q Γ =>
+      (data.1, start data.2) :=
+  Primrec.fst.pair (start_primrec.comp Primrec.snd)
+
+/-- Package the same finite source description with the structurally distinct
+reverse-tagged target. -/
+theorem finiteDescribedTarget_primrec
+    {Q : Type u} {Γ : Type v} [Primcodable Q] [DecidableEq Q]
+    [Inhabited Γ] [Primcodable Γ] [DecidableEq Γ] :
+    Primrec fun data : FiniteMachine Q Γ × Lecerf.Machine.Config Q Γ =>
+      (data.1, target data.2) :=
+  Primrec.fst.pair (target_primrec.comp Primrec.snd)
+
+/-- Construct both finite-description coupling endpoints jointly. -/
+theorem finiteDescribedStartTarget_primrec
+    {Q : Type u} {Γ : Type v} [Primcodable Q] [DecidableEq Q]
+    [Inhabited Γ] [Primcodable Γ] [DecidableEq Γ] :
+    Primrec fun data : FiniteMachine Q Γ × Lecerf.Machine.Config Q Γ =>
+      (data.1, (start data.2, target data.2)) :=
+  Primrec.fst.pair ((start_primrec.comp Primrec.snd).pair
+    (target_primrec.comp Primrec.snd))
+
 def universalStart (code : Nat.Partrec.Code) (input : Nat) :
     Config (Lecerf.Machine.History.Config Source.EvalSearchConfig) :=
   start (Source.evalSearchStart code input)
@@ -506,6 +535,28 @@ theorem universalReturnNext_primrec :
 theorem universalReturnPrev_primrec :
     Primrec (returnStep Source.universalEvalSearchStep).prev :=
   returnStep_prev_primrec Source.universalEvalSearchStep_primrec
+
+/-- The effective universal source reaches the distinct reverse-initial target
+exactly when the represented partial-recursive computation is defined. -/
+theorem universalTarget_strictlyReachable_iff_eval_dom
+    (code : Nat.Partrec.Code) (input : Nat) :
+    StrictlyReachable (turnaroundStep Source.universalEvalSearchStep).next
+        (universalStart code input) (universalTarget code input) ↔
+      (Nat.Partrec.Code.eval code input).Dom :=
+  (target_strictlyReachable_iff_halts Source.universalEvalSearchStep
+    (Source.evalSearchStart code input)).trans
+      (Source.universalEvalSearchStep_halts_iff_eval_dom code input)
+
+/-- The same universal computation has a positive closed-coupling return
+exactly when the represented partial-recursive computation is defined. -/
+theorem universalPositiveReturn_iff_eval_dom
+    (code : Nat.Partrec.Code) (input : Nat) :
+    PositiveReturn (returnStep Source.universalEvalSearchStep).next
+        (universalStart code input) ↔
+      (Nat.Partrec.Code.eval code input).Dom :=
+  (positiveReturn_iff_halts Source.universalEvalSearchStep
+    (Source.evalSearchStart code input)).trans
+      (Source.universalEvalSearchStep_halts_iff_eval_dom code input)
 
 end History
 

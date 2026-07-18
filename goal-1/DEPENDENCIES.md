@@ -328,6 +328,37 @@ abstract history state. They do **not** compile the unbounded `List` log into
 a conventional one-tape `FiniteMachine`. That representation-level compiler,
 and the earlier ordinary-rule phase compiler, remain separate later bridges.
 
+### Stage 5 realized coupling boundary
+
+The coupling layer is split so executable phase semantics remain below
+history-specific correctness and computability:
+
+```text
+Transition/API + Primrec/List
+  -> Machine/Coupling/Core
+
+Machine/Coupling/Core + Machine/History/Correctness
+  -> Machine/Coupling/Correctness
+
+Coupling/Correctness + History/Computable + Machine/Effectivity + SourceBridge
+  -> Machine/Coupling/Computable
+  -> Machine/Coupling/API
+  -> Machine/API
+```
+
+`Coupling/Core` defines constructive phase-tagged configurations, an open
+turnaround `PEquiv`, and a uniformly closed return `PEquiv`; it imports no
+history, machine syntax, or halting semantics. `Coupling/Correctness` owns
+generic path lifting and the history-generated invariant. `Coupling/Computable`
+owns the primitive-recursive generic interpreters and finite/universal source
+specializations. `Coupling/Audit` is a non-public diagnostic and axiom-audit
+leaf.
+
+The finite coupling theorems consume an existing `FiniteMachine` description
+and an abstract phase-tagged full-history state. They do **not** produce a new
+finite rule table. The history-list tape compiler (`A-025`) and finite validity
+criterion (`A-024`) therefore remain Stage-6 dependencies.
+
 ## Tentative Module Layout
 
 ```text
@@ -352,7 +383,12 @@ formal/
         Computable.lean
         Audit.lean
         API.lean
-      Coupling.lean
+      Coupling/
+        Core.lean
+        Correctness.lean
+        Computable.lean
+        Audit.lean
+        API.lean
       API.lean
     Word/
       Code.lean
@@ -408,8 +444,18 @@ Machine/History/Computable   -> History/Correctness, Machine/Effectivity,
                                 Machine/SourceBridge
 Machine/History/API          -> Machine/History/Computable
 Machine/History/Audit        -> Machine/History/Computable (not re-exported)
-Machine/API                  -> Machine/History/API
+Machine/Coupling/Core        -> Transition/API, Primrec/List
+Machine/Coupling/Correctness -> Coupling/Core, History/Correctness
+Machine/Coupling/Computable  -> Coupling/Correctness, History/Computable,
+                                Machine/Effectivity, Machine/SourceBridge
+Machine/Coupling/API         -> Machine/Coupling/Computable
+Machine/Coupling/Audit       -> Machine/Coupling/Computable (not re-exported)
+Machine/API                  -> Machine/History/API, Machine/Coupling/API
 ```
 
 Full `lake build` passed with 835 jobs after the Stage-4 public API import
 changed.
+
+Stage-5 focused builds passed through `Coupling.Audit` (835 jobs), and the
+public `Machine.API`/root adjacent build passed after adding `Coupling.API`.
+The final full-build count is recorded in `5-COUPLING.md` and `AUDIT.md`.

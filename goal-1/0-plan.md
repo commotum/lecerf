@@ -95,11 +95,13 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   exact `PEquiv` on all history states, proves generated history exactly
   equivalent to reachability, preserves and reflects halting, and is primitive
   recursive jointly in an existing finite-machine description.
-- Stage 5 is in progress. Its boundary is a generic reversible terminal-switch
-  coupling plus a closed return gadget, specialized to the history lift for
-  exact source-halting iff distinct reverse-initial reachability and positive
-  return. No decision predicate or undecidability reduction belongs to this
-  stage.
+- Stage 5 is complete. `Lecerf.Machine.Coupling.{Core,Correctness,Computable,
+  Audit,API}` compile. The generic open turnaround and uniformly closed return
+  gadget are exact `PEquiv`s; the history specialization proves source halting
+  iff strict reachability of a structurally distinct reverse-initial target and
+  iff positive return. Generic, finite-description, and universal interpreters
+  and endpoint maps are primitive recursive. No decision predicate or
+  undecidability reduction is claimed.
 
 ## Current Design Decisions
 
@@ -151,6 +153,21 @@ in `goal-1/[INDEX]-[SHORTHAND].md`, created only when that stage starts.
   The simulator state nevertheless contains an unbounded abstract list; no
   generated ordinary `FiniteMachine` implementing that log is claimed. That
   tape/microstate compiler remains a later reduction bridge.
+- `Coupling.turnaround` runs a `ReversibleStep` forward, switches phase exactly
+  at a forward-terminal state, retraces through its checked inverse, and leaves
+  an inverse-terminal state terminal. `Coupling.returnGadget` instead closes
+  every inverse-terminal boundary back to the matching forward state. Closing
+  every component uniformly preserves the exact ambient inverse law; the
+  runtime never recognizes a privileged start or consults a halting witness.
+- `Coupling.History.target_strictlyReachable_iff_halts` and
+  `Coupling.History.positiveReturn_iff_halts` are semantic iff theorems. Their
+  reflection uses a generated-state invariant, and positive return uses the
+  exact predecessor of the forward start. `history_length_lt_of_strictlyReachable`
+  separately certifies that the history-forward phase has no positive cycle.
+- Stage-5 finite theorems still interpret a coupled abstract history state
+  jointly with an existing `FiniteMachine` description. They do not produce a
+  finite tape-rule table. Stage 6 must close that compiler/validity boundary
+  before stating reversible finite-machine many-one reductions.
 - Use `FreeMonoid α` for words and define indexed codehood by injectivity of
   `FreeMonoid.lift`. Relate this to mathlib's set-based uniquely-decodable API
   only together with generator injectivity.
@@ -221,7 +238,7 @@ recorded in `DEPENDENCIES.md`. Later-layer module names remain provisional.
 | 2 | `TRANSITION` | Complete | Reversible partial-transition API |
 | 3 | `MACHINE` | Complete | Concrete deterministic Turing-machine semantics |
 | 4 | `HISTORY-SIM` | Complete | Constructive reversible history simulation |
-| 5 | `COUPLING` | In progress | Forward/reverse coupling and return gadgets |
+| 5 | `COUPLING` | Complete | Forward/reverse coupling and return gadgets |
 | 6 | `MACHINE-UNDEC` | Not started | Three reversible-machine undecidability reductions |
 | 7 | `WORD-CODES` | Not started | Free-monoid code and morphism API |
 | 8 | `STEP-CODE` | Not started | Machine-step representation by code maps |
@@ -525,13 +542,13 @@ paper, including documented corrections and trust assumptions.
 
 ## Current Execution Status
 
-`4-HISTORY-SIM.md` is complete. The public machine layer now additionally
-exports primitive-recursive finite-machine execution and a full-predecessor
-history simulator with checked inverse execution, exact reachable-history
-invariant, source reachability preservation/reflection, history growth,
-cycle-safe checkpoint uniqueness, reverse retracing, and halting equivalence.
-Both generic and finite-description history interpreters are primitive
-recursive, and the universal `evaln` source is instantiated. The abstract
-unbounded log has not been compiled to a conventional finite tape machine;
-coupling and undecidability remain unstarted. Focused/public/full builds,
-scans, and axiom audit passed. Stage 5 is the next incomplete stage.
+`5-COUPLING.md` is complete. The public machine layer now exports a generic
+open forward/terminal-switch/reverse `PEquiv`, a uniformly closed return
+`PEquiv`, exact history-specialized distinct-target and positive-return iff
+theorems, and primitive-recursive generic, finite-description, and universal
+interpreters and endpoint maps. The closed gadget is total and is therefore a
+return/reachability construction, not a halting construction; Stage 4's
+partial history step remains the halting target. The abstract unbounded log
+has not been compiled to a conventional finite tape machine, and no many-one
+reduction or undecidability result is yet claimed. Focused/public/full builds,
+scans, and axiom audit passed. Stage 6 is the next incomplete stage.

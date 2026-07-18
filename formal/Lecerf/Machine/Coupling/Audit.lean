@@ -76,5 +76,7 @@ end History
 #print axioms Lecerf.Machine.Coupling.History.target_strictlyReachable_iff_halts
 #print axioms Lecerf.Machine.Coupling.History.positiveReturn_iff_halts
 #print axioms Lecerf.Machine.Coupling.History.universalReturnNext_primrec
+#print axioms Lecerf.Machine.Coupling.History.universalTarget_strictlyReachable_iff_eval_dom
+#print axioms Lecerf.Machine.Coupling.History.universalPositiveReturn_iff_eval_dom
 
 end Lecerf.Machine.Coupling.Audit
