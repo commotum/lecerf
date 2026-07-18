@@ -48,12 +48,12 @@ Status labels in this file are:
 | `L4a-SIM3` | §4a(3) | A checkpoint `λ vᵢ μ wᵢ ν` recovers the source configuration and history | `History.Config.encode/decode/project` and `History.reachable_iff_valid` implement a cleaner full-predecessor checkpoint with exact recovery and no-spurious-checkpoint reflection; correspondence with the printed marker word remains open | spec-gap |
 | `L4a-SIM4` | §4a(4) | `wᵢ = b² rₖ₁ … rₖᵢ b` records one distinguished nonidentity relation per source step | Stage 4 uses an explicit empty initial list and pushes the complete predecessor on every actual source step. `history_length_of_forward` proves one-entry growth. This is intentionally more redundant than the printed token scheme | corrected-target |
 | `L4a-SIM5` | §4a(5) | Simulator halting checkpoints are exactly source-halting checkpoints | `terminal_forward_iff`, `haltsFrom_forward_iff`, and `universalHistory_halts_iff_eval_dom` prove preservation and reflection for the clean simulator | source-confirmed |
-| `L4a-SIM6` | §4a(6) | The coupled machine reaches the starred initial configuration iff the source halts | `Coupling.History.start_ne_target` and `target_strictlyReachable_iff_halts` give the exact abstract semantic statement. Endpoint and step interpreters are primitive recursive, and `universalTarget_strictlyReachable_iff_eval_dom` specializes it to the universal source. This is not yet a generated finite-machine reduction | source-confirmed |
-| `L4a-SIM7` | §4a(7) | Return or passage through a framed target can be conditioned on source halting | `Coupling.History.positiveReturn_iff_halts` supplies a complete cleaner abstract gadget and both directions. Uniformly closing every inverse-terminal component is a formal strengthening of the sketch needed for a global executable `PEquiv`; finite tape compilation remains open | spec-gap |
-| `L4a-SKETCH` | §4a proof | One representative relation is simulated by sweeping, editing, appending history, shifting delimiters, and returning control | The clean abstract simulator is now complete. Its unbounded list has not been compiled into the paper's sweeping tape/marker rules, so a historical correspondence theorem remains a separate obligation | spec-gap |
-| `L4b-THM1H` | Theorem 1 | Halting is recursively unsolvable for arbitrary reversible Turing machines | Uniform noncomputability of a validity-checked finite reversible-machine halting predicate | source-confirmed |
-| `L4b-THM1R` | Theorem 1 | Return to the initial configuration is recursively unsolvable | Use `StateTransition.Reaches₁`; reflexive reachability would trivialize the claim | corrected-target |
-| `L4b-THM1T` | Theorem 1 | Passage through a specified configuration other than the initial one is recursively unsolvable | Include target distinctness in the predicate/reduction output and prove both reduction directions | source-confirmed |
+| `L4a-SIM6` | §4a(6) | The coupled machine reaches the starred initial configuration iff the source halts | `TwoTape.HistoryCompiler.turnaround_bottom_strictlyReachable_iff_source_halts` gives a finite conventional two-tape realization using a structurally distinct exposed reverse-bottom microstate. `ReversibleUniversal.eval_dom_iff_turnaround_bottom_strictlyReachable` specializes it to the fixed universal table, and the endpoint map is primitive recursive. The target is a cleaner microstate analogue, not literally Lecerf's starred marker word | source-confirmed |
+| `L4a-SIM7` | §4a(7) | Return or passage through a framed target can be conditioned on source halting | `TwoTape.HistoryCompiler.return_positiveReturn_iff_source_halts` and the open-turnaround theorem prove both directions for finite two-tape tables. `partrecHalts0_iff_returnYes` and `partrecHalts0_iff_reachabilityYes` add validity guards and computable reduction maps. Correspondence with the omitted historical one-tape table remains open | spec-gap |
+| `L4a-SKETCH` | §4a proof | One representative relation is simulated by sweeping, editing, appending history, shifting delimiters, and returning control | `TwoTape.HistoryCompiler` now gives complete finite rule families: forward steps append source-rule tokens, and reverse execution scans left, checks the token, moves the work head back, then restores and erases in place. The crucial checked correction is `restoreRule.move₂ = .stay`. This is a cleaner two-tape construction; no theorem identifies it with Lecerf's one-tape sweeping/marker encoding | spec-gap |
+| `L4b-THM1H` | Theorem 1 | Halting is recursively unsolvable for arbitrary reversible Turing machines | For fixed finite two-tape control/alphabet types, `HaltingYes` guards an arbitrary supplied table by primitive-recursive `Certified`; `partrecHalts0_manyOne_haltingYes` is an explicit computable reduction and `haltingYes_not_computable` proves noncomputability. This establishes the finite two-tape version, not a one-tape lowering | source-confirmed |
+| `L4b-THM1R` | Theorem 1 | Return to the initial configuration is recursively unsolvable | `ReturnYes` uses `PositiveReturn`, excluding the zero-step loophole. `partrecHalts0_manyOne_returnYes` and `returnYes_not_computable` establish the validity-guarded finite reversible two-tape result | corrected-target |
+| `L4b-THM1T` | Theorem 1 | Passage through a specified configuration other than the initial one is recursively unsolvable | `ReachabilityYes` explicitly requires unequal endpoints and `StrictlyReachable`. `partrecHalts0_manyOne_reachabilityYes` and `reachabilityYes_not_computable` establish the validity-guarded finite reversible two-tape result with both reduction directions | source-confirmed |
 | `L4c-THM2F` | Theorem 2 | `w = θⁿ(w)` is recursively unsolvable in `n` for arbitrary given `w, θ` | Uniform existence of a positive, fully defined iterate; supplied-exponent evaluation is a separate decidable problem | corrected-target |
 | `L4c-THM2O` | Theorem 2 | `w₁ = θⁿ(w₂)`, with `w₁ ≠ w₂`, is recursively unsolvable in `n` | Uniform existence of a positive, fully defined iterate from start `w₂` to target `w₁` | corrected-target |
 
@@ -120,7 +120,7 @@ Status labels in this file are:
 Names in completed rows are exact checked declarations. Later rows remain
 proposed API targets.
 
-| Claim family | Proposed declaration family | Planned stage |
+| Claim family | Declaration family | Planned stage |
 |---|---|---:|
 | Generic reversible execution | `Step`, `BackwardUnique`, `ReversibleStep`, `ReversibleStep.next_eq_some_iff_prev_eq_some`, `ReversibleStep.reachable_iff_reverse_reachable`, `ReversibleStep.strictlyReachable_iff_reverse_strictlyReachable` | 2 (implemented) |
 | Concrete machine semantics | `Tape`, `Config`, `Rule`, `FiniteMachine`, `FiniteMachine.step`, `FiniteMachine.TableDeterministic`, `FiniteMachine.Reversible` | 3 (implemented) |
@@ -129,38 +129,50 @@ proposed API targets.
 | History simulation | `History.forward`, `History.backward`, `History.reversible`, `History.reachable_iff_valid`, `History.source_reachable_iff_exists_reachable_checkpoint`, `History.haltsFrom_forward_iff` | 4 (implemented abstractly; historical tape compiler open) |
 | Effective history interpretation | `FiniteMachine.step_uniform_primrec`, `History.forwardInterpreter_primrec`, `History.backwardInterpreter_primrec`, `History.finiteForward_uniform_primrec`, `History.finiteBackward_uniform_primrec`, `History.universalHistory_halts_iff_eval_dom` | 4 (implemented; generated conventional history machine open) |
 | Coupling | `Coupling.turnaround`, `Coupling.returnGadget`, `Coupling.History.target_strictlyReachable_iff_halts`, `Coupling.History.positiveReturn_iff_halts`, `Coupling.History.universalTarget_strictlyReachable_iff_eval_dom`, `Coupling.History.universalPositiveReturn_iff_eval_dom` | 5 (implemented abstractly; finite compiler open) |
-| Machine undecidability | `reversibleHalting_not_computable`, `reversibleReturn_not_computable`, `reversibleReachability_not_computable` | 6 |
+| Fixed conventional universal source | `Compiler.UniversalSource.universalCode`, `Compiler.FiniteSource.machine`, `Compiler.FiniteSource.halts_iff_eval_dom`, `Compiler.FiniteSource.initial_primrec` | 6 (implemented; fixed one-tape source) |
+| Finite reversible two-tape compiler | `TwoTape.HistoryCompiler.historyMachine`, `turnaroundMachine`, `returnMachine`, `historyMachine_haltsFrom_iff_source`, `turnaround_bottom_strictlyReachable_iff_source_halts`, `return_positiveReturn_iff_source_halts` | 6 (implemented; one-tape lowering open) |
+| Finite two-tape validity | `TwoTape.FiniteMachine.SyntacticallyReversible`, `TwoTape.FiniteMachine.syntacticallyReversible_primrec`, `HistoryCompiler.historyMachine_syntacticallyReversible`, `turnaroundMachine_syntacticallyReversible`, `returnMachine_syntacticallyReversible` | 6 (implemented sufficient guard) |
+| Fixed universal reversible tables | `Compiler.ReversibleUniversal.historyTable`, `turnaroundTable`, `returnTable`, `startCheckpoint_primrec`, `bottomTarget_primrec`, `eval_dom_iff_history_halts`, `eval_dom_iff_turnaround_bottom_strictlyReachable`, `eval_dom_iff_return_positiveReturn` | 6 (implemented; finite two-tape) |
+| Machine undecidability | `ReversibleTwoTape.HaltingYes`, `ReturnYes`, `ReachabilityYes`, `partrecHalts0_manyOne_haltingYes`, `partrecHalts0_manyOne_returnYes`, `partrecHalts0_manyOne_reachabilityYes`, `haltingYes_not_computable`, `returnYes_not_computable`, `reachabilityYes_not_computable` | 6 (implemented; finite two-tape) |
 | Indexed codes | `IsIndexedCode`, `IsPrefixCode`, `IsSuffixCode` | 7 |
 | Code maps | `CodeIso`, `PaperCodeEpi`, `iteratePEquiv` | 7 |
 | Step encoding | `encodeConfig`, `stepCodeIso`, `iterate_encode_iff_reaches` | 8 |
 | Iterate undecidability | `positiveFixedOrbit_not_computable`, `distinctOrbit_not_computable` | 9 |
 
 Stage 3 supplies the concrete read-write-move semantics and repaired local and
-global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stage 4
-supplies clean abstract analogues of `L4a-SIM1` through `L4a-SIM5`, including
-effectivity and halting reflection. Stage 5 supplies the phase-tagged
-halt-to-reverse coupling, distinct-target reachability iff, positive-return
-iff, and primitive-recursive abstract interpreters/endpoints. The printed
-marker words, finite history/coupling compiler, finite validity predicate, and
-code-map layer remain open, so no finite-machine undecidability claim follows
-from these declarations alone.
+global inverse laws for the machine portion of `L2-RULEINV`/`L2-REV`. Stages
+4–5 supply the clean abstract history and coupling theorems. Stage 6 adds a
+fixed conventional one-tape universal source, a complete finite reversible
+two-tape history/coupling compiler, primitive-recursive validity and endpoint
+maps, three exact many-one reductions, and three noncomputability theorems.
+The result is deliberately two-tape. Lowering it to the project's one-tape
+`FiniteMachine`, identifying it with Lecerf's literal marker/sweeping table,
+and constructing the code-map layer remain separate obligations.
 
 ## Principal Reduction Map
 
 ```text
-established encoded halting predicate
-  -- computable finite-machine compiler + semantic iff -->
-ordinary finite-machine halting
-  -- effective abstract history interpreter + halting iff (Stage 4 checked) -->
-abstract reversible-transition halting
-  -- phase-tagged coupling gadgets + semantic iff/effectivity (Stage 5 checked) -->
-abstract positive return / distinct-target reachability
-  -- pending history/coupling finite-tape compiler and validity proof -->
-finite reversible-machine halting / return / reachability
-  -- configuration code + step/iterate iff -->
+PartrecHalts0(code) := (Nat.Partrec.Code.eval code 0).Dom
+  -- one fixed universal ToPartrec program; primitive-recursive encoded input;
+     checked TM2 → TM1 → TM0 lowering and canonical tape bridge -->
+HaltsFrom FiniteSource.machine.step
+  (FiniteSource.initial (UniversalSource.encodedInput code 0).1)
+  -- three fixed finite two-tape history/coupling tables;
+     primitive-recursive endpoints; checked validity/reversibility;
+     preservation and reflection -->
+HaltingYes (compileHalting code)
+ReturnYes (compileReturn code)
+ReachabilityYes (compileReachability code)
+  -- explicit ManyOneReducible witnesses + halting_problem 0 -->
+¬ComputablePred HaltingYes
+¬ComputablePred ReturnYes
+¬ComputablePred ReachabilityYes
+
+finite reversible two-tape steps/configurations
+  -- pending configuration code + step/iterate iff -->
 positive fixed orbit / distinct orbit of a partial code isomorphism
 ```
 
-Every arrow is a separate theorem obligation. A mathematical existence proof
-of a simulator cannot discharge computability, well-formedness, preservation,
-or reflection for any arrow.
+Every Stage-6 arrow above is checked separately; the fixed tables do not hide a
+varying compiler. The final code-isomorphism arrow remains a later theorem
+obligation, as do any one-tape lowering and historical-encoding correspondence.

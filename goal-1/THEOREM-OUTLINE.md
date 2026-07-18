@@ -1,8 +1,8 @@
 # Proposed Theorem and Reduction Outline
 
-Stage 2 through Stage 5 declarations are identified as implemented below. All
-later-layer names remain proposed Lean surfaces and may be refined when
-implementation evidence requires it.
+Stage 2 through Stage 6 declarations are identified as implemented below.
+The word, code-encoding, and iterate-problem layers remain proposed Lean
+surfaces and may be refined when implementation evidence requires it.
 
 ## 1. Partial Transition Systems (implemented)
 
@@ -171,12 +171,14 @@ table. The audit's two-rule merge is table-deterministic and each entry has a
 paper's printed tuple inverse only as diagnostic syntax and proves it fails on
 a concrete moving-rule successor.
 
-The phase decomposition above is semantic, not yet a generated finite table
-of ordinary rules with `normal`/`move` microstates. Likewise,
-`ReverseTableCompatible` currently has a proved sufficient direction, while
-the exact checked characterization uses semantic `BackwardCompatible`. The
-finite syntactic compiler and decidable pairwise converse are explicit later
-obligations, not consequences of `FiniteMachine.toPEquiv`.
+For this one-tape model, the phase decomposition above remains semantic rather
+than a generated finite table of ordinary `normal`/`move` microstates.
+Likewise, `ReverseTableCompatible` has a proved sufficient direction while the
+exact checked characterization uses semantic `BackwardCompatible`. Stage 6
+does not claim a converse here: it introduces a separate simultaneous
+read-write-move two-tape model with its own decidable sufficient validity
+certificate. A future two-to-one-tape lowering must still implement and prove
+the missing phase-control bridge.
 
 The effective replacement halting source is one fixed transition:
 
@@ -196,12 +198,26 @@ evalSearchStart_joint_primrec :
   Primrec fun data => evalSearchStart data.1 data.2
 ```
 
-This is a complete effective source-transition theorem, not yet the first
-reduction arrow to `FiniteMachine`. The pinned mathlib TM route exposes an
-existential `ToPartrec.Code` and noncomputable downstream support maps, so the
-project records that obstruction instead of fabricating a compiler. A later
-undecidability stage must still provide an explicit computable finite-machine
-compiler and its own halting iff.
+This remains a complete effective source-transition theorem. Stage 6 also
+closes the finite source side by selecting one fixed universal
+`Turing.ToPartrec.Code`, compiling its proved finite support to a fixed
+one-tape machine, and putting the varying `Nat.Partrec.Code` on the input tape:
+
+```lean
+Compiler.UniversalSource.encodedInput_joint_primrec
+
+Compiler.FiniteSource.machine : FiniteMachine State Symbol
+Compiler.FiniteSource.machine_tableDeterministic
+Compiler.FiniteSource.halts_iff_eval_dom
+
+Compiler.FiniteSource.initial_joint_primrec
+Compiler.FiniteSource.initial_primrec
+```
+
+`universalCode`, the finite support, the induced fixed encodings, and the
+fixed machine table are isolated noncomputable constants. The changing input
+configuration is primitive recursive; no varying source code is passed to a
+classical machine selector.
 
 ## 3. History-Recording Reversible Simulation (implemented)
 
@@ -313,11 +329,12 @@ History.universalBackward_primrec
 History.universalHistory_halts_iff_eval_dom
 ```
 
-The finite theorems interpret an existing finite machine description against
-an unbounded abstract history log. They do not generate a conventional
-one-tape `FiniteMachine` implementing that log. The latter tape/microstate
-compiler remains a distinct bridge before a finite reversible-machine
-undecidability target can be claimed.
+The finite theorems in this abstract layer interpret an existing finite
+machine description against an unbounded abstract history log. They do not
+themselves generate a conventional one-tape `FiniteMachine`. Stage 6 supplies
+a separate finite two-tape history-token compiler with a concrete history
+tape and microstates. Thus the finite reversible-machine claim is now proved
+for that two-tape target, while one-tape lowering remains distinct.
 
 ## 4. Forward–Reverse Coupling (implemented)
 
@@ -417,57 +434,228 @@ Coupling.History.universalTarget_strictlyReachable_iff_eval_dom
 Coupling.History.universalPositiveReturn_iff_eval_dom
 ```
 
-The finite theorems interpret an existing `FiniteMachine` description on an
-abstract phase-tagged full-history state. They do not compile that state into
-a conventional finite tape machine and therefore are not yet Stage-6 raw
-finite-machine reductions.
+The finite theorems here interpret an existing `FiniteMachine` description on
+an abstract phase-tagged full-history state. Stage 6 does not reinterpret them
+as syntax: it proves an independent concrete two-tape compiler and connects
+its finite microstep semantics to the same halting, return, and target ideas.
 
-## 5. Finite Decision Problems and Machine Reductions
+## 5. Finite Two-Tape Decision Problems and Machine Reductions (implemented)
 
-Target predicates live on raw `Primcodable` descriptions. Malformed inputs are
-false; reduction functions must always construct valid ones. Indicative
-shapes:
+Public modules:
 
-```lean
-def ReversibleHaltingYes (x : RevHaltInput) : Prop :=
-  x.machine.Valid ∧ x.machine.Reversible ∧
-    HaltsFrom x.machine.step x.start
+```text
+Lecerf.Machine.Compiler.UniversalSource
+Lecerf.Machine.Compiler.Table
+Lecerf.Machine.Compiler.TapeBridge
+Lecerf.Machine.Compiler.FiniteSource
+Lecerf.Machine.Compiler.FiniteSourceComputable
+Lecerf.Machine.Compiler.ReversibleUniversal
 
-def ReversibleReturnYes (x : RevReturnInput) : Prop :=
-  x.machine.Valid ∧ x.machine.Reversible ∧
-    PositiveReturn x.machine.step x.start
+Lecerf.Machine.TwoTape.Core
+Lecerf.Machine.TwoTape.Reversible
+Lecerf.Machine.TwoTape.Effectivity
+Lecerf.Machine.TwoTape.Validity
+Lecerf.Machine.TwoTape.HistoryCompiler.Core
+Lecerf.Machine.TwoTape.HistoryCompiler.Basic
+Lecerf.Machine.TwoTape.HistoryCompiler.Trace
+Lecerf.Machine.TwoTape.HistoryCompiler.Reversible
+Lecerf.Machine.TwoTape.HistoryCompiler.Runtime
+Lecerf.Machine.TwoTape.HistoryCompiler.Correctness
+Lecerf.Machine.TwoTape.HistoryCompiler.Effectivity
 
-def ReversibleReachabilityYes (x : RevReachInput) : Prop :=
-  x.machine.Valid ∧ x.machine.Reversible ∧ x.start ≠ x.target ∧
-    StrictlyReachable x.machine.step x.start x.target
+Lecerf.Undecidability.ReversibleTwoTape.Problems
+Lecerf.Undecidability.ReversibleTwoTape.Reduction
+Lecerf.Undecidability.ReversibleTwoTape.API
 ```
 
-If `Reversible` already entails deterministic forward and backward execution,
-that implication is proved in the machine API; validity still checks all
-finite bounds and lookup constraints.
+`ReversibleTwoTape.Audit` is a non-public executable and axiom-audit leaf.
 
-For source predicate
+### Finite target syntax, validity, and history compiler
 
-```lean
-def PartrecHalts (c : Nat.Partrec.Code) : Prop := (c.eval 0).Dom
-```
-
-construct computable raw-description maps and iff theorems:
+`TwoTape.Config Q Γ₁ Γ₂` carries two canonical project tapes.
+`TwoTape.Rule Q Γ₁ Γ₂` reads both heads and then writes and moves both tapes
+simultaneously. `TwoTape.FiniteMachine` is a raw finite first-match rule list.
+The exact inverse and semantic separation are checked by:
 
 ```lean
-compileHalt   : Nat.Partrec.Code → RevHaltInput
-compileReturn : Nat.Partrec.Code → RevReturnInput
-compileReach  : Nat.Partrec.Code → RevReachInput
+TwoTape.Rule.apply_eq_some_iff_undo_eq_some
+TwoTape.Rule.toPEquiv
 
-PartrecHalts c ↔ ReversibleHaltingYes      (compileHalt c)
-PartrecHalts c ↔ ReversibleReturnYes       (compileReturn c)
-PartrecHalts c ↔ ReversibleReachabilityYes (compileReach c)
+TwoTape.FiniteMachine.TableDeterministic
+TwoTape.FiniteMachine.IncomingSeparatedPair
+TwoTape.FiniteMachine.OutputSeparated
+TwoTape.FiniteMachine.SyntacticallyReversible
+TwoTape.FiniteMachine.SyntacticallyReversible.reversible
+TwoTape.FiniteMachine.syntacticallyReversible_primrec
+TwoTape.FiniteMachine.step_uniform_primrec
 ```
 
-Package each as `ManyOneReducible`. Transfer noncomputability from
-`ComputablePred.halting_problem 0` with
-`ComputablePred.computable_of_manyOneReducible`. No theorem may replace the
-computable maps with existence of an equivalent machine.
+`SyntacticallyReversible` is a decidable, primitive-recursive sufficient
+certificate: forward rule keys are pairwise separated and incoming rules are
+separated on at least one written tape head. It implies
+`TableDeterministic ∧ BackwardUnique step`. No converse claiming that every
+semantically reversible table passes this certificate is asserted.
+
+The finite history alphabet and compiler controls are:
+
+```lean
+inductive TwoTape.HistoryCompiler.Mark
+  | blank | bottom | token (rule : Machine.Rule Q Γ)
+
+inductive TwoTape.HistoryCompiler.Control
+  | forward (state : Q)
+  | reverse (state : Q)
+  | inspect (state : Q)
+  | restore (rule : Machine.Rule Q Γ)
+
+TwoTape.HistoryCompiler.historyMachine
+TwoTape.HistoryCompiler.turnaroundMachine
+TwoTape.HistoryCompiler.returnMachine
+TwoTape.HistoryCompiler.checkpoint
+TwoTape.HistoryCompiler.bottomTarget
+```
+
+The first tape runs the source; the second records a complete source rule per
+successful step. The open table switches at a source terminal state and
+reverses to a distinct exposed-bottom target. The closed table adds one
+bottom rule returning to the fresh forward checkpoint. The generated-table
+and correctness declarations include:
+
+```lean
+TwoTape.HistoryCompiler.historyMachine_syntacticallyReversible
+TwoTape.HistoryCompiler.turnaroundMachine_syntacticallyReversible
+TwoTape.HistoryCompiler.returnMachine_syntacticallyReversible
+
+TwoTape.HistoryCompiler.historyMachine_reversible
+TwoTape.HistoryCompiler.turnaroundMachine_reversible
+TwoTape.HistoryCompiler.returnMachine_reversible
+
+TwoTape.HistoryCompiler.checkpoint_ne_bottomTarget
+TwoTape.HistoryCompiler.historyMachine_haltsFrom_iff_source
+TwoTape.HistoryCompiler.turnaround_bottom_strictlyReachable_iff_source_halts
+TwoTape.HistoryCompiler.return_positiveReturn_iff_source_halts
+
+TwoTape.HistoryCompiler.checkpoint_primrec
+TwoTape.HistoryCompiler.reverseCheckpoint_primrec
+TwoTape.HistoryCompiler.bottomTarget_primrec
+```
+
+The `CanonicalRun` invariant classifies every state reachable from a generated
+checkpoint, including the forward, boundary, scan, inspect, restore, reverse,
+and exposed-bottom microstates. It supplies reflection: neither a malformed
+history nor a spurious microstate can produce the target or positive return in
+the headline iff theorems.
+
+### Fixed universal instantiation
+
+`Compiler.ReversibleUniversal` instantiates the compiler at the fixed
+one-tape universal source:
+
+```lean
+Compiler.ReversibleUniversal.historyTable
+Compiler.ReversibleUniversal.turnaroundTable
+Compiler.ReversibleUniversal.returnTable
+
+Compiler.ReversibleUniversal.sourceStart
+Compiler.ReversibleUniversal.startCheckpoint
+Compiler.ReversibleUniversal.bottomTarget
+
+Compiler.ReversibleUniversal.historyTable_syntacticallyReversible
+Compiler.ReversibleUniversal.turnaroundTable_syntacticallyReversible
+Compiler.ReversibleUniversal.returnTable_syntacticallyReversible
+
+Compiler.ReversibleUniversal.startCheckpoint_primrec
+Compiler.ReversibleUniversal.bottomTarget_primrec
+Compiler.ReversibleUniversal.startCheckpoint_ne_bottomTarget
+
+Compiler.ReversibleUniversal.eval_dom_iff_history_halts
+Compiler.ReversibleUniversal.eval_dom_iff_turnaround_bottom_strictlyReachable
+Compiler.ReversibleUniversal.eval_dom_iff_return_positiveReturn
+```
+
+All three machine tables are closed constants. Classical choice and
+`Finset.toList` enumeration are confined to those fixed constants and their
+fixed encodings. Only the start/target configurations vary with the source
+code. The final maps are declared inside a `noncomputable section` because
+they mention the constants, but the complete maps have checked `Primrec` and
+`Computable` proofs; there is no varying noncomputable compiler or oracle.
+
+### Raw problems and exact reductions
+
+The raw target types have fixed finite state and alphabet types, while the
+finite rule table remains part of each input:
+
+```lean
+abbrev HaltingInput := TargetMachine × TargetConfig
+abbrev ReturnInput := TargetMachine × TargetConfig
+abbrev ReachabilityInput := TargetMachine × TargetConfig × TargetConfig
+
+def Certified (machine : TargetMachine) : Prop :=
+  machine.SyntacticallyReversible
+
+def HaltingYes (input : HaltingInput) : Prop :=
+  Certified input.1 ∧ HaltsFrom input.1.step input.2
+
+def ReturnYes (input : ReturnInput) : Prop :=
+  Certified input.1 ∧ PositiveReturn input.1.step input.2
+
+def ReachabilityYes (input : ReachabilityInput) : Prop :=
+  Certified input.1 ∧ input.2.1 ≠ input.2.2 ∧
+    StrictlyReachable input.1.step input.2.1 input.2.2
+```
+
+`certified_primrec` proves the raw guard primitive recursive.
+`HaltingYes.reversible`, `ReturnYes.reversible`, and
+`ReachabilityYes.reversible` derive semantic whole-machine reversibility from
+the guard. Uncertified descriptions are false, and every generated instance
+has an explicit certificate.
+
+The source predicate, reduction maps, effectivity theorems, and exact iff
+theorems are:
+
+```lean
+def PartrecHalts0 (code : Nat.Partrec.Code) : Prop :=
+  (Nat.Partrec.Code.eval code 0).Dom
+
+compileHalting      : Nat.Partrec.Code → HaltingInput
+compileReturn       : Nat.Partrec.Code → ReturnInput
+compileReachability : Nat.Partrec.Code → ReachabilityInput
+
+compileHalting_primrec
+compileHalting_computable
+compileReturn_primrec
+compileReturn_computable
+compileReachability_primrec
+compileReachability_computable
+
+compileHalting_certified
+compileReturn_certified
+compileReachability_certified
+compileReachability_start_ne_target
+
+partrecHalts0_iff_haltingYes
+partrecHalts0_iff_returnYes
+partrecHalts0_iff_reachabilityYes
+```
+
+The three packaged reductions and transferred noncomputability theorems are:
+
+```lean
+partrecHalts0_manyOne_haltingYes : PartrecHalts0 ≤₀ HaltingYes
+partrecHalts0_manyOne_returnYes : PartrecHalts0 ≤₀ ReturnYes
+partrecHalts0_manyOne_reachabilityYes : PartrecHalts0 ≤₀ ReachabilityYes
+
+haltingYes_not_computable : ¬ComputablePred HaltingYes
+returnYes_not_computable : ¬ComputablePred ReturnYes
+reachabilityYes_not_computable : ¬ComputablePred ReachabilityYes
+```
+
+Each last theorem transfers `ComputablePred.halting_problem 0` backward along
+the displayed `ManyOneReducible`; none relies on a project-specific
+undecidability axiom. These are finite reversible **two-tape** results. They do
+not yet state the same decision problems for the earlier one-tape
+`FiniteMachine`, and they do not yet identify the compiler with Lecerf's
+historical compact marker encoding.
 
 ## 6. Words, Codes, and Code Maps
 
@@ -592,17 +780,24 @@ no-instances.
 
 ```text
 Nat.Partrec.Code halting
-  ≤₀ computable search-transition halting
-  ≤₀ ordinary finite-machine halting
-  ≤₀ reversible-machine halting
-  ≤₀ reversible positive return / distinct reachability
-  ≤₀ positive fixed orbit / distinct orbit of a partial code isomorphism
+  |-- ≤₀ certified halting of a finite reversible two-tape table
+  |-- ≤₀ certified positive return of a finite reversible two-tape table
+  `-- ≤₀ certified distinct-target strict reachability of a finite
+          reversible two-tape table
+
+Planned next machine/code arrows:
+  finite reversible two-tape positive return
+    -> positive fixed orbit of a partial code isomorphism
+  finite reversible two-tape distinct reachability
+    -> distinct orbit of a partial code isomorphism
 ```
 
-The first generic search step may be folded into the finite-machine compiler,
-but the semantic iff and computability proof remain explicit. Fixed orbit is
-fed by positive return; distinct orbit is fed by start-to-distinct-target
-reachability. Each arrow requires:
+The three Stage-6 arrows are direct packaged reductions. Internally, their iff
+proofs pass through a fixed universal one-tape source and fixed finite
+two-tape history/turnaround/return tables; the only varying data are
+primitive-recursive configurations. Fixed orbit will be fed by positive
+return, and distinct orbit by start-to-distinct-target reachability. Each
+future arrow still requires:
 
 1. a computable function on finite encodings;
 2. a proof that its output passes the target validity predicate;
@@ -610,4 +805,6 @@ reachability. Each arrow requires:
 4. reflection/no-spurious yes-instances.
 
 Simulation, code encoding, and reduction theorems stay in separate layers even
-when later proofs reuse the same construction.
+when later proofs reuse the same construction. A two-to-one-tape lowering and
+the correspondence with Lecerf's historical marker encoding also remain
+separate from the implemented Stage-6 reduction branch.

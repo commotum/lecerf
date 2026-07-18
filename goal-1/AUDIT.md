@@ -63,10 +63,15 @@ Material changes to the paper are:
 - removal of the English-only completeness claim (`A-013`); and
 - a consistent empty history base case (`A-015`).
 
+`A-030` is instead a correction to the reconstructed finite compiler, not a
+claim about text omitted by the paper: token restoration must leave the
+history head in place for the next leftward scan.
+
 Independent representation choices, not claims about the historical text,
 are `PEquiv` for generic reversible steps, `FreeMonoid` for words, a custom
 indexed-code predicate, complete predecessor lists for the first clean history
-simulator, phase-tagged coupling, and a finite-support tape model.
+simulator, phase-tagged coupling, a finite-support tape model, and the Stage-6
+finite two-tape rule-token compiler.
 
 ## No-Cheating Audit Categories
 
@@ -86,8 +91,9 @@ Every completed stage must classify findings under these headings:
 
 ## Axiom Audit Table
 
-Stages 2 through 5 introduce the checked transition, finite-machine, abstract
-history-simulation, and forward/reverse coupling surfaces.
+Stages 2 through 6 introduce the checked transition, one- and two-tape
+finite-machine surfaces, abstract and finite history simulations,
+forward/reverse coupling, and validity-guarded undecidability reductions.
 
 | Lean declaration | Role | `#print axioms` result | Disposition |
 |---|---|---|---|
@@ -117,6 +123,12 @@ history-simulation, and forward/reverse coupling surfaces.
 | `Lecerf.Machine.Coupling.History.universalReturnNext_primrec` | Primitive-recursive fixed universal return step | `propext`, `Classical.choice`, `Quot.sound` | Interpreter effectivity only; no finite output compiler is inferred |
 | `Lecerf.Machine.Coupling.History.universalTarget_strictlyReachable_iff_eval_dom` | Universal evaluation domain iff distinct-target reachability | `propext`, `Classical.choice`, `Quot.sound` | Semantic specialization of the checked universal source; not yet a finite-description reduction |
 | `Lecerf.Machine.Coupling.History.universalPositiveReturn_iff_eval_dom` | Universal evaluation domain iff positive return | `propext`, `Classical.choice`, `Quot.sound` | Semantic specialization; no `ManyOneReducible` or undecidability conclusion is claimed |
+| `Lecerf.Machine.TwoTape.HistoryCompiler.return_positiveReturn_iff_source_halts` | Finite closed two-tape return iff source halting | `propext`, `Classical.choice`, `Quot.sound` | Both directions use the generated-run invariant and checked backward uniqueness; no project axiom |
+| `Lecerf.Machine.Compiler.ReversibleUniversal.eval_dom_iff_history_halts` | Fixed finite two-tape history-table halting iff universal evaluation domain | `propext`, `Classical.choice`, `Quot.sound` | Classical dependencies belong to the fixed universal program/encodings and standard transition semantics; the varying start map is separately primitive recursive |
+| `Lecerf.Undecidability.ReversibleTwoTape.partrecHalts0_manyOne_haltingYes` | Explicit computable many-one reduction to guarded finite halting | `propext`, `Classical.choice`, `Quot.sound` | The witness is `compileHalting`, proved primitive recursive; no project axiom or varying noncomputable oracle |
+| `Lecerf.Undecidability.ReversibleTwoTape.haltingYes_not_computable` | Finite reversible two-tape halting noncomputability | `propext`, `Classical.choice`, `Quot.sound` | Derived from mathlib's `ComputablePred.halting_problem 0` through the explicit reduction |
+| `Lecerf.Undecidability.ReversibleTwoTape.returnYes_not_computable` | Finite reversible two-tape positive-return noncomputability | `propext`, `Classical.choice`, `Quot.sound` | Derived from the same established source theorem; the target predicate uses positive return |
+| `Lecerf.Undecidability.ReversibleTwoTape.reachabilityYes_not_computable` | Finite reversible two-tape distinct-target reachability noncomputability | `propext`, `Classical.choice`, `Quot.sound` | Derived from the same established source theorem; target inequality and strict reachability are explicit guards |
 
 For every later headline theorem, record the exact command, Lean output,
 mathlib or logical axioms present, and whether those axioms affect
@@ -243,3 +255,49 @@ executability or trust.
   and public-import scans, trailing-whitespace checks, and `git diff --check`
   passed. The exact `#print axioms` results are recorded above and contain only
   standard Lean/mathlib axioms.
+
+### Stage 6 finite reversible two-tape undecidability
+
+- Added the fixed universal source bridge in
+  `Machine.Compiler.{UniversalSource,Table,TapeBridge,FiniteSource,FiniteSourceComputable}`.
+  One closed `ToPartrec.Code` is selected and lowered through mathlib's
+  TM2→TM1→TM0 translations into an actual fixed one-tape `FiniteMachine`.
+  `FiniteSource.halts_iff_eval_dom` proves preservation and reflection, while
+  `FiniteSource.initial_primrec` proves the varying program/input start tape
+  primitive recursive.
+- Added `Machine.TwoTape.{Core,Reversible,Effectivity,Validity}` and the finite
+  `TwoTape.HistoryCompiler` runtime, trace invariant, correctness,
+  reversibility, and endpoint-effectivity leaves. The forward-only, open
+  turnaround, and closed return tables have checked
+  `SyntacticallyReversible` certificates implying semantic `Reversible`.
+  The corrected reverse macro erases a token with `restoreRule.move₂ = .stay`;
+  moving right there would stop a multi-token retrace early.
+- `Machine.Compiler.ReversibleUniversal` fixes those three target tables and
+  proves primitive-recursive start and bottom-target maps plus exact source
+  evaluation-domain iff theorems for finite halting, distinct-target strict
+  reachability, and positive return.
+- `Undecidability.ReversibleTwoTape.Problems` guards every raw predicate by the
+  primitive-recursive finite validity certificate. `Reduction` supplies the
+  primitive-recursive maps `compileHalting`, `compileReturn`, and
+  `compileReachability`, their three exact iff theorems, three explicit
+  `ManyOneReducible` witnesses, and `haltingYes_not_computable`,
+  `returnYes_not_computable`, and `reachabilityYes_not_computable` from
+  mathlib's `ComputablePred.halting_problem 0`.
+- Classical choice selects only the one fixed universal program. Other
+  `noncomputable` declarations package fixed finite supports, encodings,
+  enumeration orders, tables, or semantic reversible-step data. Every map
+  varying with `Nat.Partrec.Code` and used as a reduction witness has a checked
+  `Primrec` theorem; no varying compiler or oracle is hidden behind those
+  constants.
+- `lake build Lecerf.Undecidability.ReversibleTwoTape.Audit Lecerf` passed with
+  894 jobs, replaying all six representative axiom checks. Full `lake build`
+  passed with 893 jobs. Every reported Stage-6 headline dependency was exactly
+  `[propext, Classical.choice, Quot.sound]`; no project-specific axiom appears.
+- Focused scans found no `sorry`, `admit`, project `axiom`, or proof-bypassing
+  `unsafe`. All `noncomputable`/`Classical.choose` occurrences were classified
+  at the fixed-data boundary, the Stage-7 code/iterate token scan had no hits,
+  and whitespace plus `git diff --check` passed.
+- These are exact results for conventional finite reversible **two-tape**
+  machines. No lowering to the project's one-tape `FiniteMachine` and no
+  correspondence with Lecerf's literal one-tape marker/sweeping relations is
+  claimed; that historical representation gap remains explicit.

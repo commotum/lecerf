@@ -391,7 +391,7 @@ The previously grouped obligations now have different statuses:
 The realized dependency graph is:
 
 ```text
-Mathlib ToPartrec + Reduce
+Mathlib ToPartrec
   -> Machine/Compiler/UniversalSource
   -> Machine/Compiler/FiniteSource
   -> Machine/Compiler/FiniteSourceComputable
@@ -401,14 +401,19 @@ Machine/Tape + Transition/Core
   -> Machine/TwoTape/Effectivity
   -> Machine/TwoTape/Validity
 
-Machine/TwoTape/Core + Machine/Reversible
+Machine/TwoTape/Core + Transition/Reversible
   -> Machine/TwoTape/Reversible
   -> Machine/TwoTape/Validity
 
 Machine/Core + Machine/TwoTape/Reversible
   -> Machine/TwoTape/HistoryCompiler/Core
-  -> HistoryCompiler/Basic + HistoryCompiler/Trace
+  -> HistoryCompiler/Basic
+  -> HistoryCompiler/Trace
+
+HistoryCompiler/Basic
   -> HistoryCompiler/Reversible
+
+HistoryCompiler/Trace + HistoryCompiler/Reversible
   -> HistoryCompiler/Runtime
   -> HistoryCompiler/Correctness
 

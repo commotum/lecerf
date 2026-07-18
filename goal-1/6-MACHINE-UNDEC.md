@@ -48,12 +48,24 @@
   `Finset.toList` through fixed `Fintype` data and is deliberately not claimed
   as a varying primitive-recursive compiler; the intended reduction uses one
   fixed closed target table and primitive-recursive start/target maps.
-- The remaining checked work is the global generated-run invariant and three
-  semantic iff theorems, fixed universal instantiation, explicit finite
-  `ManyOneReducible` witnesses/noncomputability results, and final audits/API.
+- `HistoryCompiler.Correctness` proves the generated-run invariant and the
+  three concrete semantic equivalences:
+  `historyMachine_haltsFrom_iff_source`,
+  `turnaround_bottom_strictlyReachable_iff_source_halts`, and
+  `return_positiveReturn_iff_source_halts`.
+- `Compiler.ReversibleUniversal` instantiates the compiler at the fixed finite
+  source. Its three closed target tables are syntactically certified and
+  semantically reversible; its varying source/checkpoint/target maps are
+  primitive recursive; and its three `eval.Dom` iff theorems connect the
+  concrete machines directly to mathlib's source predicate.
+- `Undecidability.ReversibleTwoTape.Reduction` defines three explicit
+  primitive-recursive compilation maps, proves that every output is certified
+  reversible (and that reachability endpoints differ), packages three
+  `ManyOneReducible` witnesses, and derives three noncomputability theorems from
+  `ComputablePred.halting_problem 0`.
 - Primitive-recursive abstract interpreters are not finite-machine output
-  compilers. Stage 6 cannot be completed merely by renaming the Stage-4/5
-  semantic iff theorems as Turing-machine reductions.
+  compilers. The Stage-6 result instead uses the separate checked finite
+  two-tape compiler and does not rename the Stage-4/5 semantic theorems.
 
 ## Updated Assumptions
 
@@ -122,19 +134,28 @@ axiom.
 - `formal/Lecerf/Machine/Validity.lean`: finite syntactic validity and
   decidability/computability facts; it depends only on concrete machine
   semantics/effectivity.
-- `formal/Lecerf/Machine/Compiler/`: finite source and reversible-history
-  compiler modules, split into runtime, correctness, and computability leaves
-  once the checked design fixes their dependency boundary.
-- `formal/Lecerf/Undecidability/ReversibleMachine.lean`: final raw input
-  predicates, finite reduction witnesses, and noncomputability theorems.
-- `formal/Lecerf/Undecidability/Audit.lean`: executable examples and axiom
-  audit; never publicly imported.
-- `formal/Lecerf/Undecidability/API.lean`: thin stable exports after the finite
-  reductions compile.
-- Initial focused build:
-  `cd formal && lake build Lecerf.Undecidability.EffectiveTransition`.
-  Each compiler leaf gets its own narrow build; API changes require adjacent
-  root builds and a final full `lake build`.
+- `formal/Lecerf/Machine/Compiler/{UniversalSource,Table,TapeBridge,
+  FiniteSource,FiniteSourceComputable}.lean`: isolate the fixed universal
+  program, lower it through checked mathlib TM simulations, restrict to finite
+  support, and prove the varying input/start map primitive recursive.
+- `formal/Lecerf/Machine/TwoTape/{Core,Reversible,Effectivity,Validity}.lean`:
+  conventional finite two-tape execution, exact inverse semantics, uniform
+  primitive-recursive execution, and the checked sufficient reversibility
+  certificate.
+- `formal/Lecerf/Machine/TwoTape/HistoryCompiler/{Core,Basic,Trace,Runtime,
+  Reversible,Correctness,Effectivity}.lean`: finite compiler syntax and table
+  membership, normalized traces, executable microsteps, table reversibility,
+  preservation/reflection, and primitive-recursive endpoint maps.
+- `formal/Lecerf/Machine/Compiler/ReversibleUniversal.lean`: the three fixed
+  certified target tables and the exact universal semantic iff theorems.
+- `formal/Lecerf/Undecidability/ReversibleTwoTape/{Problems,Reduction,API}.lean`:
+  guarded raw predicates, explicit finite reductions/noncomputability results,
+  and stable exports.
+- `formal/Lecerf/Undecidability/ReversibleTwoTape/Audit.lean`: executable valid
+  and invalid certificate examples plus headline `#print axioms`; this leaf is
+  not publicly imported.
+- `formal/Lecerf/Undecidability/API.lean` and `formal/Lecerf.lean`: thin public
+  exports of the checked results.
 
 ## No-Cheating Checks
 
@@ -179,8 +200,11 @@ axiom.
 - Three fixed effective-transition many-one reductions and their
   noncomputability corollaries compile as an intermediate checkpoint.
 - A raw finite-machine description/input type has constructive
-  `Primcodable` support and a decidable/computable validity predicate implying
-  whole-machine reversibility.
+  `Primcodable` support at the varying boundary and a decidable/computable
+  validity predicate implying whole-machine reversibility. The fixed finite
+  alphabet encodings selected once for the universal tables are explicitly
+  noncomputable constants; no varying reduction map depends on an unproved
+  computable selection.
 - The source-to-finite-machine and finite reversible history/coupling
   construction is executable and computable on every source code.
 - Configuration encoding/decoding, generated-run invariants, local macro-step
@@ -198,4 +222,36 @@ axiom.
 
 ## Stage Results
 
-- In progress.
+- Complete. The project now has a genuine finite two-tape local-rule result,
+  not only an abstract effective-transition checkpoint.
+- The fixed source compiler preserves and reflects
+  `(Nat.Partrec.Code.eval code 0).Dom`; the finite history compiler separately
+  preserves and reflects halting, realizes distinct-target strict reachability
+  after turnaround, and realizes positive return after bottom closure.
+- `partrecHalts0_manyOne_haltingYes`,
+  `partrecHalts0_manyOne_returnYes`, and
+  `partrecHalts0_manyOne_reachabilityYes` are explicit computable reductions.
+  `haltingYes_not_computable`, `returnYes_not_computable`, and
+  `reachabilityYes_not_computable` derive solely from mathlib's pinned halting
+  theorem.
+- Every generated table satisfies `SyntacticallyReversible`, hence semantic
+  `Reversible`; the reachability reduction proves its endpoints unequal. Raw
+  predicates include the validity guard, so malformed descriptions cannot
+  create a reduction loophole.
+- A construction error in the provisional reverse macro was corrected:
+  restoration erases the newest history token while staying on that cell;
+  only the bottom transition moves right. This prevents premature termination
+  during multi-token retracing.
+- Focused reduction build: 876 jobs completed. Public API/root plus audit build:
+  894 jobs completed. Final full `lake build`: 893 jobs completed. Proof-hole,
+  project-axiom, `unsafe`, boundary, and whitespace scans passed, as did
+  `git diff --check`.
+- Representative correctness, reduction, and noncomputability declarations
+  report exactly `[propext, Classical.choice, Quot.sound]`. `Classical.choice`
+  is accounted for by the one-time selected universal program, finite support,
+  encodings, and enumeration order; there is no project-specific axiom.
+- Scope boundary: these final undecidability theorems concern the checked finite
+  **two-tape** target model. A two-to-one-tape lowering and a literal connection
+  to Lecerf's incomplete historical marker encoding remain follow-up work.
+- Results were folded into the authoritative planning, dependency, theorem,
+  audit, and paper-map documents. Stage 7 was not started.
