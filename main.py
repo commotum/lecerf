@@ -1,5 +1,5 @@
 def main():
-    print("Hello from lecerf!")
+    print("Lean project: cd formal && lake build")
 
 
 if __name__ == "__main__":
